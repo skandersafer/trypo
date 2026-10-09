@@ -27,7 +27,7 @@ import type {
   WebViewNavigation,
 } from "react-native-webview/lib/WebViewTypes";
 
-// Port of the existing Vite web app dev server (see ../User request/vite.config.ts).
+// Port of the existing Vite web app dev server (see ../trypo-web/vite.config.ts).
 const WEB_PORT = 8443;
 // Fallback when the Expo dev host can't be auto-detected (same Wi-Fi as this PC).
 const FALLBACK_LAN_HOST = __DEV__ ? "192.168.100.4" : "0.0.0.0";

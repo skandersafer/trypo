@@ -1,0 +1,12 @@
+# Root ignores (each project also has its own .gitignore)
+node_modules/
+dist/
+build/
+.expo/
+.next/
+.vercel/
+*.exe
+*-url.txt
+temp_writer.js
+.DS_Store
+*.tsbuildinfo

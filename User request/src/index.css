@@ -1,0 +1,457 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+@import 'mapbox-gl/dist/mapbox-gl.css';
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --color-brand: #3B41C8;
+  --color-teal: #06C4D4;
+  --color-coral: #FF6347;
+  --color-navy: #0D0F2E;
+  --color-surface: #F5F6FF;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+/* ---- Expo native shell / real-device embedding ---- */
+html,
+body {
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* ---- Safe-area: notch / Dynamic Island (top) + gesture bar (bottom) ----
+   Prefer `.pt-safe` on new screens. `.pt-12` override below is kept for
+   backward compat with existing screens (36 files use pt-12). */
+.pt-safe {
+  padding-top: calc(1rem + env(safe-area-inset-top, 0px));
+}
+.pt-12 {
+  padding-top: calc(3rem + env(safe-area-inset-top, 0px));
+}
+
+/* Bottom sheets / modals clear the gesture bar. */
+.safe-pb {
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* ---- True-phone rendering (APK WebView / narrow viewport) ---- */
+html.trypo-native,
+html.trypo-native body,
+html.trypo-native #root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+html.trypo-native body {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  touch-action: manipulation;
+}
+
+html.trypo-native #root {
+  height: 100dvh;
+  min-height: 100%;
+}
+
+/* Prevent auto-zoom on focus inside the native shell */
+html.trypo-native input,
+html.trypo-native select,
+html.trypo-native textarea {
+  font-size: 16px;
+}
+
+html.trypo-native button {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}
+
+img,
+video,
+canvas {
+  max-width: 100%;
+}
+
+/* Scrollbars: visible on desktop web for discoverability/a11y.
+   Mobile scrollers hide theirs via .no-scrollbar. The native shell
+   (html.trypo-native) keeps the hidden-scrollbar behavior below. */
+html.trypo-native * {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+html.trypo-native *::-webkit-scrollbar {
+  display: none;
+}
+
+/* ---- Dark mode: applied via .dark on the phone container + <html> ----
+   Coherent, high-contrast color system across the entire app. */
+html.dark,
+.dark {
+  color-scheme: dark;
+  color: #EEF2FF;
+}
+
+/* Ensure common HTML elements inherit the dark-mode text color when unstyled */
+.dark button:not([class*="text-"]):not([class*="text-[#"]):not([style*="color:"]),
+.dark p:not([class*="text-"]):not([class*="text-[#"]):not([style*="color:"]),
+.dark span:not([class*="text-"]):not([class*="text-[#"]):not([style*="color:"]),
+.dark h1:not([class*="text-"]):not([class*="text-[#"]):not([style*="color:"]),
+.dark h2:not([class*="text-"]):not([class*="text-[#"]):not([style*="color:"]),
+.dark h3:not([class*="text-"]):not([class*="text-[#"]):not([style*="color:"]),
+.dark h4:not([class*="text-"]):not([class*="text-[#"]):not([style*="color:"]),
+.dark h5:not([class*="text-"]):not([class*="text-[#"]):not([style*="color:"]),
+.dark h6:not([class*="text-"]):not([class*="text-[#"]):not([style*="color:"]),
+.dark label:not([class*="text-"]):not([class*="text-[#"]):not([style*="color:"]),
+.dark li:not([class*="text-"]):not([class*="text-[#"]):not([style*="color:"]),
+.dark div:not([class*="text-"]):not([class*="text-[#"]):not([style*="color:"]) {
+  color: inherit;
+}
+
+/* 1. Surfaces & Backgrounds */
+.dark.bg-surface,
+.dark .bg-surface {
+  background-color: #0B0E22 !important;
+}
+
+/* White cards become rich navy cards in dark mode with subtle border definition */
+.dark .bg-white:not([data-stay-white]):not(.toggle-knob) {
+  background-color: #161B38 !important;
+  border-color: rgba(255, 255, 255, 0.09) !important;
+}
+
+.dark .toggle-knob,
+.dark [data-stay-white] {
+  background-color: #ffffff !important;
+}
+
+/* Secondary surfaces (chips, dividers, item containers) */
+.dark .bg-slate-50,
+.dark .bg-slate-100,
+.dark .bg-gray-50,
+.dark .bg-gray-100,
+.dark .bg-slate-50\/60,
+.dark .bg-slate-50\/80,
+.dark .bg-slate-100\/60,
+.dark .bg-slate-100\/80 {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.dark .bg-slate-200,
+.dark .bg-gray-200 {
+  background-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* Borders & Dividers */
+.dark .border-slate-50,
+.dark .border-slate-100,
+.dark .border-slate-200,
+.dark .border-gray-100,
+.dark .border-gray-200 {
+  border-color: rgba(255, 255, 255, 0.09) !important;
+}
+
+.dark .divide-slate-50 > * + *,
+.dark .divide-slate-100 > * + *,
+.dark .divide-slate-200 > * + * {
+  border-color: rgba(255, 255, 255, 0.09) !important;
+}
+
+/* 2. Primary Text (Headings, bold titles, main values) */
+.dark .text-navy,
+.dark [class*="text-navy"] {
+  color: #EEF2FF !important;
+}
+
+/* Secondary navy text with opacity (e.g. text-navy/70, text-navy/60) */
+.dark .text-navy\/90,
+.dark .text-navy\/80 {
+  color: #E0E7FF !important;
+}
+
+.dark .text-navy\/70,
+.dark .text-navy\/60,
+.dark .text-navy\/50 {
+  color: #C5CEE8 !important;
+}
+
+/* Hardcoded dark text utilities */
+.dark .text-black,
+.dark .text-gray-950,
+.dark .text-gray-900,
+.dark .text-gray-800,
+.dark .text-zinc-950,
+.dark .text-zinc-900,
+.dark .text-zinc-800,
+.dark .text-neutral-950,
+.dark .text-neutral-900,
+.dark .text-neutral-800,
+.dark .text-slate-950,
+.dark .text-slate-900,
+.dark .text-slate-800 {
+  color: #EEF2FF !important;
+}
+
+/* 3. Brand Text & Action Links (e.g. "See all", "Edit", CTA labels) */
+/* Vibrant electric sky blue with high contrast on dark backgrounds */
+.dark .text-brand {
+  color: #38BDF8 !important;
+}
+
+.dark [style*="color: #3B41C8"],
+.dark [style*="color: #3b41c8"],
+.dark [style*="color: rgb(59, 65, 200)"] {
+  color: #38BDF8 !important;
+}
+
+/* 4. Secondary & Muted Text (Subtitles, metadata, dates, uppercase section headers) */
+.dark .text-slate-400,
+.dark .text-gray-400,
+.dark .text-zinc-400 {
+  color: #A3B1D1 !important;
+}
+
+.dark .text-slate-500,
+.dark .text-gray-500,
+.dark .text-zinc-500 {
+  color: #B8C5E2 !important;
+}
+
+.dark .text-slate-600,
+.dark .text-slate-700,
+.dark .text-gray-600,
+.dark .text-gray-700,
+.dark .text-zinc-600,
+.dark .text-zinc-700 {
+  color: #D1DBF0 !important;
+}
+
+.dark .text-slate-300,
+.dark .text-gray-300 {
+  color: #8C9BBF !important;
+}
+
+/* 5. Colored Badge Texts (Lightened for dark background readability) */
+.dark .text-emerald-950,
+.dark .text-emerald-900 {
+  color: #6EE7B7 !important;
+}
+
+.dark .text-red-950,
+.dark .text-red-900 {
+  color: #FCA5A5 !important;
+}
+
+.dark .text-blue-900,
+.dark .text-blue-800,
+.dark .text-blue-700 {
+  color: #93C5FD !important;
+}
+
+.dark .text-indigo-900,
+.dark .text-indigo-800,
+.dark .text-indigo-700 {
+  color: #A5B4FC !important;
+}
+
+.dark .text-amber-900,
+.dark .text-amber-800,
+.dark .text-amber-700 {
+  color: #FCD34D !important;
+}
+
+/* 6. Arbitrary hex dark colors & inline styles */
+.dark .text-\[\#0D0F2E\],
+.dark .text-\[\#0d0f2e\],
+.dark .text-\[\#0a0c2e\],
+.dark .text-\[\#000\],
+.dark .text-\[\#000000\] {
+  color: #EEF2FF !important;
+}
+
+.dark .text-\[\#3B41C8\],
+.dark .text-\[\#3b41c8\] {
+  color: #38BDF8 !important;
+}
+
+.dark [style*="color: #0D0F2E"],
+.dark [style*="color: #0d0f2e"],
+.dark [style*="color: #0a0c2e"],
+.dark [style*="color: #000"],
+.dark [style*="color: #000000"],
+.dark [style*="color: black"],
+.dark [style*="color: rgb(13, 15, 46)"],
+.dark [style*="color: rgb(10, 12, 46)"],
+.dark [style*="color: rgb(0, 0, 0)"] {
+  color: #EEF2FF !important;
+}
+
+/* 7. Buttons with inline styles (Pill tabs, inactive filter chips) */
+.dark button[style*="background: white"],
+.dark button[style*="background: rgb(255, 255, 255)"],
+.dark [style*="background: white"]:not(img):not([data-stay-white]):not(.toggle-knob),
+.dark [style*="background: rgb(255, 255, 255)"]:not(img):not([data-stay-white]):not(.toggle-knob) {
+  background-color: #161B38 !important;
+  color: #C5CEE8 !important;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+/* Selected button pills with inline dark navy background */
+.dark button[style*="background: #0D0F2E"],
+.dark button[style*="background: rgb(13, 15, 46)"] {
+  background: linear-gradient(135deg, #3B41C8, #06C4D4) !important;
+  color: #FFFFFF !important;
+  border-color: transparent !important;
+}
+
+/* Hardcoded rgba(241,245,249,1) in inline styles */
+.dark [style*="241,245,249"],
+.dark [style*="241, 245, 249"] {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* 8. SVG Icons (Back arrows, search, close X, navigation) */
+.dark svg [stroke="#0D0F2E"],
+.dark svg [stroke="#0d0f2e"],
+.dark svg [stroke="#0a0c2e"],
+.dark svg [stroke="#000"],
+.dark svg [stroke="#000000"],
+.dark svg [stroke="black"] {
+  stroke: #EEF2FF !important;
+}
+
+.dark svg [fill="#0D0F2E"],
+.dark svg [fill="#0d0f2e"],
+.dark svg [fill="#0a0c2e"],
+.dark svg [fill="#000"],
+.dark svg [fill="#000000"],
+.dark svg [fill="black"] {
+  fill: #EEF2FF !important;
+}
+
+/* Brand badges (bg-brand/10 text-brand) */
+.dark .bg-brand\/10 {
+  background-color: rgba(56, 189, 248, 0.15) !important;
+}
+
+/* 9. Forms, Inputs, Selects & Placeholders */
+.dark input,
+.dark select,
+.dark textarea {
+  color: #EEF2FF !important;
+}
+
+.dark input:not(.bg-transparent):not([class*="bg-"]),
+.dark select:not(.bg-transparent):not([class*="bg-"]),
+.dark textarea:not(.bg-transparent):not([class*="bg-"]) {
+  background-color: #121630 !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.dark ::placeholder {
+  color: #7A89AA !important;
+}
+
+.dark select option {
+  background-color: #161B38 !important;
+  color: #EEF2FF !important;
+}
+
+/* 10. Group hover states */
+.dark .group:hover .group-hover\:text-blue-700,
+.dark .group:hover .group-hover\:text-orange-600,
+.dark .group:hover .group-hover\:text-rose-600,
+.dark .group:hover .group-hover\:text-emerald-700,
+.dark .group:hover .group-hover\:text-amber-700 {
+  color: #FFFFFF !important;
+}
+
+/* 11. Dark mode hover backgrounds across all elements */
+.dark .hover\:bg-surface:hover,
+.dark .hover\:bg-slate-50:hover,
+.dark .hover\:bg-slate-100:hover,
+.dark .hover\:bg-slate-200:hover,
+.dark .hover\:bg-gray-50:hover,
+.dark .hover\:bg-gray-100:hover,
+.dark .hover\:bg-gray-200:hover,
+.dark .hover\:bg-slate-100\/60:hover,
+.dark .hover\:bg-slate-100\/90:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Light-colored pastel hover backgrounds */
+.dark .hover\:bg-indigo-50:hover,
+.dark .hover\:bg-indigo-100:hover,
+.dark .hover\:bg-blue-50:hover,
+.dark .hover\:bg-blue-100:hover,
+.dark .hover\:bg-teal-50:hover,
+.dark .hover\:bg-teal-100:hover,
+.dark .hover\:bg-emerald-50:hover,
+.dark .hover\:bg-purple-50:hover,
+.dark .hover\:bg-amber-50:hover,
+.dark .hover\:bg-amber-100:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark .hover\:bg-red-50:hover,
+.dark .hover\:bg-red-100:hover {
+  background-color: rgba(239, 68, 68, 0.2) !important;
+}
+
+/* Hover text navy: must NEVER turn dark in dark mode! */
+.dark .hover\:text-navy:hover,
+.dark .group:hover .group-hover\:text-navy,
+.dark a:hover .hover\:text-navy,
+.dark button:hover .hover\:text-navy,
+.dark div:hover .hover\:text-navy {
+  color: #FFFFFF !important;
+}
+
+/* Hover text brand */
+.dark .hover\:text-brand:hover,
+.dark .group:hover .group-hover\:text-brand {
+  color: #38BDF8 !important;
+}
+
+/* Hover text red / danger */
+.dark .hover\:text-red-700:hover,
+.dark .hover\:text-red-600:hover {
+  color: #F87171 !important;
+}
+
+/* Hide scrollbar utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+
+
+
+

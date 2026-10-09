@@ -1,0 +1,112 @@
+{
+  "expo": {
+    "name": "Trypo",
+    "slug": "trypo",
+    "version": "1.0.1",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "trypo",
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#0a0c2e",
+    "primaryColor": "#0a0c2e",
+    "assetBundlePatterns": [
+      "assets/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.trypo.app",
+      "buildNumber": "4",
+      "associatedDomains": [
+        "applinks:trypo-app.vercel.app"
+      ],
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Trypo utilise ta position pour centrer la carte et le suivi d'équipage.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.trypo.app",
+      "versionCode": 3,
+      "softwareKeyboardLayoutMode": "resize",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_NETWORK_STATE"
+      ],
+      "adaptiveIcon": {
+        "backgroundColor": "#0a0c2e",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "trypo-app.vercel.app"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ],
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "output": "single",
+      "name": "Trypo",
+      "shortName": "Trypo",
+      "lang": "fr",
+      "themeColor": "#0a0c2e",
+      "backgroundColor": "#0a0c2e",
+      "display": "standalone",
+      "startUrl": ".",
+      "description": "Trypo — planifie tes voyages en tribu."
+    },
+    "extra": {
+      "webUrl": "https://trypo-app.vercel.app",
+      "eas": {
+        "projectId": "7d323008-4e5f-4e98-910d-59e11ef5a1ff"
+      }
+    },
+    "updates": {
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "plugins": [
+      "expo-web-browser",
+      "expo-status-bar",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Trypo utilise ta position pour centrer la carte et le suivi d'équipage."
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0a0c2e",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200
+        }
+      ]
+    ],
+    "owner": "skandersafer"
+  }
+}

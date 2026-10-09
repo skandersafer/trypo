@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0a0c2e;
+  --foreground: #f4f5ff;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+  background:
+    radial-gradient(900px 500px at 12% -5%, rgba(59, 65, 200, 0.35), transparent 60%),
+    radial-gradient(800px 480px at 88% 8%, rgba(6, 196, 212, 0.22), transparent 60%),
+    radial-gradient(1000px 700px at 50% 110%, rgba(124, 58, 237, 0.18), transparent 60%),
+    linear-gradient(180deg, #10124a 0%, #0a0c2e 45%, #07081f 100%);
+  background-attachment: fixed;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.7s ease-out both;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 28s linear infinite;
+}

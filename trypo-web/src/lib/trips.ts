@@ -1146,7 +1146,7 @@ export async function createTrip(tripData: NewTrip): Promise<DbTrip> {
       position: idx,
       arrival_date: tripData.startDate || null,
       departure_date: tripData.endDate || null,
-      nights: 2,
+      nights: 1,
       // Real GPS when geocoded at creation — the map pins the exact city.
       // Unknown stays undefined so the map live-geocodes instead of Tunis.
       lat: Number.isFinite(lat) ? lat : undefined,
@@ -1704,6 +1704,34 @@ export async function updateTripBudget(totalBudget: number, tripId?: string): Pr
       if (error) throw error
     } catch (e) {
       reportSyncError("updateTripBudget", e)
+    }
+  }
+
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("trypo:db_changed", { detail: { tripId: trip.id } }))
+  }
+}
+
+export async function updateTripDates(startDate: string | null, endDate: string | null, tripId?: string): Promise<void> {
+  const targetTripId = tripId || getActiveTripId()
+  if (!targetTripId) throw new Error("Trip not found")
+  if (startDate && endDate && endDate < startDate) throw new Error("End date cannot be before start date.")
+  const store = loadStore()
+  const trip = store.trips.find((t) => t.id === targetTripId) || store.trips[0]
+  if (!trip) throw new Error("Trip not found")
+  trip.start_date = startDate || null
+  trip.end_date = endDate || null
+  saveStore(store)
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { error } = await supabase
+        .from("trips")
+        .update({ start_date: startDate || null, end_date: endDate || null })
+        .eq("id", trip.id)
+      if (error) throw error
+    } catch (e) {
+      reportSyncError("updateTripDates", e)
     }
   }
 

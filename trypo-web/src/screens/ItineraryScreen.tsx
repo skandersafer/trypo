@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import type { Screen } from "../App"
 import { useAuth } from "../lib/auth"
-import { addItineraryItem, deleteItineraryItem, getTripDetails } from "../lib/trips"
+import { addItineraryItem, deleteItineraryItem, getDestinationStayDays, getTripDetails } from "../lib/trips"
 import { useIsDesktop } from "../lib/useIsDesktop"
 import { searchPlaces, type PlaceSearchResult } from "../lib/travelApi"
 import GoogleMapsPlacePicker from "../components/GoogleMapsPlacePicker"
@@ -130,6 +130,8 @@ export default function ItineraryScreen({ navigate, goBack }: Props) {
   const [addCurrency, setAddCurrency] = useState("EUR")
   const [checkIn, setCheckIn] = useState("")
   const [checkOut, setCheckOut] = useState("")
+  const [stayNights, setStayNights] = useState(1)
+  const [stayDays, setStayDays] = useState<number[]>([])
   const [saving, setSaving] = useState(false)
   const [addError, setAddError] = useState<string | null>(null)
   const [placeResults, setPlaceResults] = useState<PlaceSearchResult[]>([])
@@ -181,6 +183,19 @@ export default function ItineraryScreen({ navigate, goBack }: Props) {
   }, [])
 
   useEffect(() => {
+    if (addType === "stay") {
+      setStayDays((prev) => (prev.length > 0 ? prev : activeDayData ? [activeDay] : []))
+      if (activeDayData?.isoDate && !checkIn) {
+        setCheckIn(activeDayData.isoDate)
+        const out = new Date(`${activeDayData.isoDate}T00:00:00`)
+        out.setDate(out.getDate() + 1)
+        if (!checkOut) setCheckOut(out.toISOString().slice(0, 10))
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [addType, showAddSheet])
+
+  useEffect(() => {
     setLoading(true)
     getTripDetails()
       .then((tripData) => {
@@ -204,7 +219,7 @@ export default function ItineraryScreen({ navigate, goBack }: Props) {
           grouped[dateStr].push(item)
         })
 
-        const destinations = tripData.trip_destinations || []
+        const destinations = (tripData.trip_destinations || []).slice().sort((a: any, b: any) => (a.position ?? 0) - (b.position ?? 0))
         const destCities = destinations.map((d: any) => d.city)
         const destMap: Record<string, string> = {}
         destinations.forEach((d: any) => {
@@ -214,6 +229,15 @@ export default function ItineraryScreen({ navigate, goBack }: Props) {
           }
         })
         const cityLabel = destCities.join(" → ") || "Destination"
+        // Spread destinations across days using each stop's stay length
+        // (a 3-night stop owns Day 1–3, the next stop starts on Day 4).
+        // The old code used destinations[dayIndex], so Day 2 of a 3-day
+        // stay wrongly showed the next city.
+        const dayCities: string[] = []
+        destinations.forEach((d: any) => {
+          const span = Math.max(1, getDestinationStayDays(d))
+          for (let k = 0; k < span; k++) dayCities.push(d.city)
+        })
         const startDate = tripData.start_date ? new Date(`${tripData.start_date}T00:00:00`) : null
         const endDate = tripData.end_date ? new Date(`${tripData.end_date}T00:00:00`) : null
         const dayCount =
@@ -240,7 +264,7 @@ export default function ItineraryScreen({ navigate, goBack }: Props) {
                   day: "numeric",
                 })
               : dateKey
-          const city = destinations[index] ? destinations[index].city : cityLabel
+          const city = dayCities[index] || destCities[index] || cityLabel
           return {
           day: index + 1,
           isoDate: dateKey.length === 10 ? dateKey : undefined,
@@ -306,43 +330,72 @@ export default function ItineraryScreen({ navigate, goBack }: Props) {
     setSaving(true)
     setAddError(null)
     try {
-      const startDate = addType === "stay" ? checkIn : activeDayData?.isoDate
-      const startsAt = startDate
-        ? `${startDate}T${addTime || "12:00"}:00`
-        : null
-      const endsAt = addType === "stay" && checkOut
-        ? `${checkOut}T${addTime || "12:00"}:00`
-        : null
       const locationName = selectedPlace
         ? `${selectedPlace.address} [${selectedPlace.lat},${selectedPlace.lng}]`
         : addLocation.trim() || undefined
-      const item = await addItineraryItem({
-        tripId: trip.id,
-        itemType: addType,
-        title: addTitle.trim(),
-        details: addDetails.trim() || undefined,
-        locationName,
-        startsAt,
-        endsAt,
-        estimatedCost: addCost ? Number(addCost) : null,
-        currency: addCurrency,
-      })
-      const nextItem = {
+      // Stay: one row per selected trip day so the stay shows on every
+      // chosen day. Other types: single row on the active day.
+      const stayDayList =
+        addType === "stay" && stayDays.length > 0
+          ? [...new Set(stayDays)].sort((a, b) => a - b).filter((d) => days[d])
+          : []
+      const builds: Array<{ startsAt: string | null; endsAt: string | null }> =
+        stayDayList.length > 0
+          ? stayDayList.map((d) => {
+              const iso = days[d]?.isoDate
+              const startsAt = iso ? `${iso}T${addTime || "12:00"}:00` : null
+              const nextIso = days[d + 1]?.isoDate
+              const fallbackOut = iso
+                ? new Date(new Date(`${iso}T00:00:00`).getTime() + 86400000).toISOString().slice(0, 10)
+                : null
+              const outIso = checkOut || nextIso || fallbackOut
+              return { startsAt, endsAt: outIso ? `${outIso}T${addTime || "12:00"}:00` : null }
+            })
+          : [
+              {
+                startsAt: (addType === "stay" ? checkIn : activeDayData?.isoDate)
+                  ? `${(addType === "stay" ? checkIn : activeDayData?.isoDate)}T${addTime || "12:00"}:00`
+                  : null,
+                endsAt:
+                  addType === "stay" && checkOut ? `${checkOut}T${addTime || "12:00"}:00` : null,
+              },
+            ]
+      const created: Array<{ item: any; dayIndex: number }> = []
+      for (const b of builds) {
+        const dayIndex =
+          stayDayList.length > 0
+            ? stayDayList[builds.indexOf(b)]
+            : activeDay
+        const item = await addItineraryItem({
+          tripId: trip.id,
+          itemType: addType,
+          title: addTitle.trim(),
+          details: addDetails.trim() || undefined,
+          locationName,
+          startsAt: b.startsAt,
+          endsAt: b.endsAt,
+          estimatedCost: addCost ? Number(addCost) : null,
+          currency: addCurrency,
+        })
+        created.push({ item, dayIndex })
+      }
+      const toRow = (item: any) => ({
         id: item.id,
-        time: startsAt
-          ? new Date(startsAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+        time: item.starts_at
+          ? new Date(item.starts_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
           : "All Day",
         type: item.item_type,
-        icon: item.item_type === "food" ? "🍜" : item.item_type === "place" ? "📍" : item.item_type === "note" ? "📝" : "🎯",
+        icon: item.item_type === "food" ? "🍜" : item.item_type === "place" ? "📍" : item.item_type === "note" ? "📝" : item.item_type === "stay" ? "🏨" : "🎯",
         title: item.title,
         detail: item.details || item.location_name || "",
         cost: item.estimated_cost ? `${item.estimated_cost} ${item.currency}` : "Free",
         color: "#3B41C8",
-      }
+      })
       setDays((current) =>
-        current.map((day, index) =>
-          index === activeDay ? { ...day, items: [...day.items, nextItem] } : day,
-        ),
+        current.map((day, index) => {
+          const rows = created.filter((c) => c.dayIndex === index).map((c) => toRow(c.item))
+          return rows.length > 0 ? { ...day, items: [...day.items, ...rows] } : day
+        }),
       )
       setAddType(null)
       setAddTitle("")
@@ -351,6 +404,8 @@ export default function ItineraryScreen({ navigate, goBack }: Props) {
       setAddCost("")
       setCheckIn("")
       setCheckOut("")
+      setStayDays([])
+      setStayNights(1)
       setSelectedPlace(null)
       setPlaceResults([])
       setShowAddSheet(false)
@@ -779,25 +834,126 @@ export default function ItineraryScreen({ navigate, goBack }: Props) {
                   </div>
 
                   {addType === "stay" && (
-                    <div className="grid grid-cols-2 gap-2">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        Arrivée (Check-in)
-                        <input
-                          type="date"
-                          value={checkIn}
-                          onChange={(e) => setCheckIn(e.target.value)}
-                          className="mt-1 w-full rounded-xl bg-slate-50 px-3 py-2.5 text-[12px] font-medium border border-slate-200/60"
-                        />
-                      </label>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        Départ (Check-out)
-                        <input
-                          type="date"
-                          value={checkOut}
-                          onChange={(e) => setCheckOut(e.target.value)}
-                          className="mt-1 w-full rounded-xl bg-slate-50 px-3 py-2.5 text-[12px] font-medium border border-slate-200/60"
-                        />
-                      </label>
+                    <div className="flex flex-col gap-3 rounded-2xl border border-brand/15 bg-brand/[0.03] p-3">
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">
+                          Which days are you staying? ({stayDays.length || stayNights} night{(stayDays.length || stayNights) > 1 ? "s" : ""})
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {days.map((d, i) => {
+                            const selected = stayDays.includes(i)
+                            return (
+                              <button
+                                key={d.day}
+                                type="button"
+                                onClick={() => {
+                                  setStayDays((prev) => {
+                                    const next = prev.includes(i)
+                                      ? prev.filter((x) => x !== i)
+                                      : [...prev, i].sort((a, b) => a - b)
+                                    const sorted = [...next].sort((a, b) => a - b)
+                                    if (sorted.length > 0) {
+                                      const first = days[sorted[0]]?.isoDate
+                                      const last = days[sorted[sorted.length - 1]]?.isoDate
+                                      if (first && !checkIn) setCheckIn(first)
+                                      else if (first) setCheckIn(first)
+                                      if (last) {
+                                        const out = new Date(`${last}T00:00:00`)
+                                        out.setDate(out.getDate() + 1)
+                                        setCheckOut(out.toISOString().slice(0, 10))
+                                      }
+                                      setStayNights(sorted.length)
+                                    }
+                                    return next
+                                  })
+                                }}
+                                className="px-2.5 py-1.5 rounded-xl text-[11px] font-black transition-all"
+                                style={{
+                                  background: selected ? "#3B41C8" : "white",
+                                  color: selected ? "white" : "#3B41C8",
+                                  border: selected ? "1.5px solid #3B41C8" : "1.5px solid #e2e8f0",
+                                }}
+                              >
+                                Day {d.day} · {d.date}
+                              </button>
+                            )
+                          })}
+                        </div>
+                        {days.length === 0 && (
+                          <p className="text-[11px] text-slate-400">Set trip dates first to pick days.</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex-1">
+                          Nights
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const next = Math.max(1, stayNights - 1)
+                              setStayNights(next)
+                              const base = stayDays.length > 0 ? Math.min(...stayDays) : activeDay
+                              const seq = Array.from({ length: next }, (_, k) => base + k).filter((x) => days[x])
+                              setStayDays(seq)
+                              const last = days[seq[seq.length - 1]]?.isoDate
+                              if (days[base]?.isoDate) setCheckIn(days[base].isoDate!)
+                              if (last) {
+                                const out = new Date(`${last}T00:00:00`)
+                                out.setDate(out.getDate() + 1)
+                                setCheckOut(out.toISOString().slice(0, 10))
+                              }
+                            }}
+                            className="w-7 h-7 rounded-full font-black"
+                            style={{ background: "rgba(59,65,200,0.08)", color: "#3B41C8" }}
+                          >
+                            −
+                          </button>
+                          <span className="text-[14px] font-black text-navy min-w-[48px] text-center">{stayNights}n</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const next = Math.min(days.length || 30, stayNights + 1)
+                              setStayNights(next)
+                              const base = stayDays.length > 0 ? Math.min(...stayDays) : activeDay
+                              const seq = Array.from({ length: next }, (_, k) => base + k).filter((x) => days[x])
+                              setStayDays(seq)
+                              const last = days[seq[seq.length - 1]]?.isoDate
+                              if (days[base]?.isoDate) setCheckIn(days[base].isoDate!)
+                              if (last) {
+                                const out = new Date(`${last}T00:00:00`)
+                                out.setDate(out.getDate() + 1)
+                                setCheckOut(out.toISOString().slice(0, 10))
+                              }
+                            }}
+                            className="w-7 h-7 rounded-full font-black"
+                            style={{ background: "rgba(59,65,200,0.08)", color: "#3B41C8" }}
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                          Arrivée (Check-in)
+                          <input
+                            type="date"
+                            value={checkIn}
+                            onChange={(e) => setCheckIn(e.target.value)}
+                            className="mt-1 w-full rounded-xl bg-slate-50 px-3 py-2.5 text-[12px] font-medium border border-slate-200/60"
+                          />
+                        </label>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                          Départ (Check-out)
+                          <input
+                            type="date"
+                            value={checkOut}
+                            min={checkIn || undefined}
+                            onChange={(e) => setCheckOut(e.target.value)}
+                            className="mt-1 w-full rounded-xl bg-slate-50 px-3 py-2.5 text-[12px] font-medium border border-slate-200/60"
+                          />
+                        </label>
+                      </div>
                     </div>
                   )}
 
@@ -819,10 +975,11 @@ export default function ItineraryScreen({ navigate, goBack }: Props) {
                       </label>
                       <div className="flex gap-1.5">
                         <input
-                          type="number"
-                          min="0"
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
                           value={addCost}
-                          onChange={(e) => setAddCost(e.target.value)}
+                          onChange={(e) => setAddCost(e.target.value.replace(/[^0-9]/g, ""))}
                           placeholder="0"
                           className="min-w-0 flex-1 rounded-xl bg-slate-50 px-3 py-2.5 text-[13px] font-medium outline-none border border-slate-200/60"
                         />

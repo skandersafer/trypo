@@ -7,7 +7,7 @@ import GoogleMapsPlacePicker from "../components/GoogleMapsPlacePicker"
 import { useAuth } from "../lib/auth"
 import { searchDestinations, type DestinationSuggestion } from "../lib/travelApi"
 import { hasMapboxToken } from "../lib/mapbox"
-import { addBooking, addItineraryItem, updateBooking, updateItineraryItem, deleteBooking, deleteItineraryItem, claimMissingServerMembership, generateTripInviteCode, getActiveTripId, getDestinationStayDays, getMyTrips, getTripDetails, getUserTripPermission, setActiveTripId, syncTripDestinations, deleteTrip, generateUuid } from "../lib/trips"
+import { addBooking, addItineraryItem, updateBooking, updateItineraryItem, deleteBooking, deleteItineraryItem, claimMissingServerMembership, generateTripInviteCode, getActiveTripId, getDestinationStayDays, getMyTrips, getTripDetails, getUserTripPermission, setActiveTripId, syncTripDestinations, deleteTrip, generateUuid, updateTripDates } from "../lib/trips"
 import { getMyTripMembership, setTripVisibility } from "../lib/communityLive"
 import { useIsDesktop } from "../lib/useIsDesktop"
 import { getStoredRates, fetchLiveRates, getRelativeRate } from "../lib/currencyApi"
@@ -134,6 +134,7 @@ const formatShortDate = (isoDate: string | null | undefined) => {
 const formatDateRange = (startDate: string | null | undefined, endDate: string | null | undefined) => {
   if (!startDate && !endDate) return "Dates TBD"
   if (!startDate || !endDate) return `${formatShortDate(startDate)} – ${formatShortDate(endDate)}`
+  if (startDate === endDate) return formatShortDate(startDate)
 
   const start = parseIsoDate(startDate)
   const end = parseIsoDate(endDate)
@@ -149,7 +150,11 @@ const normalizeStopDates = (route: Stop[], tripStartDate?: string) => {
   let cursor = parseIsoDate(baseDate) ?? new Date()
   cursor.setHours(0, 0, 0, 0)
 
-  return route.map((stop, index) => {
+  // departure_date is the checkout day (exclusive): a 1-day stop is
+  // Jun 12 → Jun 13, and the next stop checks in on Jun 13 — contiguous,
+  // no gap day. The old code added an extra +1 day between stops, which
+  // inflated every trip's total day count.
+  return route.map((stop) => {
     const stayDays = Math.max(1, Number(stop.days) || 1)
     const start = new Date(cursor)
     const end = new Date(cursor)
@@ -157,15 +162,13 @@ const normalizeStopDates = (route: Stop[], tripStartDate?: string) => {
 
     const nextStop = {
       ...stop,
+      days: stayDays,
       startDate: start.toISOString().slice(0, 10),
       endDate: end.toISOString().slice(0, 10),
       dates: formatDateRange(start.toISOString().slice(0, 10), end.toISOString().slice(0, 10)),
     }
 
     cursor = new Date(end)
-    if (index < route.length - 1) {
-      cursor.setDate(cursor.getDate() + 1)
-    }
 
     return nextStop
   })
@@ -1488,6 +1491,11 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
   const [userRole, setUserRole] = useState<string>("owner")
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [isDeletingTrip, setIsDeletingTrip] = useState(false)
+  const [showDatesModal, setShowDatesModal] = useState(false)
+  const [editStartDate, setEditStartDate] = useState("")
+  const [editEndDate, setEditEndDate] = useState("")
+  const [savingDates, setSavingDates] = useState(false)
+  const [datesError, setDatesError] = useState<string | null>(null)
   // "I left this trip" gate: a signed-in account that neither owns nor is a
   // member of the trip must not see the full trip editor as if it were still
   // part of the crew.
@@ -1536,7 +1544,7 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
             country: item.country,
             emoji: "📍",
             dates: "Dates TBD",
-            days: 2,
+            days: 1,
           })),
         )
       } catch {
@@ -1577,12 +1585,16 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
         setTrip(tripData)
         setCommunityPublic((tripData as any)?.visibility === "public")
         let rawDestinations: any[] = tripData.trip_destinations || []
+        // Sort by persisted position FIRST so a drag-reorder survives a
+        // reload / map visit. Supabase returns rows unordered, which used to
+        // reset the route to its old order on every remount.
+        rawDestinations = rawDestinations.slice().sort((a: any, b: any) => (a.position ?? 0) - (b.position ?? 0))
         if ((!rawDestinations || rawDestinations.length === 0) && Array.isArray((tripData as any).destinations) && (tripData as any).destinations.length > 0) {
           rawDestinations = (tripData as any).destinations.map((city: string, i: number) => ({
             id: generateUuid(),
             city,
             country: "Destination",
-            nights: 2,
+            nights: 1,
             position: i,
           }))
         }
@@ -1950,11 +1962,12 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
   }
 
   const addStop = (dest: DestinationSuggestion) => {
+    // Every new destination starts at 1 day — the user extends with +.
     const newStop: Stop = {
       id: generateUuid(),
       city: dest.city,
       dates: dest.dates || "Dates TBD",
-      days: dest.days || 2,
+      days: 1,
       emoji: dest.emoji || "📍",
     }
     const nextStops = normalizeStopDates([...stops, newStop], trip?.start_date)
@@ -2116,6 +2129,19 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
           <p className={`text-white/65 text-[13px] ${isDesktop ? "md:max-w-none" : "truncate"}`}>
             {[trip?.start_date, trip?.end_date].filter(Boolean).join(" – ") || "Dates to be set"} · {stops.length} Destinations
           </p>
+          <button
+            type="button"
+            onClick={() => {
+              setEditStartDate(trip?.start_date ? String(trip.start_date).slice(0, 10) : "")
+              setEditEndDate(trip?.end_date ? String(trip.end_date).slice(0, 10) : "")
+              setDatesError(null)
+              setShowDatesModal(true)
+            }}
+            className="mt-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-black text-white transition-all active:scale-95"
+            style={{ background: "rgba(255,255,255,0.18)", backdropFilter: "blur(8px)" }}
+          >
+            📅 Edit dates
+          </button>
         </div>
       </div>
 
@@ -3020,6 +3046,79 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
       </div>
 
       {/* Delete Trip Confirmation Modal */}
+      {showDatesModal && (
+        <div className="fixed inset-0 z-[150] bg-black/60 backdrop-blur-xs flex items-center justify-center p-5">
+          <div className="w-full max-w-sm rounded-[28px] bg-white p-6 shadow-2xl">
+            <h3 className="text-[18px] font-black text-navy text-center mb-1.5">
+              Modify trip dates
+            </h3>
+            <p className="text-[12px] text-slate-500 text-center mb-4">
+              Destination dates shift automatically from the start date.
+            </p>
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                Start
+                <input
+                  type="date"
+                  value={editStartDate}
+                  onChange={(e) => setEditStartDate(e.target.value)}
+                  className="mt-1 w-full rounded-xl bg-slate-50 px-3 py-2.5 text-[13px] font-semibold text-navy outline-none border border-slate-200"
+                />
+              </label>
+              <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                End
+                <input
+                  type="date"
+                  value={editEndDate}
+                  min={editStartDate || undefined}
+                  onChange={(e) => setEditEndDate(e.target.value)}
+                  className="mt-1 w-full rounded-xl bg-slate-50 px-3 py-2.5 text-[13px] font-semibold text-navy outline-none border border-slate-200"
+                />
+              </label>
+            </div>
+            {datesError && <p className="text-[12px] font-bold text-red-600 mb-2">{datesError}</p>}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDatesModal(false)}
+                disabled={savingDates}
+                className="flex-1 py-3.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-[13px] active:scale-95 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  void (async () => {
+                    if (!trip?.id) return
+                    if (editStartDate && editEndDate && editEndDate < editStartDate) {
+                      setDatesError("End date cannot be before start date.")
+                      return
+                    }
+                    setSavingDates(true)
+                    setDatesError(null)
+                    try {
+                      await updateTripDates(editStartDate || null, editEndDate || null, trip.id)
+                      const nextTrip = { ...trip, start_date: editStartDate || null, end_date: editEndDate || null }
+                      setTrip(nextTrip)
+                      const nextStops = normalizeStopDates(stops, editStartDate || undefined)
+                      persistStops(nextStops, nextTrip)
+                      setShowDatesModal(false)
+                    } catch (e) {
+                      setDatesError(e instanceof Error ? e.message : "Could not save dates.")
+                    } finally {
+                      setSavingDates(false)
+                    }
+                  })()
+                }}
+                disabled={savingDates}
+                className="flex-1 py-3.5 rounded-xl text-white font-black text-[13px] active:scale-95 transition-all disabled:opacity-50"
+                style={{ background: "linear-gradient(135deg, #3B41C8, #06C4D4)" }}
+              >
+                {savingDates ? "Saving..." : "Save dates"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {showDeleteModal && (
         <div className="fixed inset-0 z-[150] bg-black/60 backdrop-blur-xs flex items-center justify-center p-5 animate-fadeIn">
           <div className="w-full max-w-sm rounded-[28px] bg-white p-6 shadow-2xl">
@@ -3333,7 +3432,7 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
                       city: customDestinationName,
                       emoji: "📍",
                       dates: "Dates TBD",
-                      days: 2,
+                      days: 1,
                     })
                   }
                   className="flex items-center gap-3 py-3 px-4 rounded-2xl text-left transition-all hover:bg-brand/10"
@@ -3348,7 +3447,7 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
                       Ajouter « {customDestinationName} »
                     </p>
                     <p className="text-slate-400 text-[11px]">
-                      Lieu personnalisé • 2 jours par défaut
+                      Lieu personnalisé • 1 jour par défaut
                     </p>
                   </div>
                   <div
@@ -3378,7 +3477,7 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
                       {dest.city}
                     </p>
                     <p className="text-slate-400 text-[11px] truncate">
-                      {dest.country ? `${dest.country}` : `${dest.days ?? 2} jours recommandés`}
+                      {dest.country ? `${dest.country}` : `${dest.days ?? 1} jour${(dest.days ?? 1) > 1 ? "s" : ""} recommandé${(dest.days ?? 1) > 1 ? "s" : ""}`}
                     </p>
                   </div>
                   <div
@@ -3434,7 +3533,7 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
                   country: countryName,
                   emoji: "📍",
                   dates: "Dates TBD",
-                  days: 2,
+                  days: 1,
                 })
                 setShowMapPicker(false)
               }}

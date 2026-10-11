@@ -454,11 +454,12 @@ export default function BudgetScreen({ navigate, goBack }: Props) {
               <div>
                 <label className="text-xs font-bold text-slate-400 mb-1 block">Total budget ({displayCurrency})</label>
                 <input
-                  type="number"
-                  min="0"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   placeholder="e.g. 1500"
                   value={budgetInput}
-                  onChange={(e) => setBudgetInput(e.target.value)}
+                  onChange={(e) => setBudgetInput(e.target.value.replace(/[^0-9]/g, ""))}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-brand"
                 />
               </div>
@@ -510,10 +511,12 @@ export default function BudgetScreen({ navigate, goBack }: Props) {
               <div>
                 <label className="text-xs font-bold text-slate-400 mb-1 block">Amount ({displayCurrency})</label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   placeholder="e.g. 45"
                   value={newAmount}
-                  onChange={(e) => setNewAmount(e.target.value)}
+                  onChange={(e) => setNewAmount(e.target.value.replace(/[^0-9]/g, ""))}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold focus:outline-none focus:border-brand"
                 />
               </div>

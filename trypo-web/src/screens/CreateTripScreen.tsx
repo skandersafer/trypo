@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import type { Screen } from "../App"
 import { useAuth } from "../lib/auth"
-import { getSuggestedCitiesForCountry, searchDestinations } from "../lib/travelApi"
+import { searchDestinations } from "../lib/travelApi"
 import { resolveKnownCoords } from "../lib/geocode"
 import { createTrip } from "../lib/trips"
 import { useIsDesktop } from "../lib/useIsDesktop"
@@ -64,11 +64,17 @@ export default function CreateTripScreen({ navigate, goBack }: Props) {
     const nextValue = (value || destInput).trim()
     if (!nextValue) return
 
-    // Remember GPS when the user taps a geocoded suggestion.
+    // Destinations can ONLY come from the map/search suggestions — no
+    // free-typed text. The tapped suggestion carries GPS; a typed value must
+    // match a suggestion exactly, otherwise we refuse it.
     const tapped = destinationSuggestions.find(
       (s) => s.city.toLowerCase() === nextValue.toLowerCase(),
     )
-    if (tapped && Number.isFinite(Number(tapped.lat)) && Number.isFinite(Number(tapped.lng))) {
+    if (!tapped) {
+      setError("Please pick a destination from the suggestions below 🗺️ — typed names alone can't be added.")
+      return
+    }
+    if (Number.isFinite(Number(tapped.lat)) && Number.isFinite(Number(tapped.lng))) {
       setCoordCache((prev) => ({
         ...prev,
         [tapped.city.trim().toLowerCase()]: {
@@ -79,18 +85,14 @@ export default function CreateTripScreen({ navigate, goBack }: Props) {
       }))
     }
 
-    const exactCountryMatches = await getSuggestedCitiesForCountry(nextValue)
-    const proposedCities = exactCountryMatches.length > 0 ? exactCountryMatches : [nextValue]
-
+    const city = tapped.city
     setDestinations((existing) => {
-      const merged = [...existing]
-      proposedCities.forEach((city) => {
-        if (!merged.includes(city)) merged.push(city)
-      })
-      return merged
+      if (existing.some((d) => d.toLowerCase() === city.toLowerCase())) return existing
+      return [...existing, city]
     })
     setDestInput("")
     setDestinationSuggestions([])
+    setError(null)
   }
 
   /** Resolve real GPS for every destination before saving the trip. */
@@ -119,10 +121,23 @@ export default function CreateTripScreen({ navigate, goBack }: Props) {
   }
 
   const create = async () => {
+    // Typed-but-unpicked text is never a destination: it must come from a
+    // suggestion (same rule as the + button).
     let currentDestinations = [...destinations]
-    if (destInput.trim() && !currentDestinations.includes(destInput.trim())) {
-      currentDestinations.push(destInput.trim())
-      setDestinations(currentDestinations)
+    if (destInput.trim()) {
+      const match = destinationSuggestions.find(
+        (s) => s.city.toLowerCase() === destInput.trim().toLowerCase(),
+      )
+      if (!match) {
+        setError("Please pick a destination from the suggestions 🗺️ — typed names alone can't be added.")
+        return
+      }
+      if (!currentDestinations.some((d) => d.toLowerCase() === match.city.toLowerCase())) {
+        currentDestinations.push(match.city)
+        setDestinations(currentDestinations)
+      }
+      setDestInput("")
+      setDestinationSuggestions([])
     }
 
     if (!title.trim() || !currentDestinations.length) {
@@ -253,7 +268,7 @@ export default function CreateTripScreen({ navigate, goBack }: Props) {
                   }
                 }}
                 className="flex-1 text-[13px] text-navy outline-none"
-                placeholder="Type a country or city…"
+                placeholder="Search a city, then tap a suggestion…"
               />
               <button
                 onClick={() => void addDestination()}
@@ -372,10 +387,11 @@ export default function CreateTripScreen({ navigate, goBack }: Props) {
           >
             <span className="text-slate-400 font-bold text-[15px]">€</span>
             <input
-              type="number"
-              min="0"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
               value={budget}
-              onChange={(e) => setBudget(e.target.value)}
+              onChange={(e) => setBudget(e.target.value.replace(/[^0-9]/g, ""))}
               className="w-full text-navy font-bold text-[15px] outline-none bg-transparent"
               placeholder="e.g. 1500"
             />

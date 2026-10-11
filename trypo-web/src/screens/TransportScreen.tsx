@@ -67,6 +67,8 @@ export default function TransportScreen({ navigate, openBooking, goBack }: Props
   const [departureTime, setDepartureTime] = useState("12:00")
   const [duration, setDuration] = useState("3h")
   const [reference, setReference] = useState("")
+  const [price, setPrice] = useState("")
+  const [currency, setCurrency] = useState("EUR")
   const [added, setAdded] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
@@ -183,6 +185,13 @@ export default function TransportScreen({ navigate, openBooking, goBack }: Props
   const submit = async () => {
     if (!from || !to) return
     const chosenIcon = transportTypes.find((t) => t.label === selectedType)?.icon || "🚌"
+    const amount = price ? Number(String(price).replace(",", ".")) || 0 : 0
+    const priceLabel = amount > 0 ? `${amount} ${currency === "USD" ? "$" : currency === "GBP" ? "£" : currency === "TND" ? "د.ت" : "€"}` : "—"
+    const durationMatch = duration.match(/(\d+(?:[.,]\d+)?)\s*h/i)
+    const minuteMatch = duration.match(/(\d+)\s*m/i)
+    const totalMinutes = Math.round(Number(durationMatch?.[1]?.replace(",", ".") || 0) * 60 + Number(minuteMatch?.[1] || 0))
+    const departure = date ? new Date(`${date}T${departureTime}:00`) : null
+    const arrival = departure ? new Date(departure.getTime() + totalMinutes * 60000) : null
     const newSegment: TransportItem = {
       id: Date.now(),
       icon: chosenIcon,
@@ -192,21 +201,16 @@ export default function TransportScreen({ navigate, openBooking, goBack }: Props
       fromCode: from.slice(0, 3).toUpperCase(),
       toCode: to.slice(0, 3).toUpperCase(),
       date: date || "TBD",
-      time: "12:00",
-      arrivalTime: "15:00",
-      duration: "3h",
-      price: "$0",
-      priceNum: 0,
+      time: departureTime || "12:00",
+      arrivalTime: arrival ? arrival.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "15:00",
+      duration: duration || "3h",
+      price: priceLabel,
+      priceNum: amount,
       status: "confirmed",
       operator: "Planned Transport",
     }
     const tripData = await getTripDetails()
     if (!tripData) return
-    const durationMatch = duration.match(/(\d+(?:[.,]\d+)?)\s*h/i)
-    const minuteMatch = duration.match(/(\d+)\s*m/i)
-    const totalMinutes = Math.round(Number(durationMatch?.[1]?.replace(",", ".") || 0) * 60 + Number(minuteMatch?.[1] || 0))
-    const departure = date ? new Date(`${date}T${departureTime}:00`) : null
-    const arrival = departure ? new Date(departure.getTime() + totalMinutes * 60000) : null
     const startsAt = departure ? departure.toISOString() : null
     const endsAt = arrival ? arrival.toISOString() : null
     const itineraryItem = await addItineraryItem({
@@ -216,8 +220,8 @@ export default function TransportScreen({ navigate, openBooking, goBack }: Props
       details: `${selectedType} · ${duration}${reference ? ` · Ref ${reference}` : ""}`,
       startsAt,
       endsAt,
-      estimatedCost: 0,
-      currency: "EUR",
+      estimatedCost: amount > 0 ? amount : null,
+      currency,
     })
     await addBooking({
       tripId: tripData.id,
@@ -227,13 +231,13 @@ export default function TransportScreen({ navigate, openBooking, goBack }: Props
       startsAt,
       endsAt,
       confirmationCode: reference || undefined,
-      amount: 0,
-      currency: "EUR",
+      amount: amount > 0 ? amount : null,
+      currency,
       notes: `${from} → ${to} · ${duration}${reference ? ` · Ref ${reference}` : ""}`,
       itineraryItemId: itineraryItem.id,
     })
     window.dispatchEvent(new Event("trypo-itinerary-sync"))
-    setTransportsList((prev) => [...prev, { ...newSegment, price: "0 €" }])
+    setTransportsList((prev) => [...prev, { ...newSegment }])
     setAdded(true)
     setTimeout(() => {
       setAdded(false)
@@ -244,6 +248,7 @@ export default function TransportScreen({ navigate, openBooking, goBack }: Props
       setDepartureTime("12:00")
       setDuration("3h")
       setReference("")
+      setPrice("")
     }, 1200)
   }
 
@@ -560,10 +565,36 @@ export default function TransportScreen({ navigate, openBooking, goBack }: Props
                 <input value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="2h 15m" className="mt-1 w-full bg-slate-50 rounded-xl px-3 py-2.5 text-[13px] text-navy font-semibold outline-none" />
               </label>
             </div>
-            <label className="block mb-5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            <label className="block mb-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">
               Booking reference
               <input value={reference} onChange={(e) => setReference(e.target.value)} placeholder="e.g. TU8F3K" className="mt-1 w-full bg-slate-50 rounded-xl px-3 py-2.5 text-[13px] text-navy font-semibold outline-none" />
             </label>
+            <div className="mb-5">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                Price paid (counts toward Budget → Transportation)
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value.replace(/[^0-9]/g, ""))}
+                  placeholder="e.g. 45"
+                  className="min-w-0 flex-1 bg-slate-50 rounded-xl px-3 py-2.5 text-[13px] text-navy font-semibold outline-none"
+                />
+                <select
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                  className="w-24 bg-slate-50 rounded-xl px-2 py-2.5 text-[13px] text-navy font-bold outline-none"
+                >
+                  <option value="EUR">EUR</option>
+                  <option value="USD">USD</option>
+                  <option value="GBP">GBP</option>
+                  <option value="TND">TND</option>
+                </select>
+              </div>
+            </div>
             {date && departureTime && duration && (
               <p className="mb-4 rounded-xl bg-emerald-50 px-3 py-2 text-[11px] text-emerald-700">
                 Arrival: {new Date(new Date(`${date}T${departureTime}:00`).getTime() + (Math.round(Number(duration.match(/(\d+(?:[.,]\d+)?)\s*h/i)?.[1]?.replace(",", ".") || 0) * 60 + Number(duration.match(/(\d+)\s*m/i)?.[1] || 0)) * 60000)).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}

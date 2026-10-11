@@ -102,7 +102,7 @@ const INJECTED_BEFORE_LOAD = `
     window.__TRYPO_NATIVE_LOCATION__ = window.__TRYPO_NATIVE_LOCATION__ || null;
     document.documentElement.classList.add('trypo-native');
     var meta = document.querySelector('meta[name="viewport"]');
-    var content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover';
+    var content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content';
     if (meta) meta.setAttribute('content', content);
     else {
       meta = document.createElement('meta');
@@ -129,7 +129,7 @@ const INJECTED_AFTER_LOAD = `
     window.__TRYPO_NATIVE__ = true;
     document.documentElement.classList.add('trypo-native');
     var meta = document.querySelector('meta[name="viewport"]');
-    if (meta) meta.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover');
+    if (meta) meta.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content');
   } catch (e) {}
 })();
 true;

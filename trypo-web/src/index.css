@@ -89,6 +89,23 @@ button {
   font: inherit;
 }
 
+/* ---- Mobile keyboard stability ----
+   iOS Safari auto-zooms on focus when field text is < 16px; the zoom and
+   snap-back is what randomly dismisses the keyboard on phones. Keep field
+   text at 16px everywhere (beats Tailwind text-* classes on purpose). */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+select,
+textarea {
+  font-size: 16px !important;
+}
+
+/* Kill double-tap-zoom / tap-delay on every button (was native-shell only).
+   Delayed + mis-targeted taps were another keyboard-dismiss source. */
+button,
+[role="button"] {
+  touch-action: manipulation;
+}
+
 img,
 video,
 canvas {

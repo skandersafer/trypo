@@ -100,6 +100,7 @@ export type DbBooking = {
   currency?: string
   notes?: string | null
   details?: any
+  itinerary_item_id?: string | null
   created_at?: string
 }
 
@@ -1468,6 +1469,10 @@ export async function addBooking(booking: any): Promise<DbBooking> {
     currency: booking.currency || "USD",
     notes: booking.notes ?? null,
     details: booking.details,
+    // Keep the linked itinerary row on the LOCAL copy too (it used to live
+    // only on the server row), so a transport deleted from the Transport
+    // screen can also delete its linked itinerary item while offline.
+    itinerary_item_id: booking.itinerary_item_id ?? booking.itineraryItemId ?? null,
     created_at: new Date().toISOString(),
   }
 

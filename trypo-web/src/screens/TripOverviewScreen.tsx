@@ -1616,15 +1616,33 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
         // Route legs from synced bookings: a transport saved on another
         // account arrives here as itinerary/booking rows — render them as
         // leg cards so every account sees the same route. Entries already
-        // set on this device win over the hydrated copy.
+        // set on this device win over the hydrated copy. Legs whose linked
+        // booking rows are GONE (e.g. deleted from the Transport screen) are
+        // pruned: without this the localStorage copy kept resurrecting a
+        // deleted leg forever. Pruning is safe — any leg with booking rows
+        // re-hydrates from them on the next load.
         const hydratedLegs = hydrateLegsFromBookings(
           (tripData as any).bookings,
           (tripData as any).itinerary_items,
           normalizedStops,
         )
-        if (Object.keys(hydratedLegs).length > 0) {
-          setTransportLegs((prev) => ({ ...hydratedLegs, ...prev }))
-        }
+        setTransportLegs((prev) => {
+          const merged = { ...hydratedLegs, ...prev }
+          const itemsById = new Map<string, any>()
+          for (const it of (tripData as any).itinerary_items || []) if (it?.id) itemsById.set(it.id, it)
+          const bookings = (tripData as any).bookings || []
+          const pruned: Record<string, TransportLeg> = {}
+          for (const [key, leg] of Object.entries(merged)) {
+            if (!leg || leg.icon === "➕") continue
+            const linked = bookings.some(
+              (b: any) =>
+                (b?.booking_type === "transport" || b?.booking_type === "flight") &&
+                legKeyForBooking(b, itemsById, normalizedStops) === key,
+            )
+            if (linked) pruned[key] = leg
+          }
+          return pruned
+        })
 
         void getUserTripPermission(activeId, user?.id || user?.email).then((perm) => {
           setUserRole(perm.role)
@@ -3192,8 +3210,12 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
                     : priceText.includes("د.ت")
                       ? "TND"
                       : "EUR"
+                // Strip everything but digits/decimal separators: the leg
+                // price carries a currency symbol ("$89", "50 €") and the old
+                // regex KEPT the symbol, so Number() returned NaN and every
+                // transport was saved with amount null → budget zero.
                 const amount = priceText
-                  ? Number(priceText.replace(/[^\d.,€$£دت]/g, "").replace(",", ".")) || null
+                  ? Number(priceText.replace(/[^0-9.,-]/g, "").replace(",", ".")) || null
                   : null
                 const [fromId, toId] = legModalKey.split("→")
                 const fromStop = stops.find((s) => s.id === fromId)

@@ -80,6 +80,9 @@ export default function TransportScreen({ navigate, openBooking, goBack }: Props
     try {
       await deleteBooking(transportId)
       if (t.itineraryItemId) await deleteItineraryItem(t.itineraryItemId)
+      // Drop it locally right away so the TripOverview leg (which prunes
+      // legs without booking rows on its next load) disappears too.
+      setTransportsList((prev) => prev.filter((x) => String(x.id) !== transportId))
     } catch (e) {
       console.error("Failed to delete transport:", e)
     } finally {

@@ -280,6 +280,36 @@ export default function AuthScreen({ onSuccess, navigate }: Props) {
           </div>
         )}
 
+        {!recovery && !isForgotPassword && (
+          <>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={() => continueWithProvider("google")}
+                className="rounded-xl border border-slate-200 py-3 text-sm font-bold text-slate-700 disabled:opacity-60"
+              >
+                Google
+              </button>
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={() => continueWithProvider("apple")}
+                className="rounded-xl border border-slate-200 py-3 text-sm font-bold text-slate-700 disabled:opacity-60"
+              >
+                Apple
+              </button>
+            </div>
+            <div className="flex items-center gap-3 mb-5">
+              <div className="h-px flex-1 bg-slate-200" />
+              <span className="text-[10px] font-bold uppercase text-slate-400">
+                or continue with email
+              </span>
+              <div className="h-px flex-1 bg-slate-200" />
+            </div>
+          </>
+        )}
+
         {recovery ? (
           <>
             <h2 className="text-xl font-black mb-1">Choose a new password</h2>
@@ -321,6 +351,15 @@ export default function AuthScreen({ onSuccess, navigate }: Props) {
             />
             {!isForgotPassword && (
               <>
+                <input
+                  required
+                  minLength={6}
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="Password"
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 mt-3 outline-none focus:border-[#3B41C8]"
+                />
                 {!isSignup && (
                   <button
                     type="button"
@@ -333,15 +372,6 @@ export default function AuthScreen({ onSuccess, navigate }: Props) {
                     Forgot password?
                   </button>
                 )}
-                <input
-                  required
-                  minLength={6}
-                  type="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  placeholder="Password"
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 mt-3 outline-none focus:border-[#3B41C8]"
-                />
               </>
             )}
           </>
@@ -367,36 +397,6 @@ export default function AuthScreen({ onSuccess, navigate }: Props) {
                   ? "Create my account"
                   : "Log in to Trypo"}
         </button>
-
-        {!recovery && !isForgotPassword && (
-          <>
-            <div className="flex items-center gap-3 my-4">
-              <div className="h-px flex-1 bg-slate-200" />
-              <span className="text-[10px] font-bold uppercase text-slate-400">
-                or continue with
-              </span>
-              <div className="h-px flex-1 bg-slate-200" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                disabled={submitting}
-                onClick={() => continueWithProvider("google")}
-                className="rounded-xl border border-slate-200 py-3 text-sm font-bold text-slate-700 disabled:opacity-60"
-              >
-                Google
-              </button>
-              <button
-                type="button"
-                disabled={submitting}
-                onClick={() => continueWithProvider("apple")}
-                className="rounded-xl border border-slate-200 py-3 text-sm font-bold text-slate-700 disabled:opacity-60"
-              >
-                Apple
-              </button>
-            </div>
-          </>
-        )}
 
         {(isForgotPassword || recovery) && (
           <button

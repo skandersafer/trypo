@@ -2,10 +2,8 @@ import { useEffect, useState } from "react"
 import type { Screen } from "../App"
 import { useAuth, useMyAvatar } from "../lib/auth"
 import {
-  getActiveTripId,
   getCommunityTripPlan,
   getMyTrips,
-  getTripDetails,
   setActiveTripId,
 } from "../lib/trips"
 import { useMyNotifications, useMyTripsRealtime, useCommunityFeed } from "../lib/communityLive"
@@ -28,7 +26,6 @@ function greeting(): string {
 export default function HomeScreen({ navigate }: Props) {
   const { user } = useAuth()
   const [myTrips, setMyTrips] = useState<Array<any>>([])
-  const [activeTrip, setActiveTrip] = useState<any>(null)
   const { unread: unreadNotifs } = useMyNotifications()
   const { trips: communityFeed } = useCommunityFeed()
 
@@ -48,6 +45,8 @@ export default function HomeScreen({ navigate }: Props) {
           dates:
             [trip.start_date, trip.end_date].filter(Boolean).join(" – ") ||
             "Dates to be set",
+          startDate: trip.start_date ? String(trip.start_date).slice(0, 10) : null,
+          endDate: trip.end_date ? String(trip.end_date).slice(0, 10) : null,
           dests: destinations.length,
           progress: trip.planning_progress || 0,
           image:
@@ -56,8 +55,6 @@ export default function HomeScreen({ navigate }: Props) {
         }
       })
       setMyTrips(mapped)
-      const details = await getTripDetails()
-      setActiveTrip(details ?? null)
     } catch {
       /* offline — keep cached UI */
     }
@@ -76,28 +73,63 @@ export default function HomeScreen({ navigate }: Props) {
   const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Traveler"
   const myAvatar = useMyAvatar()
   const isDesktop = useIsDesktop()
-  const currentActiveId = getActiveTripId()
-  const upcomingTrip =
-    myTrips.find((t) => t.id === currentActiveId) ||
-    (activeTrip
-      ? {
-          id: activeTrip.id,
-          name: activeTrip.title,
-          destinations: activeTrip.trip_destinations ?? [],
-          route:
-            (activeTrip.trip_destinations ?? []).map((d: any) => d.city).join(" → ") ||
-            "No destinations yet",
-          dates:
-            [activeTrip.start_date, activeTrip.end_date].filter(Boolean).join(" – ") ||
-            "Dates to be set",
-          dests: (activeTrip.trip_destinations ?? []).length,
-          progress: activeTrip.planning_progress || 0,
-          image:
-            activeTrip.cover_image_url ||
-            "https://images.unsplash.com/photo-1532370184535-22cec5ca8480?w=800&h=500&fit=crop&auto=format",
-        }
-      : null) ||
-    (myTrips.length > 0 ? myTrips[0] : null)
+  // Nearest trip as of today: ongoing first, then the closest future start,
+  // then dateless trips, then the most recently ended one. Never a stale
+  // last-opened or list-order pick.
+  const pickNearestTrip = (list: Array<any>): any | null => {
+    if (list.length === 0) return null
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const day = (v: string | null): number | null => {
+      if (!v) return null
+      const d = new Date(`${v}T00:00:00`)
+      return Number.isNaN(d.getTime()) ? null : d.getTime()
+    }
+    const now = today.getTime()
+    const ongoing = list
+      .filter((t) => {
+        const s = day(t.startDate)
+        const e = day(t.endDate)
+        return s !== null && s <= now && (e === null || e >= now)
+      })
+      .sort((a, b) => day(a.startDate)! - day(b.startDate)!)[0]
+    if (ongoing) return ongoing
+    const upcoming = list
+      .filter((t) => {
+        const s = day(t.startDate)
+        return s !== null && s > now
+      })
+      .sort((a, b) => day(a.startDate)! - day(b.startDate)!)[0]
+    if (upcoming) return upcoming
+    const dateless = list.find((t) => day(t.startDate) === null)
+    if (dateless) return dateless
+    const past = list
+      .filter((t) => {
+        const e = day(t.endDate)
+        return e !== null && e < now
+      })
+      .sort((a, b) => day(b.endDate)! - day(a.endDate)!)[0]
+    return past || list[0]
+  }
+  const upcomingTrip = pickNearestTrip(myTrips)
+
+  const upcomingBadge = (() => {
+    if (!upcomingTrip?.startDate) return null
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const start = new Date(`${upcomingTrip.startDate}T00:00:00`)
+    if (Number.isNaN(start.getTime())) return null
+    const end = upcomingTrip.endDate ? new Date(`${upcomingTrip.endDate}T00:00:00`) : null
+    const validEnd = end && !Number.isNaN(end.getTime()) ? end : null
+    if (start.getTime() <= today.getTime() && (!validEnd || validEnd.getTime() >= today.getTime())) {
+      return validEnd
+        ? `Ongoing · ends ${validEnd.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+        : "Ongoing"
+    }
+    const diff = Math.round((start.getTime() - today.getTime()) / 86400000)
+    if (diff <= 0) return null
+    return diff === 1 ? "Starts tomorrow" : `In ${diff} days`
+  })()
 
   const openTrip = (id?: string) => {
     if (id) setActiveTripId(id)
@@ -195,10 +227,15 @@ export default function HomeScreen({ navigate }: Props) {
               className="absolute inset-0"
               style={{ background: "linear-gradient(to top, rgba(13,15,46,0.88) 0%, rgba(13,15,46,0.15) 60%, transparent 100%)" }}
             />
-            <div className="absolute top-3 right-3">
+            <div className="absolute top-3 right-3 flex flex-col items-end gap-1.5">
               <span className="px-3 py-1 rounded-full text-[11px] font-bold text-white" style={{ background: "rgba(13,15,46,0.55)", backdropFilter: "blur(8px)" }}>
                 {upcomingTrip.dates}
               </span>
+              {upcomingBadge && (
+                <span className="px-3 py-1 rounded-full text-[11px] font-black text-white" style={{ background: "linear-gradient(135deg, #3B41C8, #06C4D4)", boxShadow: "0 4px 12px rgba(59,65,200,0.4)" }}>
+                  {upcomingBadge}
+                </span>
+              )}
             </div>
             <div className="absolute bottom-0 left-0 right-0 p-4">
               <h3 className="text-white font-black text-[18px] leading-tight truncate">{upcomingTrip.name}</h3>

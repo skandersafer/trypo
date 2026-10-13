@@ -22,6 +22,7 @@ import {
 } from "../lib/communityLive"
 import { getCommunityTripSelection } from "../lib/community"
 import { useIsDesktop } from "../lib/useIsDesktop"
+import { HeartIcon, NoteIcon, PlaneIcon, SparklesIcon } from "../components/icons"
 
 interface Props {
   navigate: (s: Screen) => void
@@ -73,19 +74,19 @@ const DEFAULT_AVATAR =
   "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop"
 
 const typeLabel: Record<CommentType, { label: string; color: string; bg: string }> = {
-  advice: { label: "💡 Tip", color: "#3B41C8", bg: "rgba(59,65,200,0.08)" },
+  advice: { label: "Tip", color: "#3B41C8", bg: "rgba(59,65,200,0.08)" },
   opinion: {
-    label: "💬 Opinion",
+    label: "Opinion",
     color: "#7C3AED",
     bg: "rgba(124,58,237,0.08)",
   },
   question: {
-    label: "❓ Question",
+    label: "Question",
     color: "#f59e0b",
     bg: "rgba(245,158,11,0.1)",
   },
   "join-interest": {
-    label: "✈️ Wants to join",
+    label: "Wants to join",
     color: "#FF6347",
     bg: "rgba(255,99,71,0.08)",
   },
@@ -310,16 +311,16 @@ export default function CommunityTripDetailScreen({
   const joinRequested = sentOptimistic || joinStatus === "pending"
 
   const joinLabel = isOwner
-    ? "✅ Your Trip"
+    ? "Your trip"
     : !signedIn
-      ? "🔐 Sign in to Join"
+      ? "Sign in to Join"
       : acceptedMember
-        ? "🚪 Leave this trip"
+        ? "Leave trip"
         : joinRequested
-          ? "✓ Requested"
+          ? "Requested"
           : joinStatus === "declined"
-            ? "↻ Request Again"
-            : "✈️ Request to Join"
+            ? "Request again"
+            : "Request to Join"
 
   const sendJoinRequest = async () => {
     const tripId = viewTrip?.id ? String(viewTrip.id) : ""
@@ -342,11 +343,11 @@ export default function CommunityTripDetailScreen({
       setRequestInfo(
         isOwner
           ? "This is your trip — manage join requests from Trip Social"
-          : "You're already part of this trip's crew 🎉",
+          : "You're already part of this trip's crew",
       )
       return
     }
-    setRequestInfo("✓ Request sent — the organizer will review it")
+    setRequestInfo("Request sent — the organizer will review it")
     setSentOptimistic(true)
     void refreshJoinStatus()
   }
@@ -397,7 +398,6 @@ export default function CommunityTripDetailScreen({
     return (
       <div className="min-h-full bg-surface flex flex-col items-center justify-center px-8 text-center">
         <div className="pt-12" />
-        <span className="text-5xl mb-4">🌍</span>
         <h1 className="text-navy font-black text-[18px] mb-2">
           No community trip selected
         </h1>
@@ -490,7 +490,7 @@ export default function CommunityTripDetailScreen({
 
       {/* Author + stats */}
       <div
-        className="bg-white px-5 md:px-8 py-3 flex items-center gap-3"
+        className="bg-white px-5 md:px-8 py-3.5 flex items-center gap-3"
         style={{ boxShadow: "0 2px 8px rgba(59,65,200,0.06)" }}
       >
         <img
@@ -501,22 +501,34 @@ export default function CommunityTripDetailScreen({
         />
         <div className="flex-1">
           <p className="text-navy font-black text-[14px]">
-            {trip.author} {trip.flag}
+            {trip.author}
           </p>
           <p className="text-slate-400 text-[11px]">
             {trip.duration} · {trip.budget}
           </p>
         </div>
         <div className="flex gap-3 text-[12px] text-slate-400">
-          <span>❤️ {reactionTotal}</span>
-          <span>✈️ {trip.joiners + (acceptedMember ? 1 : 0)}</span>
-          <span>💬 {comments.length}</span>
+          <span className="flex items-center gap-1">
+            <HeartIcon size={12} />
+            <span className="font-bold text-navy">{reactionTotal}</span>
+            <span className="text-slate-400">likes</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <PlaneIcon size={12} />
+            <span className="font-bold text-navy">{trip.joiners + (acceptedMember ? 1 : 0)}</span>
+            <span className="text-slate-400">going</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <NoteIcon size={12} />
+            <span className="font-bold text-navy">{comments.length}</span>
+            <span className="text-slate-400">comments</span>
+          </span>
         </div>
       </div>
 
       {/* Accepted crew roster (visible to members/owner) */}
       {crew.length > 0 && (
-        <div className="px-5 md:px-8 py-3 bg-white border-t border-slate-50 flex items-center gap-3 overflow-hidden">
+        <div className="px-5 md:px-8 py-4 bg-white border-t border-slate-50 flex items-center gap-3 overflow-hidden mb-4">
           <span className="text-[10px] font-black text-slate-400 tracking-wide uppercase shrink-0">
             Crew
           </span>
@@ -531,58 +543,44 @@ export default function CommunityTripDetailScreen({
               />
             ))}
           </div>
-          <div className="flex flex-wrap gap-x-2 gap-y-0.5 min-w-0">
-            {crew.slice(0, 3).map((m) => (
-              <span
-                key={m.user_id}
-                className="text-[11px] font-bold text-navy truncate"
-              >
-                {m.name}
-                {m.role === "owner"
-                  ? " · Organizer"
-                  : m.role === "editor"
-                    ? " · Editor"
-                    : ""}
-              </span>
-            ))}
-            {crew.length > 3 && (
-              <span className="text-[11px] font-bold text-slate-400">
-                +{crew.length - 3}
-              </span>
-            )}
-          </div>
+          <p className="text-[11px] font-bold text-navy truncate">
+            {crew.slice(0, 3).map((m) => m.name).join(", ")}
+            {crew.length > 3 ? ` +${crew.length - 3}` : ""}
+          </p>
         </div>
       )}
 
       {/* Reaction + Join row */}
-      <div className="px-5 md:px-8 py-3 flex gap-2 bg-white border-t border-slate-50">
+      <div className="px-5 md:px-8 py-4 flex gap-2 bg-white border-t border-slate-50 mb-4 items-stretch">
         <button
           onClick={() => {
             if (contentId) void toggleTripReaction(contentId)
           }}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-bold flex-1 justify-center"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-bold flex-1 justify-center min-h-[44px] whitespace-nowrap"
           style={{
             background: myReaction ? "rgba(255,99,71,0.1)" : "rgba(241,245,249,1)",
             color: myReaction ? "#FF6347" : "#64748b",
             outline: myReaction ? "2px solid rgba(255,99,71,0.3)" : "none",
           }}
         >
-          🔥 Epic {reactionTotal > 0 && ` ${reactionTotal}`}
+          <SparklesIcon size={14} />
+          <span>Epic{reactionTotal > 0 && ` ${reactionTotal}`}</span>
         </button>
         <button
           onClick={() => navigate("trip-social")}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-bold flex-1 justify-center"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-bold flex-1 justify-center min-h-[44px] whitespace-nowrap"
           style={{
             background: "rgba(241,245,249,1)",
             color: "#3B41C8",
           }}
         >
-          💬 Comment
+          <NoteIcon size={14} />
+          <span>Comment</span>
         </button>
         <button
           onClick={onJoinTap}
           disabled={joinDisabled || requestFlow === "sending"}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-black flex-1 justify-center text-white"
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-black flex-1 justify-center text-white min-h-[44px] whitespace-nowrap"
           style={{
             background:
               isOwner
@@ -598,9 +596,9 @@ export default function CommunityTripDetailScreen({
       </div>
 
       {requestFlow === "error" && requestError && (
-        <div className="px-5 md:px-8">
+        <div className="px-5 md:px-8 mb-4">
           <div className="p-3 rounded-xl bg-red-50 text-red-600 text-[12px] font-bold">
-            ⚠️ {requestError}
+            {requestError}
           </div>
           {(requestError === NOT_SIGNED_IN_MESSAGE ||
             requestError === ACCOUNT_MISMATCH_MESSAGE) && (
@@ -612,14 +610,14 @@ export default function CommunityTripDetailScreen({
                 color: "white",
               }}
             >
-              🔐 Sign in to request to join
+              Sign in to request to join
             </button>
           )}
         </div>
       )}
 
       {requestInfo && (
-        <div className="px-5 md:px-8">
+        <div className="px-5 md:px-8 mb-4">
           <div className="p-3 rounded-xl bg-emerald-50 text-emerald-700 text-[12px] font-bold">
             {requestInfo}
           </div>
@@ -627,7 +625,7 @@ export default function CommunityTripDetailScreen({
       )}
 
       {/* About */}
-      <div className="px-5 md:px-8 py-4 bg-white border-t border-slate-50 mb-2">
+      <div className="px-5 md:px-8 py-4 bg-white border-t border-slate-50 mb-4">
         <p className="text-slate-600 text-[13px] leading-relaxed mb-2">
           {trip.about}
         </p>
@@ -651,13 +649,13 @@ export default function CommunityTripDetailScreen({
               color: "#3B41C8",
             }}
           >
-            🙋 Manage join requests for this trip
+            Manage join requests
           </button>
         )}
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 px-5 md:px-8 mb-4 mt-2">
+      <div className="flex gap-1 px-5 md:px-8 mb-4">
         {(["plan", "comments"] as const).map((t) => (
           <button
             key={t}
@@ -673,8 +671,8 @@ export default function CommunityTripDetailScreen({
             }}
           >
             {t === "plan"
-              ? `🗺 Trip Plan (${trip.stops.length} stops)`
-              : `💬 Comments (${comments.length})`}
+              ? `Trip Plan (${trip.stops.length} stops)`
+              : `Comments (${comments.length})`}
           </button>
         ))}
       </div>
@@ -696,7 +694,7 @@ export default function CommunityTripDetailScreen({
                       background: "linear-gradient(135deg, #3B41C8, #06C4D4)",
                     }}
                   >
-                    {stop.emoji}
+                    {i + 1}
                   </div>
                   {i < trip.stops.length - 1 && (
                     <div
@@ -807,7 +805,7 @@ export default function CommunityTripDetailScreen({
             {requestFlow === "sending"
               ? "Sending…"
               : joinRequested
-                ? "✓ Join Request Sent!"
+                ? "Join Request Sent"
                 : joinLabel}
           </button>
           {joinRequested && !isOwner && (
@@ -817,7 +815,7 @@ export default function CommunityTripDetailScreen({
           )}
           {joinStatus === "accepted" && !isOwner && (
             <p className="text-center text-emerald-600 text-[11px] mt-2">
-              You're part of the crew — see you on the road! 🎉
+              You're part of the crew — see you on the road!
             </p>
           )}
         </div>
@@ -905,7 +903,6 @@ export default function CommunityTripDetailScreen({
           <div className={isDesktop ? "grid grid-cols-1 lg:grid-cols-2 gap-3" : "flex flex-col gap-3"}>
             {comments.length === 0 && (
               <div className="flex flex-col items-center py-10 text-center">
-                <span className="text-4xl mb-2">💬</span>
                 <p className="text-navy font-black text-[14px]">
                   Start the discussion
                 </p>
@@ -937,7 +934,6 @@ export default function CommunityTripDetailScreen({
                         <span className="text-navy font-black text-[13px]">
                           {c.name}
                         </span>
-                        <span>{c.flag}</span>
                       </div>
                       <p className="text-slate-400 text-[10px]">{c.time}</p>
                     </div>
@@ -962,8 +958,8 @@ export default function CommunityTripDetailScreen({
       {showLeaveModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/60 backdrop-blur-sm">
           <div className="bg-white rounded-[28px] max-w-sm w-full p-6 shadow-2xl border border-slate-100 flex flex-col items-center text-center">
-            <div className="w-14 h-14 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center text-2xl mb-3.5 border border-orange-100">
-              🚪
+            <div className="w-14 h-14 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center text-2xl font-black mb-3.5 border border-orange-100">
+              !
             </div>
             <h3 className="text-[17px] font-black text-navy mb-1.5">
               Leave this trip?
@@ -975,7 +971,7 @@ export default function CommunityTripDetailScreen({
             </p>
             {leaveError && (
               <div className="mb-6 w-full p-3 rounded-xl bg-red-50 text-red-600 text-[12px] font-bold">
-                ⚠️ {leaveError}
+                {leaveError}
               </div>
             )}
             <div className="flex w-full gap-2.5">

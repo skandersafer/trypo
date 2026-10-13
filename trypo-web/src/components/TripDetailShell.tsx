@@ -1,6 +1,6 @@
 import { useState } from "react"
 import type { Screen } from "../App"
-import { ToolIcon } from "./icons"
+import { ToolIcon, GlobeIcon, CalendarIcon, BedIcon, WalletIcon, DotsIcon } from "./icons"
 
 interface Props {
   current: Screen
@@ -9,12 +9,12 @@ interface Props {
   children: React.ReactNode
 }
 
-const GROUPS: Array<{ key: string; label: string; screens: Screen[]; target: Screen }> = [
-  { key: "overview", label: "Overview", screens: ["trip-overview"], target: "trip-overview" },
-  { key: "plan", label: "Plan", screens: ["itinerary", "map", "weather"], target: "itinerary" },
-  { key: "book", label: "Book", screens: ["find-stay", "stay-details", "transport", "bookings", "booking-detail"], target: "find-stay" },
-  { key: "budget", label: "Budget", screens: ["budget", "split-bills", "currency"], target: "budget" },
-  { key: "more", label: "More", screens: ["packing-list", "crew-tracker", "collaborative", "trip-memories", "hidden-gems", "vibe-match"], target: "packing-list" },
+const GROUPS: Array<{ key: string; label: string; screens: Screen[]; target: Screen; Icon: (p: { size?: number }) => React.ReactElement }> = [
+  { key: "overview", label: "Overview", screens: ["trip-overview"], target: "trip-overview", Icon: GlobeIcon },
+  { key: "plan", label: "Plan", screens: ["itinerary", "map", "weather"], target: "itinerary", Icon: CalendarIcon },
+  { key: "book", label: "Book", screens: ["find-stay", "stay-details", "transport", "bookings", "booking-detail"], target: "find-stay", Icon: BedIcon },
+  { key: "budget", label: "Budget", screens: ["budget", "split-bills", "currency"], target: "budget", Icon: WalletIcon },
+  { key: "more", label: "More", screens: ["packing-list", "crew-tracker", "collaborative", "trip-memories", "hidden-gems", "vibe-match"], target: "packing-list", Icon: DotsIcon },
 ]
 
 const MORE_TOOLS: Array<{ label: string; hint: string; target: Screen }> = [
@@ -72,7 +72,7 @@ export default function TripDetailShell({ current, navigate, goBack, children }:
                 <button
                   key={g.key}
                   onClick={() => goTab(g.key)}
-                  className="flex-shrink-0 px-4 py-2 rounded-full text-[12px] transition-all"
+                  className="flex-shrink-0 px-4 py-2 rounded-full text-[12px] transition-all flex items-center gap-1.5"
                   style={{
                     background: isActive ? "#0D0F2E" : "#FFFFFF",
                     color: isActive ? "#FFFFFF" : "#64748B",
@@ -80,6 +80,7 @@ export default function TripDetailShell({ current, navigate, goBack, children }:
                     border: isActive ? "1px solid #0D0F2E" : "1px solid #EEF0F8",
                   }}
                 >
+                  <g.Icon size={14} />
                   {g.label}
                 </button>
               )

@@ -7,7 +7,7 @@ import GoogleMapsPlacePicker from "../components/GoogleMapsPlacePicker"
 import { useAuth } from "../lib/auth"
 import { searchDestinations, type DestinationSuggestion } from "../lib/travelApi"
 import { hasMapboxToken } from "../lib/mapbox"
-import { TransportIcon, MapIcon } from "../components/icons"
+import { TransportIcon, MapIcon, ToolIcon } from "../components/icons"
 import { addBooking, addItineraryItem, updateBooking, updateItineraryItem, deleteBooking, deleteItineraryItem, claimMissingServerMembership, generateTripInviteCode, getActiveTripId, getDestinationStayDays, getMyTrips, getTripDetails, getUserTripPermission, setActiveTripId, syncTripDestinations, deleteTrip, generateUuid, updateTripDates } from "../lib/trips"
 import { getMyTripMembership, setTripVisibility } from "../lib/communityLive"
 import { useIsDesktop } from "../lib/useIsDesktop"
@@ -2887,61 +2887,51 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
           {[
             {
-              icon: "PL",
               label: "Packing List",
               sub: "9/15 packed",
               screen: "packing-list" as Screen,
             },
             {
-              icon: "W",
               label: "Weather",
               sub: "Tunis 28°C",
               screen: "weather" as Screen,
             },
             {
-              icon: "CU",
               label: "Currency",
               sub: `1 USD = ${liveRates.TND ? liveRates.TND.toFixed(2) : "2.91"} TND`,
               screen: "currency" as Screen,
             },
             {
-              icon: "TC",
               label: "Trip Crew",
               sub: "3 travelers",
               screen: "collaborative" as Screen,
             },
             {
-              icon: "SB",
               label: "Split Bills",
               sub: "$317 total · 3 people",
               screen: "split-bills" as Screen,
             },
             {
-              icon: "FC",
               label: "Find Crew",
               sub: "Sarah 12min · Marco 32min",
               screen: "crew-tracker" as Screen,
             },
             {
-              icon: "HG",
               label: "Hidden Gems",
               sub: stops.length > 0 ? `Secrets in ${stops.map((s) => s.city).slice(0, 2).join(" & ")}` : "Local secrets nearby",
               screen: "hidden-gems" as Screen,
             },
             {
-              icon: "VM",
               label: "Vibe Match",
               sub: "Match today's mood",
               screen: "vibe-match" as Screen,
             },
             {
-              icon: "CO",
               label: "Community",
               sub: "312 views · 3 join requests",
               screen: "trip-social" as Screen,
             },
             {
-              icon: "ME",
               label: "Memories",
               sub: "Map style · photos · slideshow",
               screen: "trip-memories" as Screen,
@@ -2977,7 +2967,7 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
               className="bg-white rounded-2xl p-3.5 flex items-center gap-3 text-left cursor-pointer transition-transform active:scale-98"
               style={{ boxShadow: "0 2px 8px rgba(59,65,200,0.07)" }}
             >
-              <span className="w-9 h-9 rounded-xl flex items-center justify-center text-[12px] font-black text-brand flex-shrink-0" style={{ background: "rgba(59,65,200,0.07)" }}>{tool.icon}</span>
+              <span className="w-9 h-9 rounded-xl flex items-center justify-center text-brand flex-shrink-0" style={{ background: "rgba(59,65,200,0.07)" }}><ToolIcon name={tool.label} size={18} /></span>
               <div>
                 <p className="text-navy font-bold text-[13px]">{tool.label}</p>
                 <p className="text-slate-400 text-[10px]">{tool.sub}</p>

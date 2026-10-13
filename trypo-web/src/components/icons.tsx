@@ -273,8 +273,17 @@ export function CheckIcon(props: IconProps) {
   )
 }
 
-export function ChevronIcon(props: IconProps) {
+export function DotsIcon(props: IconProps) {
   return (
+    <Svg {...props}>
+      <circle cx="5" cy="12" r="1.2" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none" />
+      <circle cx="19" cy="12" r="1.2" fill="currentColor" stroke="none" />
+    </Svg>
+  )
+}
+
+export function ChevronIcon(props: IconProps) {  return (
     <Svg {...props}>
       <path d="M9 5l7 7-7 7" />
     </Svg>

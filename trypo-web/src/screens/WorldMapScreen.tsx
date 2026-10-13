@@ -57,6 +57,8 @@ export type Country = {
   citiesCount: number
   memoriesCount: number
   visited: boolean
+  /** True when checked manually on the map (not from a trip). */
+  manual?: boolean
   cities: CitySpot[]
   photos: MemoryPhoto[]
   stories: MemoryStory[]
@@ -1147,6 +1149,13 @@ const FLAG_BY_COUNTRY: Record<string, string> = {
   norvege: "🇳🇴", sweden: "🇸🇪", suede: "🇸🇪", denmark: "🇩🇰", danemark: "🇩🇰",
   finland: "🇫🇮", finlande: "🇫🇮", iceland: "🇮🇸", islande: "🇮🇸",
   china: "🇨🇳", chine: "🇨🇳", "south korea": "🇰🇷", "czech republic": "🇨🇿",
+  brazil: "🇧🇷", argentina: "🇦🇷", chile: "🇨🇱",
+  malaysia: "🇲🇾", singapore: "🇸🇬", philippines: "🇵🇭",
+  "saudi arabia": "🇸🇦", "united arab emirates": "🇦🇪", qatar: "🇶🇦",
+  nigeria: "🇳🇬", ghana: "🇬🇭", senegal: "🇸🇳", ethiopia: "🇪🇹",
+  romania: "🇷🇴", ukraine: "🇺🇦", russia: "🇷🇺",
+  israel: "🇮🇱", jordan: "🇯🇴", lebanon: "🇱🇧", "new zealand": "🇳🇿",
+  tanzania: "🇹🇿", madagascar: "🇲🇬", libya: "🇱🇾", libye: "🇱🇾",
 }
 
 const CONTINENT_BY_COUNTRY: Record<string, Country["continent"]> = {
@@ -1166,11 +1175,112 @@ const CONTINENT_BY_COUNTRY: Record<string, Country["continent"]> = {
   canada: "Americas", brazil: "Americas", bresil: "Americas",
   australia: "Oceania", australie: "Oceania",
   china: "Asia", chine: "Asia", "south korea": "Asia", "czech republic": "Europe",
+  // Extended so a manually checked country lands on the right continent tab.
+  "united states of america": "Americas", canada: "Americas", brazil: "Americas",
+  argentine: "Americas", chile: "Americas", venezuela: "Americas", ecuador: "Americas",
+  bolivia: "Americas", paraguay: "Americas", uruguay: "Americas", cuba: "Americas",
+  jamaica: "Americas", haiti: "Americas", "dominican republic": "Americas",
+  "costa rica": "Americas", panama: "Americas", guatemala: "Americas",
+  honduras: "Americas", nicaragua: "Americas", "el salvador": "Americas",
+  bahamas: "Americas", greenland: "Americas",
+  malaysia: "Asia", singapore: "Asia", philippines: "Asia", cambodia: "Asia",
+  laos: "Asia", myanmar: "Asia", "sri lanka": "Asia", pakistan: "Asia",
+  bangladesh: "Asia", mongolia: "Asia", kazakhstan: "Asia", uzbekistan: "Asia",
+  georgia: "Asia", armenia: "Asia", azerbaijan: "Asia", israel: "Asia",
+  jordan: "Asia", lebanon: "Asia", "saudi arabia": "Asia",
+  "united arab emirates": "Asia", qatar: "Asia", kuwait: "Asia", oman: "Asia",
+  yemen: "Asia", iraq: "Asia", iran: "Asia", russia: "Asia",
+  "north korea": "Asia", taiwan: "Asia", "hong kong": "Asia",
+  libya: "Africa", libye: "Africa", sudan: "Africa", ethiopia: "Africa",
+  somalia: "Africa", djibouti: "Africa", eritrea: "Africa", chad: "Africa",
+  niger: "Africa", mali: "Africa", "burkina faso": "Africa", senegal: "Africa",
+  mauritania: "Africa", gambia: "Africa", "guinea-bissau": "Africa",
+  guinea: "Africa", "sierra leone": "Africa", liberia: "Africa",
+  "ivory coast": "Africa", "côte d'ivoire": "Africa", ghana: "Africa",
+  togo: "Africa", benin: "Africa", nigeria: "Africa", cameroon: "Africa",
+  "central african republic": "Africa", "south sudan": "Africa", uganda: "Africa",
+  rwanda: "Africa", burundi: "Africa", tanzania: "Africa", congo: "Africa",
+  "democratic republic of the congo": "Africa", gabon: "Africa", angola: "Africa",
+  namibia: "Africa", botswana: "Africa", zimbabwe: "Africa", mozambique: "Africa",
+  malawi: "Africa", zambia: "Africa", lesotho: "Africa", eswatini: "Africa",
+  madagascar: "Africa", mauritius: "Africa", seychelles: "Africa",
+  "cape verde": "Africa", comoros: "Africa", "sao tome and principe": "Africa",
+  albania: "Europe", serbia: "Europe", "bosnia and herzegovina": "Europe",
+  montenegro: "Europe", "north macedonia": "Europe", slovenia: "Europe",
+  slovakia: "Europe", romania: "Europe", bulgaria: "Europe", moldova: "Europe",
+  ukraine: "Europe", belarus: "Europe", lithuania: "Europe", latvia: "Europe",
+  estonia: "Europe", luxembourg: "Europe", malta: "Europe", cyprus: "Europe",
+  andorra: "Europe", monaco: "Europe", liechtenstein: "Europe",
+  "san marino": "Europe", vatican: "Europe",
+  "new zealand": "Oceania", fiji: "Oceania", "papua new guinea": "Oceania",
+  "new caledonia": "Oceania", "french polynesia": "Oceania", samoa: "Oceania",
+  tonga: "Oceania", vanuatu: "Oceania",
 }
 
 function finiteCoord(v: unknown): number | null {
   const n = Number(v)
   return Number.isFinite(n) && n !== 0 ? n : null
+}
+
+// ── Manually checked countries ("I was here", tapped on the map) ───────────
+// Stored per device in localStorage and merged with the automatic trip-based
+// countries. A manual entry never disappears: trips only ADD countries.
+
+const MANUAL_VISITED_KEY = "trypo_manual_visited_v1"
+
+type ManualEntry = {
+  name: string
+  frenchName: string
+  flag: string
+  continent: Country["continent"]
+  year: number
+}
+
+function readManualVisited(): Record<string, ManualEntry> {
+  try {
+    const raw = typeof window !== "undefined" ? localStorage.getItem(MANUAL_VISITED_KEY) : null
+    if (!raw) return {}
+    const parsed = JSON.parse(raw)
+    return parsed && typeof parsed === "object" ? parsed : {}
+  } catch {
+    return {}
+  }
+}
+
+function writeManualVisited(next: Record<string, ManualEntry>): void {
+  try {
+    if (typeof window !== "undefined") localStorage.setItem(MANUAL_VISITED_KEY, JSON.stringify(next))
+  } catch {}
+}
+
+/** English GeoJSON name → French label (best effort, capitalized key). */
+function frenchLabelFor(englishName: string, normKey: string): string {
+  for (const [frKey, en] of Object.entries(ENGLISH_BY_KEY)) {
+    if (normCountryKey(en) === normKey) {
+      return frKey.charAt(0).toUpperCase() + frKey.slice(1)
+    }
+  }
+  return englishName
+}
+
+/** Build a transient (not yet visited) country from a tapped GeoJSON feature. */
+function buildUnvisitedCountry(geoName: string, lng: number, lat: number): Country {
+  const key = normCountryKey(geoName)
+  return {
+    name: geoName,
+    frenchName: frenchLabelFor(geoName, key),
+    flag: FLAG_BY_COUNTRY[key] || "🏳️",
+    continent: CONTINENT_BY_COUNTRY[key] || "Europe",
+    year: new Date().getFullYear(),
+    lat,
+    lng,
+    citiesCount: 0,
+    memoriesCount: 0,
+    visited: false,
+    cities: [],
+    photos: [],
+    stories: [],
+  }
 }
 
 /** Build visited countries from the user's trips (passed trips → on the map). */
@@ -1308,9 +1418,39 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
   // ── Dynamic world: user's own passed trips + uploaded phone photos ──
   const [dynamicCountries, setDynamicCountries] = useState<Country[]>([])
   const [worldPhotos, setWorldPhotos] = useState<Record<string, MemoryPhoto[]>>(() => readWorldPhotos())
+  // Countries the user checked manually by tapping the map.
+  const [manualVisited, setManualVisited] = useState<Record<string, ManualEntry>>(() => readManualVisited())
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const worldFileRef = useRef<HTMLInputElement>(null)
   const modalCountryForUpload = useRef<Country | null>(null)
+
+  const markCountryVisited = (c: Country) => {
+    const key = normCountryKey(c.name)
+    const entry: ManualEntry = {
+      name: c.name,
+      frenchName: c.frenchName || c.name,
+      flag: c.flag || "🏳️",
+      continent: c.continent || "Europe",
+      year: new Date().getFullYear(),
+    }
+    setManualVisited((prev) => {
+      const next = { ...prev, [key]: entry }
+      writeManualVisited(next)
+      return next
+    })
+  }
+
+  const unmarkCountryVisited = (c: Country) => {
+    const key = normCountryKey(c.name)
+    setManualVisited((prev) => {
+      if (!prev[key]) return prev
+      const next = { ...prev }
+      delete next[key]
+      writeManualVisited(next)
+      return next
+    })
+    setSelected(null)
+  }
 
   useEffect(() => {
     let alive = true
@@ -1328,7 +1468,8 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
   }, [])
 
   /** Only the user's own trips color the map — no demo countries.
-   * Passed/underway trips merged with uploaded phone photos. */
+   * Passed/underway trips merged with manually checked countries and
+   * uploaded phone photos. */
   const allCountries = useMemo<Country[]>(() => {
     const byKey = new Map<string, Country>()
     for (const d of dynamicCountries) {
@@ -1349,6 +1490,22 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
         year: Math.max(prev.year, d.year),
       })
     }
+    // Manually checked countries join the map (trip entries win on collision).
+    for (const entry of Object.values(manualVisited)) {
+      const key = normCountryKey(entry.name)
+      if (!byKey.has(key)) {
+        byKey.set(key, {
+          ...entry,
+          citiesCount: 0,
+          memoriesCount: 0,
+          visited: true,
+          manual: true,
+          cities: [],
+          photos: [],
+          stories: [],
+        })
+      }
+    }
     // Uploaded phone photos attach to their country (first = newest).
     for (const c of byKey.values()) {
       const mine = worldPhotos[normCountryKey(c.name)] || []
@@ -1358,7 +1515,7 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
       }
     }
     return [...byKey.values()]
-  }, [dynamicCountries, worldPhotos])
+  }, [dynamicCountries, manualVisited, worldPhotos])
 
   const countriesRef = useRef<Country[]>(allCountries)
   countriesRef.current = allCountries
@@ -1505,6 +1662,23 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
             },
           }
         }
+        // Tapped-but-unvisited preview: subtle white highlight so the user
+        // sees which country they are about to check as visited.
+        const isPreview =
+          sel && !sel.visited && normCountryKey(f?.properties?.name || "") === normCountryKey(sel.name)
+        if (isPreview) {
+          return {
+            ...f,
+            properties: {
+              ...(f.properties || {}),
+              __trypoVisited: false,
+              __fillColor: "#FFFFFF",
+              __fillOpacity: 0.35,
+              __lineColor: "#FFFFFF",
+              __lineWidth: 2,
+            },
+          }
+        }
         return {
           ...f,
           properties: {
@@ -1562,6 +1736,15 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
       if (country) {
         setSelected(country)
         map.flyTo({ center: [country.lng, country.lat], zoom: 5, duration: 1200 })
+        return
+      }
+      // Unvisited country tapped: open it as a preview so the user can
+      // check it as visited manually.
+      const rawName = String((feat?.properties as any)?.name || "").trim()
+      if (rawName && e.lngLat) {
+        const preview = buildUnvisitedCountry(rawName, e.lngLat.lng, e.lngLat.lat)
+        setSelected(preview)
+        map.flyTo({ center: [e.lngLat.lng, e.lngLat.lat], zoom: 4, duration: 1200 })
       }
     })
     map.on("mouseenter", "trypo-countries-fill", () => {
@@ -1661,6 +1844,19 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected])
 
+  // Re-color the globe when the visited list itself changes (trip finished,
+  // manual check/uncheck, photo upload) so new countries light up at once.
+  useEffect(() => {
+    const map = mapInstanceRef.current
+    if (!map || !mapLoadedRef.current) return
+    try {
+      applyCountriesSource(map, selectedRef.current)
+    } catch {
+      // ignore
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allCountries])
+
   // Update city markers on the map when country selection changes
   useEffect(() => {
     cityMarkersRef.current.forEach((m) => m.remove())
@@ -1745,7 +1941,7 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
             <p className="text-4xl mb-2">🗺️</p>
             <p className="text-white font-black text-[15px] mb-1">Ta carte est vierge</p>
             <p className="text-white/55 text-[12px] leading-relaxed">
-              Crée un voyage, termine-le, et chaque pays visité se colorera ici automatiquement 🌍
+              Crée un voyage, termine-le, et chaque pays visité se colorera ici automatiquement 🌍 Ou touche directement un pays pour le cocher ✓
             </p>
           </div>
         </div>
@@ -1851,7 +2047,9 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
                       </span>
                     </div>
                     <p className="text-white/50 text-[11px] font-medium mt-0.5">
-                      Visité en {selected.year} • {selected.cities.length} {selected.cities.length > 1 ? "villes" : "ville"}
+                      {selected.visited
+                        ? `Visité en ${selected.year} • ${selected.cities.length} ${selected.cities.length > 1 ? "villes" : "ville"}`
+                        : "Pas encore visité — marque-le d'une touche ✓"}
                     </p>
                   </div>
                 </div>
@@ -1924,6 +2122,22 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
               )}
 
               {/* Action buttons */}
+              {!selected.visited ? (
+                <div className="flex items-center gap-2 pt-2.5 border-t border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => markCountryVisited(selected)}
+                    className="flex-1 flex items-center justify-center gap-2 py-3 px-3 rounded-2xl font-black text-sm text-white shadow-lg active:scale-95 transition-all cursor-pointer"
+                    style={{
+                      background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+                      boxShadow: "0 4px 14px rgba(16,185,129,0.4)",
+                    }}
+                  >
+                    <span>✓</span>
+                    <span>Marquer comme visité</span>
+                  </button>
+                </div>
+              ) : (
               <div className="flex items-center gap-2 pt-2.5 border-t border-white/10">
                 <button
                   type="button"
@@ -1964,7 +2178,18 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
                 >
                   🔍
                 </button>
+                {selected.manual && selected.cities.length === 0 && (
+                  <button
+                    type="button"
+                    onClick={() => unmarkCountryVisited(selected)}
+                    className="px-3 py-2 rounded-2xl bg-red-500/15 hover:bg-red-500/25 active:scale-95 text-red-300 border border-red-400/30 text-xs font-bold transition-all cursor-pointer"
+                    title="Retirer des pays visités"
+                  >
+                    Retirer
+                  </button>
+                )}
               </div>
+              )}
             </div>
           ) : (
             /* Visited Countries Horizontal Carousel */

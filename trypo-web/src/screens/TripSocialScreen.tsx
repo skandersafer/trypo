@@ -19,6 +19,15 @@ import {
 import { setCommunityTripSelection } from "../lib/community"
 import CommunityTripCover, { formatTripDateRange } from "../components/CommunityTripCover"
 import { useIsDesktop } from "../lib/useIsDesktop"
+import {
+  GlobeIcon,
+  HeartIcon,
+  LockIcon,
+  NoteIcon,
+  PlaneIcon,
+  SparklesIcon,
+  UsersIcon,
+} from "../components/icons"
 
 interface Props {
   navigate: (s: Screen) => void
@@ -47,11 +56,11 @@ const DEMO_IMAGE =
   "https://images.unsplash.com/photo-1532370184535-22cec5ca8480?w=800&h=400&fit=crop&auto=format"
 
 const typeLabel: Record<CommentType, { label: string; color: string; bg: string }> = {
-  advice: { label: "💡 Tip", color: "#3B41C8", bg: "rgba(59,65,200,0.08)" },
-  opinion: { label: "💬 Opinion", color: "#7C3AED", bg: "rgba(124,58,237,0.08)" },
-  question: { label: "❓ Question", color: "#f59e0b", bg: "rgba(245,158,11,0.1)" },
+  advice: { label: "Tip", color: "#3B41C8", bg: "rgba(59,65,200,0.08)" },
+  opinion: { label: "Opinion", color: "#7C3AED", bg: "rgba(124,58,237,0.08)" },
+  question: { label: "Question", color: "#f59e0b", bg: "rgba(245,158,11,0.1)" },
   "join-interest": {
-    label: "✈️ Wants to join",
+    label: "Wants to join",
     color: "#FF6347",
     bg: "rgba(255,99,71,0.08)",
   },
@@ -226,8 +235,8 @@ export default function TripSocialScreen({ navigate, goBack }: Props) {
       setShareMsg({
         ok: true,
         text: isPublic
-          ? "Your trip is now live to the community 🌍"
-          : "Your trip is back to private 🔒",
+          ? "Your trip is now live to the community"
+          : "Your trip is back to private",
       })
     } else {
       setShareMsg({ ok: false, text: res.error || "Could not update visibility" })
@@ -321,7 +330,6 @@ export default function TripSocialScreen({ navigate, goBack }: Props) {
                 : "bg-red-50 text-red-600"
             }`}
           >
-            {shareMsg.ok ? "✓ " : "⚠️ "}
             {shareMsg.text}
           </div>
         </div>
@@ -348,7 +356,6 @@ export default function TripSocialScreen({ navigate, goBack }: Props) {
             />
             <div className="absolute bottom-3 left-4 right-4">
               <div className="flex items-center gap-2 mb-0.5">
-                <span className="text-lg">🌍</span>
                 <p className="text-white font-black text-[16px]">{heroTitle}</p>
               </div>
               <p className="text-white/60 text-[11px]">
@@ -373,12 +380,11 @@ export default function TripSocialScreen({ navigate, goBack }: Props) {
           {/* Stats row */}
           <div className="bg-white px-4 py-3 flex items-center gap-4">
             {[
-              { val: "312", label: "Views", icon: "👁" },
-              { val: String(reactions.epic + reactions.save), label: "Reactions", icon: "❤️" },
-              { val: String(pending.length), label: "Requests", icon: "🙋" },
+              { val: "312", label: "Views" },
+              { val: String(reactions.epic + reactions.save), label: "Reactions" },
+              { val: String(pending.length), label: "Requests" },
             ].map((s) => (
               <div key={s.label} className="flex items-center gap-1.5">
-                <span className="text-sm">{s.icon}</span>
                 <span className="text-navy font-black text-[14px]">{s.val}</span>
                 <span className="text-slate-400 text-[11px]">{s.label}</span>
               </div>
@@ -413,9 +419,9 @@ export default function TripSocialScreen({ navigate, goBack }: Props) {
           {/* Reaction bar */}
           <div className="bg-white border-t border-slate-50 px-4 pb-4 pt-1 flex gap-2">
             {[
-              { key: "epic" as Reaction, emoji: "🔥", label: "Epic", color: "#FF6347" },
-              { key: "save" as Reaction, emoji: "💙", label: "Save", color: "#3B41C8" },
-              { key: "join" as Reaction, emoji: "✈️", label: "Join me!", color: "#06C4D4" },
+              { key: "epic" as Reaction, label: "Epic", color: "#FF6347" },
+              { key: "save" as Reaction, label: "Save", color: "#3B41C8" },
+              { key: "join" as Reaction, label: "Join me!", color: "#06C4D4" },
             ].map((r) => (
               <button
                 key={r.key}
@@ -427,7 +433,13 @@ export default function TripSocialScreen({ navigate, goBack }: Props) {
                   outline: myReaction === r.key ? `2px solid ${r.color}40` : "none",
                 }}
               >
-                <span>{r.emoji}</span>
+                {r.key === "epic" ? (
+                  <SparklesIcon size={14} />
+                ) : r.key === "save" ? (
+                  <HeartIcon size={14} />
+                ) : (
+                  <PlaneIcon size={14} />
+                )}
                 <span>{reactions[r.key]}</span>
               </button>
             ))}
@@ -452,10 +464,10 @@ export default function TripSocialScreen({ navigate, goBack }: Props) {
             }}
           >
             {t === "post"
-              ? "💬 Comments"
+              ? "Comments"
               : t === "requests"
-                ? "🙋 Join"
-                : "🌍 Explore"}
+                ? "Join"
+                : "Explore"}
             {t === "requests" && pending.length > 0 && (
               <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-coral text-white text-[9px] font-black flex items-center justify-center">
                 {pending.length}
@@ -531,7 +543,6 @@ export default function TripSocialScreen({ navigate, goBack }: Props) {
           <div className={isDesktop ? "grid grid-cols-1 lg:grid-cols-2 gap-4" : "flex flex-col gap-3"}>
             {comments.length === 0 && (
               <div className="flex flex-col items-center py-10 text-center">
-                <span className="text-4xl mb-2">💬</span>
                 <p className="text-navy font-black text-[14px]">No discussion yet</p>
                 <p className="text-slate-400 text-[11px] mt-1">
                   Be the first to share advice or ask a question.
@@ -561,7 +572,6 @@ export default function TripSocialScreen({ navigate, goBack }: Props) {
                         <span className="text-navy font-black text-[13px]">
                           {c.name}
                         </span>
-                        <span className="text-base">{c.flag}</span>
                       </div>
                       <p className="text-slate-400 text-[10px]">{c.time}</p>
                     </div>
@@ -587,12 +597,11 @@ export default function TripSocialScreen({ navigate, goBack }: Props) {
         <div className="px-5 md:px-8 pb-8">
           {!isOwner && tripId && (
             <div className="mb-4 p-3 rounded-xl bg-slate-100 text-slate-500 text-[11px] font-semibold">
-              🔒 Only the trip owner can approve join requests.
+              Only the trip owner can approve join requests.
             </div>
           )}
           {pending.length === 0 && (
             <div className="flex flex-col items-center py-12 text-center">
-              <span className="text-5xl mb-3">🎉</span>
               <p className="text-navy font-black text-[16px]">No pending requests</p>
               <p className="text-slate-400 text-[12px] mt-1">
                 When someone wants to join your trip, they'll appear here
@@ -624,7 +633,6 @@ export default function TripSocialScreen({ navigate, goBack }: Props) {
                         alt=""
                         style={{ border: "2px solid #3B41C8" }}
                       />
-                      <span className="absolute -bottom-1 -right-1 text-base">🌍</span>
                     </div>
                     <div className="flex-1">
                       <p className="text-navy font-black text-[15px]">
@@ -661,7 +669,7 @@ export default function TripSocialScreen({ navigate, goBack }: Props) {
                     <div className="px-4 pb-4">
                       <div className="bg-surface rounded-xl p-3 mb-4">
                         <p className="text-slate-600 text-[12px] leading-relaxed italic">
-                          "{req.message || "I'd love to join this trip! ✈️"}"
+                          "{req.message || "I'd love to join this trip!"}"
                         </p>
                       </div>
                       <div className="flex gap-2">
@@ -685,7 +693,7 @@ export default function TripSocialScreen({ navigate, goBack }: Props) {
                             boxShadow: "0 4px 12px rgba(59,65,200,0.3)",
                           }}
                         >
-                          {busyRequest === req.id ? "Working…" : "Accept ✓"}
+                          {busyRequest === req.id ? "Working…" : "Accept"}
                         </button>
                       </div>
                     </div>
@@ -721,11 +729,11 @@ export default function TripSocialScreen({ navigate, goBack }: Props) {
                     />
                     <div className="flex-1">
                       <p className="text-navy font-bold text-[13px]">
-                        {req.requester_name || "Traveler"} 🌍
+                        {req.requester_name || "Traveler"}
                       </p>
                       <p className="text-slate-400 text-[11px]">
                         Joining{" "}
-                        {req.trip_title ? `«${req.trip_title}» ` : ""}🎉
+                        {req.trip_title ? `«${req.trip_title}»` : ""}
                       </p>
                     </div>
                     <span className="text-green-500 font-black text-[11px]">
@@ -759,7 +767,6 @@ export default function TripSocialScreen({ navigate, goBack }: Props) {
               className="bg-white rounded-[22px] px-5 py-8 text-center flex flex-col items-center gap-1"
               style={{ boxShadow: "0 4px 16px rgba(59,65,200,0.08)" }}
             >
-              <span className="text-3xl mb-1">🌍</span>
               <p className="text-navy font-black text-[14px]">No community trips yet</p>
               <p className="text-slate-400 text-[11px]">
                 Make your trip public and it will show up here live.
@@ -772,7 +779,7 @@ export default function TripSocialScreen({ navigate, goBack }: Props) {
                   boxShadow: "0 6px 16px rgba(59,65,200,0.3)",
                 }}
               >
-                ✈️ Share my trip
+                Share my trip
               </button>
             </div>
           ) : (
@@ -822,7 +829,7 @@ export default function TripSocialScreen({ navigate, goBack }: Props) {
                             backdropFilter: "blur(8px)",
                           }}
                         >
-                          👁 See full plan
+                          See full plan
                         </div>
                       </div>
                       <div className="px-4 py-3 flex items-center gap-3">
@@ -846,9 +853,18 @@ export default function TripSocialScreen({ navigate, goBack }: Props) {
                           </p>
                         </div>
                         <div className="flex items-center gap-3 text-[11px] text-slate-400">
-                          <span>❤️ {trip.reactionsCount ?? 0}</span>
-                          <span>✈️ {trip.joinersCount ?? 0}</span>
-                          <span>💬 {trip.commentsCount ?? 0}</span>
+                          <span className="flex items-center gap-1">
+                            <HeartIcon size={12} />
+                            {trip.reactionsCount ?? 0}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <PlaneIcon size={12} />
+                            {trip.joinersCount ?? 0}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <NoteIcon size={12} />
+                            {trip.commentsCount ?? 0}
+                          </span>
                         </div>
                       </div>
                     </button>
@@ -861,7 +877,7 @@ export default function TripSocialScreen({ navigate, goBack }: Props) {
                           color: "#3B41C8",
                         }}
                       >
-                        💬 Comment
+                        Comment
                       </button>
                       <button
                         onClick={() => openCommunityTrip(trip)}
@@ -870,7 +886,7 @@ export default function TripSocialScreen({ navigate, goBack }: Props) {
                           background: "linear-gradient(135deg, #3B41C8, #06C4D4)",
                         }}
                       >
-                        ✈️ Request to Join
+                        Request to Join
                       </button>
                     </div>
                   </div>
@@ -900,13 +916,11 @@ export default function TripSocialScreen({ navigate, goBack }: Props) {
             <div className="flex flex-col gap-3 mb-5">
               {[
                 {
-                  icon: "🌍",
                   title: "Public — Trypo community",
                   sub: "Anyone on Trypo can see, react, comment and request to join",
                   value: true as const,
                 },
                 {
-                  icon: "🔒",
                   title: "Private — invite only",
                   sub: "Only your crew and invited members can view this trip",
                   value: false as const,
@@ -925,7 +939,15 @@ export default function TripSocialScreen({ navigate, goBack }: Props) {
                       shared === opt.value ? "2px solid rgba(59,65,200,0.3)" : "none",
                   }}
                 >
-                  <span className="text-2xl mt-0.5">{opt.icon}</span>
+                  <span
+                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{
+                      background: "rgba(59,65,200,0.08)",
+                      color: "#3B41C8",
+                    }}
+                  >
+                    {opt.value ? <GlobeIcon size={22} /> : <LockIcon size={22} />}
+                  </span>
                   <div>
                     <p className="text-navy font-black text-[14px]">{opt.title}</p>
                     <p className="text-slate-400 text-[12px]">{opt.sub}</p>
@@ -942,7 +964,7 @@ export default function TripSocialScreen({ navigate, goBack }: Props) {
                 className="flex-1 py-4 rounded-2xl text-brand font-black text-[14px]"
                 style={{ background: "rgba(59,65,200,0.08)" }}
               >
-                📤 Copy Link
+                Copy Link
               </button>
               <button
                 onClick={() => setShowShareModal(false)}

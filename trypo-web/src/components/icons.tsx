@@ -283,6 +283,15 @@ export function DotsIcon(props: IconProps) {
   )
 }
 
+export function LockIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect x="5" y="10" width="14" height="10" rx="2" />
+      <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+    </Svg>
+  )
+}
+
 export function ChevronIcon(props: IconProps) {  return (
     <Svg {...props}>
       <path d="M9 5l7 7-7 7" />

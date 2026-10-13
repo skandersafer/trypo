@@ -25,6 +25,7 @@ import {
   LockIcon,
   NoteIcon,
   PlaneIcon,
+  QuestionIcon,
   SparklesIcon,
   UsersIcon,
 } from "../components/icons"
@@ -55,14 +56,15 @@ const DEFAULT_AVATAR =
 const DEMO_IMAGE =
   "https://images.unsplash.com/photo-1532370184535-22cec5ca8480?w=800&h=400&fit=crop&auto=format"
 
-const typeLabel: Record<CommentType, { label: string; color: string; bg: string }> = {
-  advice: { label: "Tip", color: "#3B41C8", bg: "rgba(59,65,200,0.08)" },
-  opinion: { label: "Opinion", color: "#7C3AED", bg: "rgba(124,58,237,0.08)" },
-  question: { label: "Question", color: "#f59e0b", bg: "rgba(245,158,11,0.1)" },
+const typeLabel: Record<CommentType, { label: string; color: string; bg: string; Icon: (p: { size?: number }) => React.ReactElement }> = {
+  advice: { label: "Tip", color: "#3B41C8", bg: "rgba(59,65,200,0.08)", Icon: SparklesIcon },
+  opinion: { label: "Opinion", color: "#7C3AED", bg: "rgba(124,58,237,0.08)", Icon: NoteIcon },
+  question: { label: "Question", color: "#f59e0b", bg: "rgba(245,158,11,0.1)", Icon: QuestionIcon },
   "join-interest": {
     label: "Wants to join",
     color: "#FF6347",
     bg: "rgba(255,99,71,0.08)",
+    Icon: PlaneIcon,
   },
 }
 
@@ -481,23 +483,30 @@ export default function TripSocialScreen({ navigate, goBack }: Props) {
       {tab === "post" && (
         <div className="px-5 md:px-8 pb-8">
           {/* Type selector */}
-          <div className="flex gap-1.5 mb-3 overflow-x-auto pb-1">
-            {(Object.keys(typeLabel) as CommentType[]).map((t) => (
-              <button
-                key={t}
-                onClick={() => setCommentType(t)}
-                className="flex-shrink-0 px-3 py-1.5 rounded-full text-[10px] font-bold"
-                style={{
-                  background: commentType === t ? typeLabel[t].bg : "white",
-                  color: commentType === t ? typeLabel[t].color : "#94a3b8",
-                  outline:
-                    commentType === t ? `2px solid ${typeLabel[t].color}40` : "none",
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
-                }}
-              >
-                {typeLabel[t].label}
-              </button>
-            ))}
+          <div className="flex gap-1.5 mb-4 overflow-x-auto no-scrollbar pb-1">
+            {(Object.keys(typeLabel) as CommentType[]).map((t) => {
+              const TypeIcon = typeLabel[t].Icon
+              const selected = commentType === t
+              return (
+                <button
+                  key={t}
+                  onClick={() => setCommentType(t)}
+                  className="flex-shrink-0 px-4 py-2 rounded-full text-[12px] flex items-center gap-1.5 transition-all"
+                  style={{
+                    background: selected ? "#0D0F2E" : "white",
+                    color: selected ? "white" : "#64748b",
+                    fontWeight: selected ? 800 : 600,
+                    border: selected ? "1px solid #0D0F2E" : "1px solid #EEF0F8",
+                    boxShadow: selected
+                      ? "0 4px 12px rgba(13,15,46,0.25)"
+                      : "0 1px 4px rgba(0,0,0,0.06)",
+                  }}
+                >
+                  <TypeIcon size={13} />
+                  {typeLabel[t].label}
+                </button>
+              )
+            })}
           </div>
 
           {/* Add comment */}

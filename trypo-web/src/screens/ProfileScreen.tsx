@@ -72,71 +72,33 @@ export default function ProfileScreen({ navigate }: Props) {
     (user as any)?.user_metadata?.avatarUrl ||
     null
 
-  const activeTripName = activeTrip?.title || "My Trips"
-
   const menuItems = [
     {
-      icon: "✏️",
       label: "Edit Profile",
       sub: "Update your info & travel style",
       action: "edit-profile" as Screen | null,
     },
     {
-      icon: "🌍",
-      label: "My World Map",
-      sub: `${profileStats.visitedCountriesCount} countr${profileStats.visitedCountriesCount > 1 ? "ies" : "y"} explored`,
-      action: "world-map" as Screen | null,
-    },
-    {
-      icon: "🗺",
       label: "My Trips",
       sub: `${profileStats.tripsCount} active trip${profileStats.tripsCount > 1 ? "s" : ""}`,
       action: "trips" as Screen | null,
     },
     {
-      icon: "👥",
-      label: "Trip Crew & Invitations",
-      sub: `${activeTripName} · Invite friends & collaborate`,
-      action: "collaborative" as Screen | null,
-    },
-    {
-      icon: "🧳",
-      label: "Packing List",
-      sub: `${activeTripName} · ${profileStats.packingDone}/${profileStats.packingTotal} items packed`,
-      action: "packing-list" as Screen | null,
-    },
-    {
-      icon: "❤️",
       label: "Saved Places",
       sub: `${profileStats.savedPlacesCount} place${profileStats.savedPlacesCount > 1 ? "s" : ""} saved`,
       action: "saved-places" as Screen | null,
     },
     {
-      icon: "🌤",
-      label: "Weather Preview",
-      sub: "Live destination forecasts",
-      action: "weather" as Screen | null,
-    },
-    {
-      icon: "💱",
-      label: "Currency Converter",
-      sub: "Real-time exchange rates",
-      action: "currency" as Screen | null,
-    },
-    {
-      icon: "🤖",
       label: "Tripo AI",
       sub: "Plan a trip or get travel advice",
       action: "chatbot" as Screen | null,
     },
     {
-      icon: "⚙️",
       label: "Settings",
       sub: "Account & preferences",
       action: "settings" as Screen | null,
     },
     {
-      icon: "🚪",
       label: "Logout",
       sub: "Disconnect from this account",
       action: "logout" as Screen | null,
@@ -147,7 +109,6 @@ export default function ProfileScreen({ navigate }: Props) {
       },
     },
     {
-      icon: "🗑️",
       label: "Delete Account",
       sub: "Permanently erase account & data",
       action: null,
@@ -223,7 +184,7 @@ export default function ProfileScreen({ navigate }: Props) {
           <div className="flex-1 min-w-0">
             <h2 className={`text-white font-black text-[20px] md:text-[24px] ${isDesktop ? "max-w-none" : "truncate"}`}>{displayName}</h2>
             <p className="text-white/60 text-[12px] truncate">
-              {userEmail || "Trypo Traveler 🌍"}
+              {userEmail || "Trypo Traveler"}
             </p>
             <p className="text-cyan-300 text-[11px] mt-0.5 font-bold">
               {userProfile?.username || `@${(userEmail || "traveler").split("@")[0]}`}
@@ -273,7 +234,6 @@ export default function ProfileScreen({ navigate }: Props) {
           className="w-full border-t border-white/10 py-3 px-5 flex items-center justify-between"
         >
           <div className="flex items-center gap-2">
-            <span className="text-base">🌍</span>
             <span className="text-white/70 text-[12px] font-semibold">
               View my world map · {profileStats.visitedCountriesCount} countr{profileStats.visitedCountriesCount > 1 ? "ies" : "y"}
             </span>
@@ -305,10 +265,10 @@ export default function ProfileScreen({ navigate }: Props) {
             style={{ boxShadow: "0 2px 10px rgba(59,65,200,0.08)" }}
           >
             <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+              className="w-10 h-10 rounded-xl flex items-center justify-center text-[16px] font-black text-brand flex-shrink-0"
               style={{ background: "rgba(59,65,200,0.08)" }}
             >
-              🌍
+              {(activeTrip.title || "T").charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-navy font-bold text-[13px] truncate">
@@ -332,10 +292,10 @@ export default function ProfileScreen({ navigate }: Props) {
             style={{ boxShadow: "0 2px 10px rgba(59,65,200,0.04)" }}
           >
             <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+              className="w-10 h-10 rounded-xl flex items-center justify-center text-[20px] font-black text-brand flex-shrink-0"
               style={{ background: "rgba(59,65,200,0.08)" }}
             >
-              ✨
+              +
             </div>
             <div className="flex-1">
               <p className="text-brand font-bold text-[13px]">
@@ -368,14 +328,14 @@ export default function ProfileScreen({ navigate }: Props) {
               className="w-full flex items-center gap-4 px-4 py-3.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-white/5 border-b border-slate-100 dark:border-white/5 last:border-b-0 cursor-pointer"
             >
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
+                className={`w-10 h-10 rounded-xl flex items-center justify-center text-[16px] font-black flex-shrink-0 ${item.danger ? "text-red-500" : "text-brand"}`}
                 style={{
                   background: item.danger
                     ? "rgba(239,68,68,0.08)"
                     : "rgba(59,65,200,0.07)",
                 }}
               >
-                {item.icon}
+                {item.label.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1">
                 <p
@@ -421,8 +381,8 @@ export default function ProfileScreen({ navigate }: Props) {
             className="w-full max-w-sm bg-white rounded-[28px] p-6 shadow-2xl border border-slate-100 flex flex-col items-center text-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-14 h-14 rounded-full bg-red-50 text-red-500 flex items-center justify-center text-2xl mb-3.5 border border-red-100">
-              🗑️
+            <div className="w-14 h-14 rounded-full bg-red-50 text-red-500 flex items-center justify-center text-2xl font-black mb-3.5 border border-red-100">
+              !
             </div>
             <h3 className="text-[17px] font-black text-navy mb-1.5">
               Delete your account?
@@ -438,7 +398,7 @@ export default function ProfileScreen({ navigate }: Props) {
             </p>
             {deleteError && (
               <div className="mt-3 w-full p-3 rounded-xl bg-red-50 text-red-600 text-[12px] font-bold">
-                ⚠️ {deleteError}
+                {deleteError}
               </div>
             )}
             <div className="flex w-full gap-2.5 mt-6">

@@ -16,12 +16,12 @@ interface Props {
 }
 
 const categories = [
-  { label: "🔥 Trending", key: "trending" },
-  { label: "🏝 Beaches", key: "beach" },
-  { label: "🏙 Cities", key: "city" },
-  { label: "🥾 Adventure", key: "adventure" },
-  { label: "🎒 Backpacking", key: "backpacking" },
-  { label: "🍜 Food", key: "food" },
+  { label: "Trending", key: "trending" },
+  { label: "Beaches", key: "beach" },
+  { label: "Cities", key: "city" },
+  { label: "Adventure", key: "adventure" },
+  { label: "Backpacking", key: "backpacking" },
+  { label: "Food", key: "food" },
 ]
 
 export type Destination = {
@@ -41,7 +41,7 @@ export type Destination = {
 
 export const destinations: Destination[] = destinationCatalog.map((item, index) => ({
   slug: `${item.city.toLowerCase().replace(/\s+/g, "-")}-${index}`,
-  flag: item.country === "Tunisia" ? "🇹🇳" : item.country === "France" ? "🇫🇷" : item.country === "Japan" ? "🇯🇵" : "🌍",
+  flag: item.country,
   name: item.city,
   country: item.country,
   budget: item.region === "North Africa" ? "$" : item.region === "Europe" ? "$$" : "$$$",
@@ -55,23 +55,23 @@ export const destinations: Destination[] = destinationCatalog.map((item, index) 
 }))
 
 const countryFlags: Record<string, string> = {
-  TN: "🇹🇳",
-  EG: "🇪🇬",
-  MA: "🇲🇦",
-  ES: "🇪🇸",
-  FR: "🇫🇷",
-  JP: "🇯🇵",
-  TH: "🇹🇭",
-  ID: "🇮🇩",
-  VN: "🇻🇳",
-  PT: "🇵🇹",
-  US: "🇺🇸",
-  GB: "🇬🇧",
+  TN: "TN",
+  EG: "EG",
+  MA: "MA",
+  ES: "ES",
+  FR: "FR",
+  JP: "JP",
+  TH: "TH",
+  ID: "ID",
+  VN: "VN",
+  PT: "PT",
+  US: "US",
+  GB: "GB",
 }
 
 const toDestination = (d: PublicDestination): Destination => ({
   slug: d.id,
-  flag: (d.countryCode && countryFlags[d.countryCode.toUpperCase()]) || "🌍",
+  flag: (d.countryCode && countryFlags[d.countryCode.toUpperCase()]) || d.country,
   name: d.city,
   country: d.country,
   budget:
@@ -307,7 +307,6 @@ export default function ExploreScreen({ navigate }: Props) {
       <div className={isDesktop ? "grid grid-cols-1 lg:grid-cols-2 gap-4 px-5 md:px-8 pb-6" : "px-5 flex flex-col gap-4 pb-6"}>
         {filtered.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <span className="text-5xl mb-3">🔍</span>
             <p className="text-navy font-black text-[16px] mb-1">
               No destinations found
             </p>
@@ -371,7 +370,6 @@ export default function ExploreScreen({ navigate }: Props) {
 
             <div className="absolute inset-0 p-4 flex flex-col justify-end">
               <div className="flex items-center gap-2 mb-1.5">
-                <span className="text-2xl">{dest.flag}</span>
                 <div>
                   <h3 className="text-white font-black text-[19px] leading-tight">
                     {dest.name}
@@ -445,10 +443,10 @@ function DestinationDetail({
   navigate: (s: Screen) => void
 }) {
   const highlights = [
-    { icon: "💰", label: "Budget", value: dest.budget },
-    { icon: "📅", label: "Best time", value: dest.bestTime },
-    { icon: "⭐", label: "Rating", value: String(dest.rating) },
-    { icon: "🌡", label: "Climate", value: "Tropical" },
+    { label: "Budget", value: dest.budget },
+    { label: "Best time", value: dest.bestTime },
+    { label: "Rating", value: String(dest.rating) },
+    { label: "Climate", value: "Tropical" },
   ]
 
   // Live guide: best places, hotels and activities from keyless web APIs
@@ -549,7 +547,6 @@ function DestinationDetail({
         </button>
         <div className="absolute bottom-5 left-5 right-5 md:left-8 md:right-8">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-3xl">{dest.flag}</span>
             <div>
               <h1 className="text-white font-black text-[26px] leading-tight">
                 {dest.name}
@@ -581,7 +578,6 @@ function DestinationDetail({
       >
         {highlights.map((h) => (
           <div key={h.label} className="flex flex-col items-center gap-0.5">
-            <span className="text-base">{h.icon}</span>
             <span className="text-navy font-black text-[12px]">{h.value}</span>
             <span className="text-slate-400 text-[9px] font-medium">
               {h.label}
@@ -628,7 +624,7 @@ function DestinationDetail({
       {/* Best places to visit — live from OpenStreetMap */}
       <div className="px-5 md:px-8 mt-5">
         <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-3">
-          🏛️ Best places to visit
+          Best places to visit
         </p>
         {guideLoading && <GuideSkeleton rows={3} />}
         {!guideLoading && guide && guide.places.length > 0 && (
@@ -643,8 +639,8 @@ function DestinationDetail({
                 style={{ boxShadow: "0 2px 8px rgba(59,65,200,0.07)" }}
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-brand/10 flex items-center justify-center text-base flex-shrink-0">
-                    🏛️
+                  <div className="w-9 h-9 rounded-xl bg-brand/10 flex items-center justify-center text-[15px] font-black text-brand flex-shrink-0">
+                    {p.name.charAt(0)}
                   </div>
                   <div className="min-w-0">
                     <p className="text-navy font-bold text-[13px] truncate">{p.name}</p>
@@ -669,7 +665,7 @@ function DestinationDetail({
       <div className="px-5 md:px-8 mt-5">
         <div className="flex justify-between items-center mb-3">
           <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
-            🏨 Best hotels
+            Best hotels
           </p>
           <a
             href={bookingSearchUrl(dest.name, dest.country)}
@@ -690,8 +686,8 @@ function DestinationDetail({
                 style={{ boxShadow: "0 2px 8px rgba(59,65,200,0.07)" }}
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-brand/10 flex items-center justify-center text-base flex-shrink-0">
-                    🏨
+                  <div className="w-9 h-9 rounded-xl bg-brand/10 flex items-center justify-center text-[15px] font-black text-brand flex-shrink-0">
+                    {h.name.charAt(0)}
                   </div>
                   <div className="min-w-0">
                     <p className="text-navy font-bold text-[13px] truncate">{h.name}</p>
@@ -730,8 +726,8 @@ function DestinationDetail({
                 style={{ boxShadow: "0 2px 8px rgba(59,65,200,0.07)" }}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-brand/10 flex items-center justify-center text-base">
-                    🏨
+                  <div className="w-9 h-9 rounded-xl bg-brand/10 flex items-center justify-center text-[15px] font-black text-brand">
+                    {s.name.charAt(0)}
                   </div>
                   <div>
                     <p className="text-navy font-bold text-[13px]">{s.name}</p>
@@ -752,7 +748,7 @@ function DestinationDetail({
       <div className="px-5 md:px-8 mt-5">
         <div className="flex justify-between items-center mb-3">
           <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
-            🎯 Activities to do
+            Activities to do
           </p>
           <a
             href={activitySearchUrl(dest.name)}
@@ -776,7 +772,7 @@ function DestinationDetail({
                 style={{ background: "rgba(6,196,212,0.12)", color: "#0891b2" }}
                 title={a.detail}
               >
-                🎯 {a.name}
+                {a.name}
               </a>
             ))}
           </div>
@@ -809,7 +805,7 @@ function DestinationDetail({
             boxShadow: "0 12px 32px rgba(59,65,200,0.35)",
           }}
         >
-          Plan a Trip to {dest.name} ✈️
+          Plan a trip to {dest.name}
         </button>
       </div>
     </div>

@@ -12,11 +12,11 @@ interface Props {
 }
 
 const travelStyles = [
-  { icon: "🎒", label: "Backpacking" },
-  { icon: "🏝", label: "Relax" },
-  { icon: "🏙", label: "City Explorer" },
-  { icon: "🥾", label: "Adventure" },
-  { icon: "💎", label: "Luxury" },
+  { label: "Backpacking" },
+  { label: "Relax" },
+  { label: "City" },
+  { label: "Adventure" },
+  { label: "Luxury" },
 ]
 
 const travelingWith = ["Solo", "Couple", "Friends", "Family"]
@@ -71,7 +71,7 @@ export default function CreateTripScreen({ navigate, goBack }: Props) {
       (s) => s.city.toLowerCase() === nextValue.toLowerCase(),
     )
     if (!tapped) {
-      setError("Please pick a destination from the suggestions below 🗺️ — typed names alone can't be added.")
+      setError("Pick a destination from the suggestions — typed names alone can't be added.")
       return
     }
     if (Number.isFinite(Number(tapped.lat)) && Number.isFinite(Number(tapped.lng))) {
@@ -129,7 +129,7 @@ export default function CreateTripScreen({ navigate, goBack }: Props) {
         (s) => s.city.toLowerCase() === destInput.trim().toLowerCase(),
       )
       if (!match) {
-        setError("Please pick a destination from the suggestions 🗺️ — typed names alone can't be added.")
+        setError("Pick a destination from the suggestions — typed names alone can't be added.")
         return
       }
       if (!currentDestinations.some((d) => d.toLowerCase() === match.city.toLowerCase())) {
@@ -141,11 +141,11 @@ export default function CreateTripScreen({ navigate, goBack }: Props) {
     }
 
     if (!title.trim() || !currentDestinations.length) {
-      setError("Veuillez renseigner un titre et au moins une destination.")
+      setError("Add a title and at least one destination.")
       return
     }
     if (startDate && endDate && endDate < startDate) {
-      setError("La date de fin ne peut pas être antérieure à la date de début.")
+      setError("End date can't be before start date.")
       return
     }
     setSubmitting(true)
@@ -171,7 +171,7 @@ export default function CreateTripScreen({ navigate, goBack }: Props) {
       console.error("Failed to create trip:", cause)
       setError(
         cause?.message ||
-        (typeof cause === "string" ? cause : "Impossible de créer le voyage. Veuillez réessayer."),
+        (typeof cause === "string" ? cause : "Couldn't create the trip. Try again."),
       )
     } finally {
       setSubmitting(false)
@@ -183,11 +183,12 @@ export default function CreateTripScreen({ navigate, goBack }: Props) {
       <div className="pt-12" />
 
       {/* Header */}
-      <div className="px-5 md:px-8 flex items-center gap-3 mb-6">
+      <div className="px-5 md:px-8 flex items-center gap-3 mb-2">
         <button
           onClick={() => goBack("home")}
-          className="w-9 h-9 rounded-full bg-white flex items-center justify-center"
-          style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}
+          aria-label="Back"
+          className="w-9 h-9 rounded-full bg-white flex items-center justify-center trypo-card"
+          style={{ borderRadius: 99 }}
         >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path
@@ -201,18 +202,16 @@ export default function CreateTripScreen({ navigate, goBack }: Props) {
         </button>
         <div>
           <h1 className="text-[22px] font-black text-navy">
-            Where are we going?
+            New trip
           </h1>
-          <p className="text-slate-400 text-[12px]">Create your new Trypo</p>
+          <p className="text-[12px]" style={{ color: "#94A3B8" }}>Where, when, how — 30 seconds</p>
         </div>
       </div>
 
       <div className="px-5 md:px-8 flex flex-col gap-5 pb-8 w-full md:max-w-2xl md:mx-auto">
-        {/* Trip name */}
+        {/* Step 1 */}
         <div>
-          <label className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2 block">
-            Trip Name
-          </label>
+          <p className="trypo-section-label mb-2">1 · Trip name</p>
           <div
             className="bg-white rounded-2xl px-4 py-3.5"
             style={{ boxShadow: "0 2px 8px rgba(59,65,200,0.06)" }}
@@ -229,9 +228,9 @@ export default function CreateTripScreen({ navigate, goBack }: Props) {
 
         {/* Destinations */}
         <div>
-          <label className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2 block">
-            Destinations
-          </label>
+          <p className="trypo-section-label mb-2">
+            2 · Destinations
+          </p>
           <div
             className="bg-white rounded-2xl p-4"
             style={{ boxShadow: "0 2px 8px rgba(59,65,200,0.06)" }}
@@ -305,7 +304,9 @@ export default function CreateTripScreen({ navigate, goBack }: Props) {
           </div>
         </div>
 
-        {/* Dates */}
+        {/* Dates + budget */}
+        <div>
+          <p className="trypo-section-label mb-2">3 · Dates & budget</p>
         <div className="flex gap-3">
           <div className="flex-1">
             <label className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2 block">
@@ -377,8 +378,8 @@ export default function CreateTripScreen({ navigate, goBack }: Props) {
         </div>
 
         {/* Budget */}
-        <div>
-          <label className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2 block">
+        <div className="mt-3">
+          <label className="text-[12px] font-bold text-navy mb-2 block">
             Budget (optional)
           </label>
           <div
@@ -397,34 +398,30 @@ export default function CreateTripScreen({ navigate, goBack }: Props) {
             />
           </div>
         </div>
+        </div>
 
         {/* Travel style */}
         <div>
-          <label className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2 block">
-            Travel Style
-          </label>
-          <div className={isDesktop ? "grid grid-cols-3 lg:grid-cols-5 gap-2 pb-1" : "flex gap-2 overflow-x-auto pb-1"}>
+          <p className="trypo-section-label mb-2">
+            4 · Travel style
+          </p>
+          <div className={isDesktop ? "grid grid-cols-3 lg:grid-cols-5 gap-2 pb-1" : "flex gap-2 overflow-x-auto no-scrollbar pb-1"}>
             {travelStyles.map((s, i) => (
               <button
                 key={s.label}
                 onClick={() => setStyle(i)}
-                className="flex-shrink-0 flex flex-col items-center gap-1.5 px-4 py-3 rounded-2xl transition-all"
+                className="flex-shrink-0 px-4 py-3 rounded-2xl transition-all text-[12px] font-bold"
                 style={{
-                  background: i === style ? "#3B41C8" : "white",
+                  background: i === style ? "#0D0F2E" : "white",
+                  color: i === style ? "white" : "#64748B",
                   boxShadow:
                     i === style
-                      ? "0 6px 16px rgba(59,65,200,0.3)"
+                      ? "0 6px 16px rgba(13,15,46,0.25)"
                       : "0 2px 8px rgba(59,65,200,0.06)",
+                  border: i === style ? "1px solid #0D0F2E" : "1px solid #EEF0F8",
                 }}
               >
-                <span className="text-xl">{s.icon}</span>
-                <span
-                  className={`text-[11px] font-bold ${
-                    i === style ? "text-white" : "text-slate-500 dark:text-slate-300"
-                  }`}
-                >
-                  {s.label}
-                </span>
+                {s.label}
               </button>
             ))}
           </div>
@@ -432,9 +429,9 @@ export default function CreateTripScreen({ navigate, goBack }: Props) {
 
         {/* Traveling with */}
         <div>
-          <label className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2 block">
-            Traveling With
-          </label>
+          <p className="trypo-section-label mb-2">
+            5 · Who's going
+          </p>
           <div className="flex gap-2">
             {travelingWith.map((c, i) => (
               <button
@@ -458,12 +455,10 @@ export default function CreateTripScreen({ navigate, goBack }: Props) {
         </div>
 
         {/* Route preview */}
-        <div
-          className="bg-white rounded-2xl p-4"
-          style={{ boxShadow: "0 2px 8px rgba(59,65,200,0.06)" }}
-        >
-          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-3">
-            Route Preview
+        {destinations.length > 0 && (
+        <div className="trypo-card p-4">
+          <p className="trypo-section-label mb-3">
+            Route
           </p>
           <div className="flex items-center gap-0 overflow-x-auto">
             {destinations.map((d, i) => (
@@ -498,18 +493,15 @@ export default function CreateTripScreen({ navigate, goBack }: Props) {
             ))}
           </div>
         </div>
+        )}
 
         {/* CTA */}
         <button
-          onClick={create}
+          onClick={() => void create()}
           disabled={submitting}
-          className="w-full py-4 rounded-2xl text-white font-black text-[16px]"
-          style={{
-            background: "linear-gradient(135deg, #3B41C8, #06C4D4)",
-            boxShadow: "0 12px 32px rgba(59,65,200,0.35)",
-          }}
+          className="trypo-cta w-full py-4 text-[16px] disabled:opacity-60"
         >
-          {submitting ? "Creating your Trypo…" : "Create My Trypo ✨"}
+          {submitting ? "Creating…" : "Create trip"}
         </button>
         {error && <p className="text-center text-xs text-red-500">{error}</p>}
       </div>

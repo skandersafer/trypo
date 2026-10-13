@@ -10,6 +10,61 @@
   --color-coral: #FF6347;
   --color-navy: #0D0F2E;
   --color-surface: #F5F6FF;
+  --color-card: #FFFFFF;
+  --color-line: #EEF0F8;
+  --color-muted: #64748B;
+  --shadow-card: 0 4px 16px rgba(13, 15, 46, 0.06);
+  --shadow-cta: 0 12px 32px rgba(59, 65, 200, 0.28);
+  --radius-card: 20px;
+}
+
+/* ---- 2026 clean system ---- */
+:root {
+  --trypo-bg: #F7F8FC;
+  --trypo-card: #FFFFFF;
+  --trypo-line: #EEF0F8;
+  --trypo-ink: #0D0F2E;
+  --trypo-muted: #64748B;
+  --trypo-faint: #94A3B8;
+}
+
+.bg-surface {
+  background-color: var(--trypo-bg) !important;
+}
+
+.trypo-card {
+  background: var(--trypo-card);
+  border: 1px solid var(--trypo-line);
+  border-radius: 20px;
+  box-shadow: 0 4px 16px rgba(13, 15, 46, 0.06);
+}
+
+.trypo-input {
+  background: #fff;
+  border: 1px solid var(--trypo-line);
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(13, 15, 46, 0.04);
+}
+
+.trypo-input:focus-within {
+  border-color: #3B41C8;
+  box-shadow: 0 0 0 3px rgba(59, 65, 200, 0.12);
+}
+
+.trypo-cta {
+  background: linear-gradient(135deg, #3B41C8, #06C4D4);
+  box-shadow: 0 12px 32px rgba(59, 65, 200, 0.28);
+  border-radius: 16px;
+  color: #fff;
+  font-weight: 800;
+}
+
+.trypo-section-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--trypo-faint);
 }
 
 html,

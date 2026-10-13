@@ -83,7 +83,6 @@ export default function TripsListScreen({ navigate }: Props) {
           )
           return {
             id: trip.id,
-            flag: "🌍",
             name: trip.title,
             ownerId: trip.owner_id ?? null,
             destinations,
@@ -189,7 +188,6 @@ export default function TripsListScreen({ navigate }: Props) {
             className="flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-white border border-brand/20 shadow-xs active:scale-95 transition-all"
             style={{ boxShadow: "0 2px 8px rgba(59,65,200,0.08)" }}
           >
-            <span className="text-sm">🔑</span>
             <span className="text-[12px] font-black text-brand">Join Code</span>
           </button>
           <button
@@ -246,7 +244,6 @@ export default function TripsListScreen({ navigate }: Props) {
 
         {!loading && filtered.length === 0 && (
           <div className="py-12 bg-white rounded-3xl p-6 text-center shadow-xs border border-dashed border-slate-200">
-            <span className="text-4xl mb-3 block">🎒</span>
             <h3 className="text-navy font-black text-lg mb-1">No trips found</h3>
             <p className="text-slate-400 text-xs mb-5">
               Ready to start your next adventure? Create your custom itinerary now.
@@ -258,7 +255,7 @@ export default function TripsListScreen({ navigate }: Props) {
                 boxShadow: "0 6px 18px rgba(59,65,200,0.3)",
               }}
             >
-              Plan My First Trip ✨
+              Plan my first trip
             </button>
           </div>
         )}
@@ -291,7 +288,6 @@ export default function TripsListScreen({ navigate }: Props) {
                   }}
                 />
                 <div className="absolute top-3 left-4 flex items-center gap-2">
-                  <span className="text-2xl">{trip.flag}</span>
                   <h3 className="text-white font-black text-[16px]">
                     {trip.name}
                   </h3>
@@ -343,11 +339,10 @@ export default function TripsListScreen({ navigate }: Props) {
                               days: getDestinationStayDays(d),
                             })
                           }}
-                          className="px-2 py-0.5 rounded-lg bg-black/40 hover:bg-brand text-white font-bold text-[10px] backdrop-blur-md transition-all active:scale-95 flex items-center gap-1 cursor-pointer border border-white/10 hover:border-white/30"
+                          className="px-2 py-0.5 rounded-lg bg-black/40 hover:bg-brand text-white font-bold text-[10px] backdrop-blur-md transition-all active:scale-95 cursor-pointer border border-white/10 hover:border-white/30"
                           title={`Explore booking & hotels in ${d.city}`}
                         >
-                          <span>📍 {d.city}</span>
-                          <span className="text-[9px] opacity-70">↗</span>
+                          {d.city}
                         </button>
                         {idx < trip.destinations.length - 1 && (
                           <span className="text-white/60 text-[10px]">→</span>
@@ -365,12 +360,12 @@ export default function TripsListScreen({ navigate }: Props) {
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex gap-3">
                     <span className="text-[12px] font-semibold text-slate-500">
-                      📅 {trip.dates}
+                      {trip.dates}
                     </span>
                   </div>
                   <div className="flex gap-2 text-[11px] text-slate-400">
-                    <span>🗓 {trip.days}d</span>
-                    <span>📍 {trip.dests}</span>
+                    <span>{trip.days}d</span>
+                    <span>{trip.dests} stops</span>
                   </div>
                 </div>
 

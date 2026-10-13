@@ -17,8 +17,6 @@ interface Props {
   goBack: (fallback?: Screen) => void
 }
 
-const tabs = ["Overview", "Itinerary", "Map", "Transport", "Bookings", "Budget"]
-
 type Stop = {
   id: string
   city: string
@@ -358,14 +356,6 @@ const stopDetails: Record<string, StopDetail> = {}
 
 const initialRoute: Stop[] = []
 
-const tabScreenMap: Record<string, Screen> = {
-  Itinerary: "itinerary",
-  Map: "map",
-  Transport: "transport",
-  Bookings: "bookings",
-  Budget: "budget",
-}
-
 type DestinationSuggestion = {
   city: string
   emoji?: string
@@ -403,51 +393,51 @@ function getSmartSuggestedDestinations(
 
   if (isTunisia) {
     candidates = [
-      { city: "Sousse", emoji: "🌴", country: "Tunisie 🇹🇳", days: 2 },
-      { city: "Djerba", emoji: "🏝️", country: "Tunisie 🇹🇳", days: 3 },
-      { city: "Sidi Bou Saïd", emoji: "🏛️", country: "Tunisie 🇹🇳", days: 1 },
-      { city: "Hammamet", emoji: "🏖️", country: "Tunisie 🇹🇳", days: 2 },
-      { city: "Tozeur", emoji: "🏜️", country: "Tunisie 🇹🇳", days: 2 },
+      { city: "Sousse", emoji: "🌴", country: "Tunisia", days: 2 },
+      { city: "Djerba", emoji: "🏝️", country: "Tunisia", days: 3 },
+      { city: "Sidi Bou Saïd", emoji: "🏛️", country: "Tunisia", days: 1 },
+      { city: "Hammamet", emoji: "🏖️", country: "Tunisia", days: 2 },
+      { city: "Tozeur", emoji: "🏜️", country: "Tunisia", days: 2 },
     ]
   } else if (isItaly) {
     candidates = [
-      { city: "Florence", emoji: "🎨", country: "Italie 🇮🇹", days: 2 },
-      { city: "Rome", emoji: "🍕", country: "Italie 🇮🇹", days: 3 },
-      { city: "Venise", emoji: "🎭", country: "Italie 🇮🇹", days: 2 },
-      { city: "Milan", emoji: "🏛️", country: "Italie 🇮🇹", days: 2 },
-      { city: "Naples", emoji: "🌋", country: "Italie 🇮🇹", days: 2 },
+      { city: "Florence", emoji: "🎨", country: "Italy", days: 2 },
+      { city: "Rome", emoji: "🍕", country: "Italy", days: 3 },
+      { city: "Venise", emoji: "🎭", country: "Italy", days: 2 },
+      { city: "Milan", emoji: "🏛️", country: "Italy", days: 2 },
+      { city: "Naples", emoji: "🌋", country: "Italy", days: 2 },
     ]
   } else if (isJapan) {
     candidates = [
-      { city: "Kyoto", emoji: "⛩️", country: "Japon 🇯🇵", days: 3 },
-      { city: "Tokyo", emoji: "🍣", country: "Japon 🇯🇵", days: 3 },
-      { city: "Osaka", emoji: "🏯", country: "Japon 🇯🇵", days: 2 },
-      { city: "Nara", emoji: "🦌", country: "Japon 🇯🇵", days: 1 },
+      { city: "Kyoto", emoji: "⛩️", country: "Japan", days: 3 },
+      { city: "Tokyo", emoji: "🍣", country: "Japan", days: 3 },
+      { city: "Osaka", emoji: "🏯", country: "Japan", days: 2 },
+      { city: "Nara", emoji: "🦌", country: "Japan", days: 1 },
     ]
   } else if (isSpain) {
     candidates = [
-      { city: "Barcelone", emoji: "☀️", country: "Espagne 🇪🇸", days: 3 },
-      { city: "Madrid", emoji: "🥘", country: "Espagne 🇪🇸", days: 3 },
-      { city: "Séville", emoji: "💃", country: "Espagne 🇪🇸", days: 2 },
-      { city: "Valence", emoji: "🍊", country: "Espagne 🇪🇸", days: 2 },
+      { city: "Barcelone", emoji: "☀️", country: "Spain", days: 3 },
+      { city: "Madrid", emoji: "🥘", country: "Spain", days: 3 },
+      { city: "Séville", emoji: "💃", country: "Spain", days: 2 },
+      { city: "Valence", emoji: "🍊", country: "Spain", days: 2 },
     ]
   } else if (isFrance) {
     candidates = [
-      { city: "Paris", emoji: "🗼", country: "France 🇫🇷", days: 3 },
-      { city: "Nice", emoji: "🏖️", country: "France 🇫🇷", days: 2 },
-      { city: "Lyon", emoji: "🦁", country: "France 🇫🇷", days: 2 },
-      { city: "Bordeaux", emoji: "🍷", country: "France 🇫🇷", days: 2 },
+      { city: "Paris", emoji: "🗼", country: "France", days: 3 },
+      { city: "Nice", emoji: "🏖️", country: "France", days: 2 },
+      { city: "Lyon", emoji: "🦁", country: "France", days: 2 },
+      { city: "Bordeaux", emoji: "🍷", country: "France", days: 2 },
     ]
   } else {
     candidates = [
-      { city: "Rome", emoji: "🍕", country: "Italie 🇮🇹", days: 3 },
-      { city: "Tokyo", emoji: "🍣", country: "Japon 🇯🇵", days: 4 },
-      { city: "Barcelone", emoji: "☀️", country: "Espagne 🇪🇸", days: 3 },
-      { city: "Tunis", emoji: "🏛️", country: "Tunisie 🇹🇳", days: 2 },
-      { city: "New York", emoji: "🗽", country: "États-Unis 🇺🇸", days: 4 },
-      { city: "Amsterdam", emoji: "🚲", country: "Pays-Bas 🇳🇱", days: 2 },
-      { city: "Marrakech", emoji: "🌴", country: "Maroc 🇲🇦", days: 3 },
-      { city: "Paris", emoji: "🗼", country: "France 🇫🇷", days: 3 },
+      { city: "Rome", emoji: "🍕", country: "Italy", days: 3 },
+      { city: "Tokyo", emoji: "🍣", country: "Japan", days: 4 },
+      { city: "Barcelone", emoji: "☀️", country: "Spain", days: 3 },
+      { city: "Tunis", emoji: "🏛️", country: "Tunisia", days: 2 },
+      { city: "New York", emoji: "🗽", country: "United States", days: 4 },
+      { city: "Amsterdam", emoji: "🚲", country: "Netherlands", days: 2 },
+      { city: "Marrakech", emoji: "🌴", country: "Morocco", days: 3 },
+      { city: "Paris", emoji: "🗼", country: "France", days: 3 },
     ]
   }
 
@@ -833,7 +823,6 @@ function MiniCalendar({
           className="mx-3 mb-3 py-2 px-3 rounded-xl flex items-center gap-2"
           style={{ background: "rgba(59,65,200,0.07)" }}
         >
-          <span className="text-base">📅</span>
           <span className="text-navy font-black text-[13px]">
             {fmt(selected)}
           </span>
@@ -1017,7 +1006,7 @@ function TransportLegModal({
                 {step === "type"
                   ? "How are you getting there?"
                   : step === "options"
-                    ? `${chosenIcon} ${selectedType} options`
+                    ? `${selectedType} options`
                     : "Add your ticket"}
               </h3>
               <p className="text-slate-400 text-[11px]">
@@ -1059,7 +1048,7 @@ function TransportLegModal({
                           : "2px solid transparent",
                     }}
                   >
-                    <span className="text-3xl">{t.icon}</span>
+                    <span className="w-10 h-10 rounded-2xl flex items-center justify-center text-[13px] font-black text-brand" style={{ background: "rgba(59,65,200,0.08)" }}>{t.label.charAt(0).toUpperCase()}</span>
                     <span
                       className="text-[11px] font-bold"
                       style={{
@@ -1082,7 +1071,7 @@ function TransportLegModal({
                     boxShadow: "0 8px 24px rgba(59,65,200,0.3)",
                   }}
                 >
-                  <span>🔍</span> Book options / prices
+                  Book options / prices
                 </button>
                 <button
                   type="button"
@@ -1118,7 +1107,7 @@ function TransportLegModal({
                       color: sortBy === s ? "white" : "#3B41C8",
                     }}
                   >
-                    {s === "price" ? "💰 Cheapest" : "⚡ Fastest"}
+                    {s === "price" ? "Cheapest" : "Fastest"}
                   </button>
                 ))}
               </div>
@@ -1141,10 +1130,10 @@ function TransportLegModal({
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center gap-2.5">
                           <div
-                            className="w-9 h-9 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+                            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-[12px] font-black text-brand"
                             style={{ background: "rgba(59,65,200,0.07)" }}
                           >
-                            {op.logo}
+                            {op.name.charAt(0).toUpperCase()}
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
@@ -1227,7 +1216,7 @@ function TransportLegModal({
                     color: "#3B41C8",
                   }}
                 >
-                  🎫 Already have a ticket? Add it manually
+                  Already have a ticket? Add it manually
                 </button>
               </div>
 
@@ -1258,7 +1247,7 @@ function TransportLegModal({
                       boxShadow: "0 8px 24px rgba(59,65,200,0.3)",
                     }}
                   >
-                    Add to Trip Plan ✓
+                    Add to trip plan
                   </button>
                 </div>
               )}
@@ -1275,7 +1264,7 @@ function TransportLegModal({
                   border: "1px solid rgba(59,65,200,0.12)",
                 }}
               >
-                <span className="text-3xl">{chosenIcon}</span>
+                <span className="w-11 h-11 rounded-2xl flex items-center justify-center text-[14px] font-black text-brand flex-shrink-0" style={{ background: "rgba(59,65,200,0.08)" }}>{selectedType.charAt(0).toUpperCase()}</span>
                 <div>
                   <p className="text-navy font-bold text-[13px]">
                     {fromCity} → {toCity}
@@ -1412,7 +1401,7 @@ function TransportLegModal({
                   boxShadow: "0 8px 24px rgba(59,65,200,0.3)",
                 }}
               >
-                Save Ticket ✓
+                Save ticket
               </button>
 
               {initialLeg && onDelete && (
@@ -1429,7 +1418,7 @@ function TransportLegModal({
                     border: "1.5px solid rgba(239,68,68,0.2)",
                   }}
                 >
-                  🗑️ Delete Ticket
+                  Delete ticket
                 </button>
               )}
             </div>
@@ -1443,7 +1432,6 @@ function TransportLegModal({
 export default function TripOverviewScreen({ navigate, goBack }: Props) {
   const { configured, user } = useAuth()
   const isDesktop = useIsDesktop()
-  const [activeTab, setActiveTab] = useState(0)
   const [showShare, setShowShare] = useState(false)
   const [trip, setTrip] = useState<any>(null)
 
@@ -1811,11 +1799,6 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
   const dragTouchRef = useRef<{ fromIndex: number; startY: number } | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
-  const handleTabClick = (i: number, label: string) => {
-    if (tabScreenMap[label]) navigate(tabScreenMap[label])
-    else setActiveTab(i)
-  }
-
   // ── Swipe handlers ──────────────────────────────────────────
   const onSwipeTouchStart = (e: React.TouchEvent, id: string) => {
     swipeTouchRef.current = {
@@ -2031,7 +2014,6 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
     return (
       <div className="min-h-full bg-surface flex flex-col items-center justify-center px-8 text-center">
         <div className="pt-12" />
-        <span className="text-6xl mb-4">🧳</span>
         <h1 className="text-navy font-black text-[20px] mb-2">No trip selected</h1>
         <p className="text-slate-400 text-[13px] mb-6 leading-relaxed">
           Create a trip and it will show up here with its itinerary, map,
@@ -2045,7 +2027,7 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
             boxShadow: "0 12px 32px rgba(59,65,200,0.35)",
           }}
         >
-          Create your first trip ✨
+          Create your first trip
         </button>
       </div>
     )
@@ -2055,9 +2037,8 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
     return (
       <div className="min-h-full bg-surface flex flex-col items-center justify-center px-8 text-center">
         <div className="pt-12" />
-        <span className="text-6xl mb-4">🚪</span>
         <h1 className="text-navy font-black text-[20px] mb-2">
-          You're not in this trip anymore
+          You&apos;re not in this trip anymore
         </h1>
         <p className="text-slate-400 text-[13px] mb-6 leading-relaxed">
           « {trip.title} » is not part of your trips anymore. You can rejoin the
@@ -2138,7 +2119,6 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
         </button>
         <div className="absolute bottom-5 left-5 right-5 md:left-8 md:right-8">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-2xl">🌍</span>
             <h1 className={`text-white font-black text-[22px] md:text-[28px] ${isDesktop ? "max-w-none" : "truncate"}`}>
               {trip?.title || (loading ? "Loading trip..." : "My Trip Overview")}
             </h1>
@@ -2158,7 +2138,7 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
             className="mt-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-black text-white transition-all active:scale-95"
             style={{ background: "rgba(255,255,255,0.18)", backdropFilter: "blur(8px)" }}
           >
-            📅 Edit dates
+            Edit dates
           </button>
         </div>
       </div>
@@ -2173,30 +2153,25 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
         }}
       >
         {[
-          { icon: "📍", value: String(stops.length), label: "Places" },
+          { value: String(stops.length), label: "Places" },
           {
-            icon: "🏨",
             value: String((trip?.bookings || []).filter((b: any) => b.booking_type === "stay").length),
             label: "Stays",
           },
           {
-            icon: "✈️",
             value: String((trip?.bookings || []).filter((b: any) => b.booking_type === "flight").length),
             label: "Flights",
           },
           {
-            icon: "🎯",
             value: String((trip?.itinerary_items || []).length),
             label: "Activities",
           },
           {
-            icon: "👥",
             value: String((trip?.members || []).filter((m: any) => m.status === "joined").length),
             label: "On Trip",
           },
         ].map((s) => (
           <div key={s.label} className="flex flex-col items-center gap-0.5">
-            <span className="text-lg">{s.icon}</span>
             <span className="text-navy font-black text-[16px]">{s.value}</span>
             <span className="text-slate-400 text-[10px] font-medium">
               {s.label}
@@ -2209,13 +2184,12 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
       {userRole === "viewer" && (
         <div className="mx-5 md:mx-8 mt-3 px-3.5 py-2.5 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-2">
-            <span className="text-base">👁️</span>
             <div>
               <p className="text-[11px] font-black text-amber-900 leading-tight">
-                Mode Lecture Seule
+                Read-only access
               </p>
               <p className="text-[10px] text-amber-700">
-                Vous consultez ce voyage en tant qu'invité lecteur.
+                You&apos;re viewing this trip as a guest reader.
               </p>
             </div>
           </div>
@@ -2270,28 +2244,7 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 px-5 md:px-8 mt-5 mb-4 overflow-x-auto pb-1">
-        {tabs.map((tab, i) => (
-          <button
-            key={tab}
-            onClick={() => handleTabClick(i, tab)}
-            className="flex-shrink-0 px-4 py-2 rounded-full text-[12px] font-bold transition-all"
-            style={{
-              background:
-                i === activeTab && !tabScreenMap[tab] ? "#3B41C8" : "white",
-              color:
-                i === activeTab && !tabScreenMap[tab] ? "white" : "#64748b",
-              boxShadow:
-                i === activeTab && !tabScreenMap[tab]
-                  ? "0 4px 12px rgba(59,65,200,0.3)"
-                  : "0 1px 4px rgba(0,0,0,0.06)",
-            }}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
+      {/* Tabs live in TripDetailShell — one nav for all trip tools. */}
 
       {/* Community banner */}
       <div className="px-5 md:px-8 mb-4">
@@ -2314,10 +2267,10 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
             />
           </div>
           <div
-            className="w-11 h-11 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
+            className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 text-white font-black text-[14px] tracking-wide"
             style={{ background: "rgba(255,255,255,0.1)" }}
           >
-            🌍
+            CO
           </div>
           <div className="flex-1 text-left relative">
             <p className="text-white font-black text-[15px]">Trip Community</p>
@@ -2368,7 +2321,6 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
         >
           {stops.length === 0 && (
             <div className="bg-white rounded-2xl p-6 text-center shadow-sm mb-3">
-              <span className="text-3xl mb-2 block">📍</span>
               <p className="text-navy font-bold text-sm">No destinations added yet</p>
               <p className="text-slate-400 text-xs mt-1">Tap below to add your first stop</p>
             </div>
@@ -2433,7 +2385,7 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
                           : "linear-gradient(135deg, #3B41C8, #06C4D4)",
                       }}
                     >
-                      {isLocked ? "🔒" : stop.emoji}
+                      {isLocked ? "✓" : i + 1}
                     </div>
                     {(i < stops.length - 1 || isExpanded) && (
                       <div
@@ -2457,12 +2409,12 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
                       >
                         {offset < -20 && (
                           <span className="text-white font-black text-[11px] ml-auto">
-                            🗑 Delete
+                            Delete
                           </span>
                         )}
                         {offset > 20 && (
                           <span className="text-white font-black text-[11px]">
-                            {isLocked ? "🔓 Unlock" : "🔒 Lock"}
+                            {isLocked ? "Unlock" : "Lock"}
                           </span>
                         )}
                       </div>
@@ -2500,9 +2452,6 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
                               <h3 className="text-navy font-black text-[15px] group-hover:text-brand transition-colors">
                                 {stop.city}
                               </h3>
-                              {isLocked && (
-                                <span className="text-[10px]">🔒</span>
-                              )}
                               <span className="text-[11px] text-brand opacity-80 group-hover:opacity-100 font-bold flex items-center gap-0.5">
                                 ↗
                               </span>
@@ -2613,7 +2562,7 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
                         {/* Stay */}
                         <div className="px-4 pt-3 pb-2 border-b border-slate-100">
                           <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">
-                            🏨 Where You Stay
+                            Where You Stay
                           </p>
                           <div className="flex items-center gap-3">
                             <div
@@ -2645,11 +2594,11 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
                             return arrivalLeg ? (
                               <div className="px-4 py-2 border-b border-slate-100">
                                 <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">
-                                  🛬 How You Arrive
+                                  How You Arrive
                                 </p>
                                 <div className="flex items-center gap-2.5">
-                                  <span className="text-[18px]">
-                                    {arrivalLeg.icon}
+                                  <span className="w-8 h-8 rounded-xl flex items-center justify-center text-[11px] font-black text-brand flex-shrink-0" style={{ background: "rgba(59,65,200,0.08)" }}>
+                                    {arrivalLeg.label.charAt(0).toUpperCase()}
                                   </span>
                                   <div className="flex-1">
                                     <p className="text-navy font-bold text-[12px]">
@@ -2676,7 +2625,7 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
                         {/* Activities */}
                         <div className="px-4 py-2">
                           <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">
-                            🎯 Planned Activities
+                            Planned Activities
                           </p>
                           {detail.activities.map((act, ai) => (
                             <div
@@ -2715,7 +2664,7 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
                               background: "rgba(59,65,200,0.04)",
                             }}
                           >
-                            <span>🏨 Booking & Tours</span>
+                            <span>Booking & Tours</span>
                             <span>↗</span>
                           </button>
                           <button
@@ -2738,7 +2687,7 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
                               background: "rgba(124,58,237,0.04)",
                             }}
                           >
-                            <span>✨ Vibe Match</span>
+                            <span>Vibe Match</span>
                           </button>
                           <button
                             type="button"
@@ -2756,7 +2705,7 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
                               background: "rgba(5,150,105,0.04)",
                             }}
                           >
-                            <span>💎 Hidden Gems</span>
+                            <span>Hidden Gems</span>
                           </button>
                           <button
                             type="button"
@@ -2767,7 +2716,7 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
                               background: "rgba(59,65,200,0.02)",
                             }}
                           >
-                            <span>🗓️ Itinerary →</span>
+                            <span>Itinerary →</span>
                           </button>
                         </div>
                       </div>
@@ -2804,7 +2753,7 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
                               border: "1px solid rgba(59,65,200,0.1)",
                             }}
                           >
-                            <span className="text-[15px]">{leg.icon}</span>
+                            <span className="w-8 h-8 rounded-xl flex items-center justify-center text-[11px] font-black text-brand flex-shrink-0" style={{ background: "rgba(59,65,200,0.08)" }}>{leg.label.charAt(0).toUpperCase()}</span>
                             <div className="flex-1 min-w-0">
                               <p className="text-navy font-bold text-[12px]">
                                 {leg.label}
@@ -2937,61 +2886,61 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
           {[
             {
-              icon: "🧳",
+              icon: "PL",
               label: "Packing List",
               sub: "9/15 packed",
               screen: "packing-list" as Screen,
             },
             {
-              icon: "🌤",
+              icon: "W",
               label: "Weather",
-              sub: "Tunis 28°C ☀️",
+              sub: "Tunis 28°C",
               screen: "weather" as Screen,
             },
             {
-              icon: "💱",
+              icon: "CU",
               label: "Currency",
               sub: `1 USD = ${liveRates.TND ? liveRates.TND.toFixed(2) : "2.91"} TND`,
               screen: "currency" as Screen,
             },
             {
-              icon: "👥",
+              icon: "TC",
               label: "Trip Crew",
               sub: "3 travelers",
               screen: "collaborative" as Screen,
             },
             {
-              icon: "💸",
+              icon: "SB",
               label: "Split Bills",
               sub: "$317 total · 3 people",
               screen: "split-bills" as Screen,
             },
             {
-              icon: "📍",
+              icon: "FC",
               label: "Find Crew",
               sub: "Sarah 12min · Marco 32min",
               screen: "crew-tracker" as Screen,
             },
             {
-              icon: "💎",
+              icon: "HG",
               label: "Hidden Gems",
               sub: stops.length > 0 ? `Secrets in ${stops.map((s) => s.city).slice(0, 2).join(" & ")}` : "Local secrets nearby",
               screen: "hidden-gems" as Screen,
             },
             {
-              icon: "✨",
+              icon: "VM",
               label: "Vibe Match",
               sub: "Match today's mood",
               screen: "vibe-match" as Screen,
             },
             {
-              icon: "🌍",
+              icon: "CO",
               label: "Community",
               sub: "312 views · 3 join requests",
               screen: "trip-social" as Screen,
             },
             {
-              icon: "📷",
+              icon: "ME",
               label: "Memories",
               sub: "Map style · photos · slideshow",
               screen: "trip-memories" as Screen,
@@ -3027,7 +2976,7 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
               className="bg-white rounded-2xl p-3.5 flex items-center gap-3 text-left cursor-pointer transition-transform active:scale-98"
               style={{ boxShadow: "0 2px 8px rgba(59,65,200,0.07)" }}
             >
-              <span className="text-xl">{tool.icon}</span>
+              <span className="w-9 h-9 rounded-xl flex items-center justify-center text-[12px] font-black text-brand flex-shrink-0" style={{ background: "rgba(59,65,200,0.07)" }}>{tool.icon}</span>
               <div>
                 <p className="text-navy font-bold text-[13px]">{tool.label}</p>
                 <p className="text-slate-400 text-[10px]">{tool.sub}</p>
@@ -3140,8 +3089,8 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
       {showDeleteModal && (
         <div className="fixed inset-0 z-[150] bg-black/60 backdrop-blur-xs flex items-center justify-center p-5 animate-fadeIn">
           <div className="w-full max-w-sm rounded-[28px] bg-white p-6 shadow-2xl">
-            <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center text-2xl mx-auto mb-4">
-              🗑️
+            <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center text-xl font-black mx-auto mb-4">
+              !
             </div>
             <h3 className="text-[18px] font-black text-navy text-center mb-1.5">
               Supprimer ce voyage ?
@@ -3382,18 +3331,18 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
               className="w-full mb-3 flex items-center justify-between p-3 rounded-2xl border border-brand/25 bg-brand/5 hover:bg-brand/10 transition-all text-left group cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-brand/15 flex items-center justify-center text-xl flex-shrink-0 group-hover:scale-105 transition-transform">
-                  🗺️
+                <div className="w-10 h-10 rounded-xl bg-brand/15 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                  <span className="text-[13px] font-black text-brand">MAP</span>
                 </div>
                 <div>
                   <p className="text-navy font-black text-[13px] flex items-center gap-1.5">
-                    <span>Choisir sur la carte</span>
+                    <span>Choose on the map</span>
                     <span className="text-[9px] bg-brand text-white px-1.5 py-0.5 rounded font-extrabold uppercase tracking-wider">
                       Mapbox GPS
                     </span>
                   </p>
                   <p className="text-slate-400 text-[11px]">
-                    Touchez n'importe quel point sur le globe pour l'ajouter
+                    Tap any point on the globe to add it
                   </p>
                 </div>
               </div>
@@ -3404,14 +3353,17 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
 
             {/* Live Search Input powered by Mapbox */}
             <div className="relative mb-3">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
-                🔍
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 flex-shrink-0">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#94a3b8" strokeWidth="1.8" strokeLinecap="round">
+                  <circle cx="7" cy="7" r="5" />
+                  <path d="m11 11 3 3" />
+                </svg>
               </span>
               <input
                 type="text"
                 value={destinationQuery}
                 onChange={(e) => setDestinationQuery(e.target.value)}
-                placeholder="Rechercher une ville, région ou pays..."
+                placeholder="Search a city, region or country..."
                 className="w-full rounded-2xl pl-10 pr-10 py-3 text-[13px] font-semibold text-navy outline-none"
                 style={{
                   background: "#f8fafc",
@@ -3463,13 +3415,13 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
                     border: "1px solid rgba(59,65,200,0.15)",
                   }}
                 >
-                  <span className="text-2xl">📍</span>
+                  <span className="w-9 h-9 rounded-xl flex items-center justify-center text-[12px] font-black text-brand flex-shrink-0" style={{ background: "rgba(59,65,200,0.07)" }}>{customDestinationName.charAt(0).toUpperCase()}</span>
                   <div className="flex-1">
                     <p className="text-navy font-black text-[14px]">
-                      Ajouter « {customDestinationName} »
+                      Add "{customDestinationName}"
                     </p>
                     <p className="text-slate-400 text-[11px]">
-                      Lieu personnalisé • 1 jour par défaut
+                      Custom place · 1 day by default
                     </p>
                   </div>
                   <div
@@ -3493,13 +3445,13 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
                     border: "1px solid rgba(59,65,200,0.1)",
                   }}
                 >
-                  <span className="text-2xl">{dest.emoji || "📍"}</span>
+                  <span className="w-9 h-9 rounded-xl flex items-center justify-center text-[12px] font-black text-brand flex-shrink-0" style={{ background: "rgba(59,65,200,0.07)" }}>{dest.city.charAt(0).toUpperCase()}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-navy font-black text-[14px] truncate">
                       {dest.city}
                     </p>
                     <p className="text-slate-400 text-[11px] truncate">
-                      {dest.country ? `${dest.country}` : `${dest.days ?? 1} jour${(dest.days ?? 1) > 1 ? "s" : ""} recommandé${(dest.days ?? 1) > 1 ? "s" : ""}`}
+                      {dest.country ? `${dest.country}` : `${dest.days ?? 1} day${(dest.days ?? 1) > 1 ? "s" : ""} recommended`}
                     </p>
                   </div>
                   <div
@@ -3515,12 +3467,11 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
 
               {filteredDestinations.length === 0 && !hasCustomDestination && !isSearchingDestinations && (
                 <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center">
-                  <span className="text-2xl block mb-1">🌍</span>
                   <p className="text-[12px] font-bold text-slate-600">
-                    Aucune destination trouvée pour « {destinationQuery} »
+                    No destination found for "{destinationQuery}"
                   </p>
                   <p className="text-[11px] text-slate-400 mt-1">
-                    Essayez un autre nom de ville ou sélectionnez directement sur la carte
+                    Try another city name or pick directly on the map
                   </p>
                 </div>
               )}

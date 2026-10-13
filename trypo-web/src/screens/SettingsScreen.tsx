@@ -237,14 +237,14 @@ export default function SettingsScreen({ navigate, goBack }: Props) {
         {/* Preferences */}
         <Section title={t("preferences")}>
           <SelectRow
-            label={`💱 ${t("currency")}`}
+            label={t("currency")}
             value={settings.currency}
             options={currencyOptions}
             onChange={(v) => update({ currency: v })}
           />
           <Divider />
           <div className="flex items-center justify-between px-4 py-3.5">
-            <p className="text-navy font-semibold text-[14px]">🌐 {t("language")}</p>
+            <p className="text-navy font-semibold text-[14px]">{t("language")}</p>
             <select
               value={settings.language}
               onChange={(e) => update({ language: e.target.value as LanguageCode })}
@@ -259,7 +259,7 @@ export default function SettingsScreen({ navigate, goBack }: Props) {
           </div>
           <Divider />
           <div className="flex items-center justify-between px-4 py-3.5">
-            <p className="text-navy font-semibold text-[14px]">📏 {t("units")}</p>
+            <p className="text-navy font-semibold text-[14px]">{t("units")}</p>
             <select
               value={settings.units}
               onChange={(e) => update({ units: e.target.value as "metric" | "imperial" })}
@@ -273,28 +273,28 @@ export default function SettingsScreen({ navigate, goBack }: Props) {
 
         {/* Notifications */}
         <Section title={t("notifications")}>
-          <ToggleRow label={`🗓 ${t("tripReminders")}`} value={settings.notifications.trip} onChange={(v) => void handleNotifToggle("trip", v)} />
+          <ToggleRow label={t("tripReminders")} value={settings.notifications.trip} onChange={(v) => void handleNotifToggle("trip", v)} />
           <Divider />
-          <ToggleRow label={`✈️ ${t("bookingUpdates")}`} value={settings.notifications.booking} onChange={(v) => void handleNotifToggle("booking", v)} />
+          <ToggleRow label={t("bookingUpdates")} value={settings.notifications.booking} onChange={(v) => void handleNotifToggle("booking", v)} />
           <Divider />
-          <ToggleRow label={`👥 ${t("crewActivity")}`} value={settings.notifications.crew} onChange={(v) => void handleNotifToggle("crew", v)} />
+          <ToggleRow label={t("crewActivity")} value={settings.notifications.crew} onChange={(v) => void handleNotifToggle("crew", v)} />
           <Divider />
-          <ToggleRow label={`🔥 ${t("dealsPromo")}`} value={settings.notifications.promo} onChange={(v) => void handleNotifToggle("promo", v)} />
+          <ToggleRow label={t("dealsPromo")} value={settings.notifications.promo} onChange={(v) => void handleNotifToggle("promo", v)} />
         </Section>
 
         {/* App */}
         <Section title={t("app")}>
-          <ToggleRow label={`🌙 ${t("darkMode")}`} value={settings.darkMode} onChange={(v) => update({ darkMode: v })} />
+          <ToggleRow label={t("darkMode")} value={settings.darkMode} onChange={(v) => update({ darkMode: v })} />
           <Divider />
           <ToggleRow
-            label={`📶 ${t("offlineAccess")}${busy ? "…" : ""}`}
+            label={`${t("offlineAccess")}${busy ? "…" : ""}`}
             value={settings.offlineMode}
             onChange={(v) => void handleOfflineToggle(v)}
             sub={t("offlineSub")}
           />
           <Divider />
           <ToggleRow
-            label={`📍 ${t("locationAccess")}`}
+            label={t("locationAccess")}
             value={settings.locationAccess}
             onChange={handleLocationToggle}
             sub={t("locationSub")}
@@ -305,7 +305,7 @@ export default function SettingsScreen({ navigate, goBack }: Props) {
         <Section title={t("privacySecurity")}>
           <button onClick={() => void handlePasswordReset()} className="w-full flex items-center justify-between p-4 text-left">
             <div>
-              <p className="text-navy font-semibold text-[14px]">🔒 {t("changePassword")}</p>
+              <p className="text-navy font-semibold text-[14px]">{t("changePassword")}</p>
               <p className="text-slate-400 text-[11px]">{t("changePasswordSub")}</p>
             </div>
             <Chevron />
@@ -313,19 +313,19 @@ export default function SettingsScreen({ navigate, goBack }: Props) {
           <Divider />
           <div className="flex items-center justify-between px-4 py-3.5">
             <div>
-              <p className="text-navy font-semibold text-[14px]">🛡 {t("twoFactor")}</p>
+              <p className="text-navy font-semibold text-[14px]">{t("twoFactor")}</p>
               <p className="text-slate-400 text-[11px]">{twoFa ? t("twoFactorOn") : t("twoFactorOff")}</p>
             </div>
             <Toggle value={twoFa} onChange={handleTwoFa} isDark={settings.darkMode} />
           </div>
           <Divider />
           <button onClick={() => setModal("privacy")} className="w-full flex items-center justify-between p-4 text-left">
-            <p className="text-navy font-semibold text-[14px]">📋 {t("privacyPolicy")}</p>
+            <p className="text-navy font-semibold text-[14px]">{t("privacyPolicy")}</p>
             <Chevron />
           </button>
           <Divider />
           <button onClick={() => setModal("terms")} className="w-full flex items-center justify-between p-4 text-left">
-            <p className="text-navy font-semibold text-[14px]">📄 {t("terms")}</p>
+            <p className="text-navy font-semibold text-[14px]">{t("terms")}</p>
             <Chevron />
           </button>
         </Section>
@@ -334,7 +334,7 @@ export default function SettingsScreen({ navigate, goBack }: Props) {
         <Section title={t("dangerZone")}>
           <button onClick={() => { setDeleteConfirm(""); setModal("delete") }} className="w-full p-4 text-left">
             <p className="font-semibold text-[14px]" style={{ color: "#ef4444" }}>
-              🗑 {t("deleteAccount")}
+              {t("deleteAccount")}
             </p>
             <p className="text-slate-400 text-[11px]">{t("deleteAccountSub")}</p>
           </button>
@@ -353,7 +353,7 @@ export default function SettingsScreen({ navigate, goBack }: Props) {
             border: "1px solid rgba(239,68,68,0.15)",
           }}
         >
-          🚪 {t("logout")}
+          {t("logout")}
         </button>
 
         <p className="text-center text-slate-300 text-[11px] lg:col-span-2">{t("version")}</p>
@@ -373,7 +373,7 @@ export default function SettingsScreen({ navigate, goBack }: Props) {
       {(modal === "privacy" || modal === "terms") && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4" onClick={() => setModal(null)}>
           <div className="w-full max-w-[360px] bg-white rounded-[24px] p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-navy font-black text-[16px] mb-2">{modal === "privacy" ? `📋 ${t("privacyPolicy")}` : `📄 ${t("terms")}`}</h3>
+            <h3 className="text-navy font-black text-[16px] mb-2">{modal === "privacy" ? t("privacyPolicy") : t("terms")}</h3>
             <p className="text-slate-500 text-[12px] leading-relaxed max-h-[220px] overflow-y-auto">
               {modal === "privacy"
                 ? "Trypo stores your trips, bookings and expenses to provide travel planning. Location is only used for nearby recommendations when you enable it. You can clear offline data anytime by disabling Offline access, and delete your account to erase local data."
@@ -395,7 +395,7 @@ export default function SettingsScreen({ navigate, goBack }: Props) {
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4" onClick={() => setModal(null)}>
           <div className="w-full max-w-[360px] bg-white rounded-[24px] p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-black text-[16px] mb-1" style={{ color: "#ef4444" }}>
-              🗑 {t("deleteAccount")}
+              {t("deleteAccount")}
             </h3>
             <p className="text-slate-500 text-[12px] mb-3">{t("confirmDelete")}</p>
             <input

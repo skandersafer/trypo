@@ -35,6 +35,7 @@ import CommunityTripDetailScreen from "./screens/CommunityTripDetailScreen"
 import ChatbotScreen from "./screens/ChatbotScreen"
 import TripMemoriesScreen from "./screens/TripMemoriesScreen"
 import BottomNav from "./components/BottomNav"
+import TripDetailShell, { TRIP_SCREENS } from "./components/TripDetailShell"
 import AuthScreen from "./screens/AuthScreen"
 import { useAuth, useMyAvatar } from "./lib/auth"
 import { useLiveTripSync } from "./lib/liveTripSync"
@@ -113,12 +114,12 @@ function DesktopSidebar({
   userName: string
   avatar: string
 }) {
-  const items: Array<{ label: string; icon: string; screens: Screen[]; target: Screen }> = [
-    { label: "Home", icon: "⌂", screens: ["home"], target: "home" },
-    { label: "Explore", icon: "◎", screens: ["explore"], target: "explore" },
-    { label: "My Trips", icon: "▤", screens: ["trips", "trip-overview", "itinerary"], target: "trips" },
-    { label: "Community", icon: "◍", screens: ["trip-social", "community-trip-detail"], target: "trip-social" },
-    { label: "Tripo AI", icon: "✦", screens: ["chatbot"], target: "chatbot" },
+  const items: Array<{ label: string; path: string; screens: Screen[]; target: Screen }> = [
+    { label: "Home", path: "M3 10.5 12 3l9 7.5M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5M9 21v-6h6v6", screens: ["home"], target: "home" },
+    { label: "Explore", path: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm3.5-12.5-2 5-5 2 2-5z", screens: ["explore"], target: "explore" },
+    { label: "My Trips", path: "M3 4.5h18a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1Zm-1 6h20M8 2.5v4M16 2.5v4", screens: ["trips", "trip-overview", "itinerary"], target: "trips" },
+    { label: "Community", path: "M12 21c-5 0-8-3.5-8-8a5 5 0 0 1 8-4 5 5 0 0 1 8 4c0 4.5-3 8-8 8Zm-4-9h.01M12 12h.01M16 12h.01", screens: ["trip-social", "community-trip-detail"], target: "trip-social" },
+    { label: "Tripo AI", path: "M12 3v18M3 12h18M5.5 5.5l13 13M18.5 5.5l-13 13", screens: ["chatbot"], target: "chatbot" },
   ]
   const isActive = (screens: Screen[]) => screens.includes(current)
   const profileActive = current === "profile" || current === "edit-profile" || current === "settings"
@@ -160,7 +161,11 @@ function DesktopSidebar({
                 background: active ? (darkMode ? "rgba(56,189,248,0.12)" : "rgba(59,65,200,0.08)") : "transparent",
               }}
             >
-              <span className="w-5 text-center text-[15px]">{item.icon}</span>
+              <span className="flex w-5 justify-center">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+                  <path d={item.path} />
+                </svg>
+              </span>
               {item.label}
             </button>
           )
@@ -407,8 +412,9 @@ export default function App() {
   }, [user !== null])
 
   const showNav = NAV_SCREENS.includes(screen)
+  const inTrip = TRIP_SCREENS.includes(screen)
 
-  const renderScreen = () => {
+  const renderContent = () => {
     // If not authenticated and not on public splash/onboarding/auth screens, force Auth
     if (!user && screen !== "splash" && screen !== "onboarding" && screen !== "auth") {
       return <AuthScreen onSuccess={() => navigateRoot("home")} navigate={navigate} />
@@ -503,12 +509,23 @@ export default function App() {
     }
   }
 
+  const renderScreen = () => {
+    const content = renderContent()
+    if (inTrip) {
+      return (
+        <TripDetailShell current={screen} navigate={navigate} goBack={goBack}>
+          {content}
+        </TripDetailShell>
+      )
+    }
+    return content
+  }
+
   return (
     <div
       className={fullBleed ? "h-dvh w-full flex flex-col overflow-hidden" : "min-h-dvh w-full flex flex-col"}
       style={{
-        background:
-          "linear-gradient(145deg, #0a0a2e 0%, #1a1a5e 40%, #0a2040 100%)",
+        background: "#E9ECF5",
         fontFamily: "'Plus Jakarta Sans', sans-serif",
       }}
     >

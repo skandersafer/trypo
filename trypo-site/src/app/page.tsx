@@ -12,32 +12,32 @@ export const metadata: Metadata = {
 
 const features = [
   {
-    icon: "🗺️",
+    icon: "IT",
     title: "Shared itinerary",
     text: "Build the route stop by stop. Everyone sees the same plan, dates and days per destination.",
   },
   {
-    icon: "🏨",
+    icon: "ST",
     title: "Stays & bookings",
     text: "Compare hotels, save stays, add bookings manually and keep confirmations in one place.",
   },
   {
-    icon: "🚌",
+    icon: "TR",
     title: "Transport legs",
     text: "Flights, trains, buses and ferries between stops — with prices, times and references.",
   },
   {
-    icon: "💰",
+    icon: "BU",
     title: "Budget & split bills",
     text: "Track spending per category and split costs with the crew without spreadsheets.",
   },
   {
-    icon: "📍",
+    icon: "CR",
     title: "Live crew tracking",
     text: "Share positions in real time and find each other on the map during the trip.",
   },
   {
-    icon: "💎",
+    icon: "HG",
     title: "Hidden gems",
     text: "Atlas Obscura, Wikivoyage and OpenStreetMap secrets for every destination.",
   },
@@ -65,13 +65,13 @@ export default function Home() {
       <section className="mx-auto max-w-5xl px-5 pb-14 pt-12 md:pt-16">
         <div className="grid items-center gap-10 md:grid-cols-2">
           <div className="text-center md:text-left">
-            <p className="mb-4 w-fit rounded-full bg-[#7c3aed] px-3.5 py-1.5 text-xs font-black text-white max-md:mx-auto">
+            <p className="mb-4 w-fit rounded-full bg-[#3B41C8] px-3.5 py-1.5 text-xs font-black text-white max-md:mx-auto">
               Group trip planner + crew tracker
             </p>
             <h1 className="text-4xl font-black leading-[1.05] tracking-tight md:text-6xl">
               Plan the trip.
               <br />
-              <span className="bg-gradient-to-r from-[#7c3aed] to-[#06C4D4] bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[#3B41C8] to-[#06C4D4] bg-clip-text text-transparent">
                 Track every moment.
               </span>
             </h1>
@@ -92,20 +92,20 @@ export default function Home() {
               .
             </p>
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row md:justify-start justify-center">
-              <Link
-                href="/download"
-                className="w-full rounded-full border border-white/20 bg-white/5 px-7 py-3.5 text-center font-bold hover:bg-white/10 sm:w-auto"
-              >
-                Download the app
-              </Link>
               <a
                 href={APP_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full rounded-full px-7 py-3.5 text-center font-bold text-white/90 hover:text-white sm:w-auto"
+                className="w-full rounded-full bg-gradient-to-r from-[#3B41C8] to-[#06C4D4] px-7 py-3.5 text-center font-bold text-white sm:w-auto"
               >
-                Start on web →
+                Start planning free
               </a>
+              <Link
+                href="/download"
+                className="w-full rounded-full px-7 py-3.5 text-center font-bold text-white/70 hover:text-white sm:w-auto"
+              >
+                Download mobile
+              </Link>
             </div>
           </div>
 
@@ -138,14 +138,14 @@ export default function Home() {
                 <span className="absolute bottom-24 left-10 rounded-full bg-white px-2.5 py-1 text-[10px] font-black text-slate-600 shadow">
                   Marseille
                 </span>
-                <span className="absolute left-[38%] top-[30%] flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-indigo-500 to-cyan-400 text-sm shadow-lg">
-                  🧑‍🤝‍🧑
+                <span className="absolute left-[38%] top-[30%] flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-indigo-500 to-cyan-400 text-[11px] font-black text-white shadow-lg">
+                  MO
                 </span>
-                <span className="absolute left-[60%] top-[48%] flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-amber-400 to-rose-400 text-sm shadow-lg">
-                  🙂
+                <span className="absolute left-[60%] top-[48%] flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-amber-400 to-rose-400 text-[10px] font-black text-white shadow-lg">
+                  AM
                 </span>
-                <span className="absolute bottom-[38%] left-[30%] flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-emerald-400 to-teal-500 text-sm shadow-lg">
-                  😎
+                <span className="absolute bottom-[38%] left-[30%] flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-emerald-400 to-teal-500 text-[10px] font-black text-white shadow-lg">
+                  YB
                 </span>
                 <div className="absolute inset-x-3 bottom-3 space-y-2">
                   <div className="rounded-2xl bg-white/95 p-2.5 shadow-lg">
@@ -165,8 +165,8 @@ export default function Home() {
 
             {/* Floating photo card */}
             <div className="absolute -left-20 top-16 w-28 -rotate-12 overflow-hidden rounded-xl border-2 border-white bg-white shadow-xl">
-              <div className="flex h-24 items-center justify-center bg-gradient-to-br from-amber-300 via-rose-300 to-indigo-400 text-3xl">
-                🏝️
+              <div className="flex h-24 items-center justify-center bg-gradient-to-br from-amber-300 via-rose-300 to-indigo-400 text-sm font-black text-white">
+                DJ
               </div>
               <p className="px-2 py-1.5 text-[9px] font-bold text-slate-600">Djerba laughed too much</p>
             </div>
@@ -174,13 +174,13 @@ export default function Home() {
             {/* Floating comment card */}
             <div className="absolute -right-16 top-56 w-52 rotate-2 rounded-2xl bg-white p-3 shadow-xl">
               <div className="flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-cyan-400 text-xs">
-                  🙂
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-cyan-400 text-[10px] font-black text-white">
+                  A
                 </span>
                 <p className="text-[10px] font-black text-slate-800">
                   Amine <span className="font-normal text-slate-400">· 2h</span>
                 </p>
-                <span className="ml-auto text-xs text-rose-400">♥</span>
+                <span className="ml-auto text-xs font-black text-rose-400">3</span>
               </div>
               <p className="mt-1.5 text-[10px] leading-snug text-slate-600">
                 Rented scooters and explored Sidi Bou — absolutely amazing!!!
@@ -208,7 +208,7 @@ export default function Home() {
       <section className="overflow-hidden border-y border-white/10 bg-white/[0.02] py-5" aria-label="Popular destinations">
         <div className="animate-marquee flex w-max gap-3">
           {[...Array(2)].flatMap((_, k) =>
-            ["Paris 🗼", "Bali 🏝️", "Tokyo 🍣", "Marrakech 🌴", "Rome 🍕", "Bangkok 🛕", "Barcelona ☀️", "Djerba 🏖️", "New York 🗽", "Santorini 💙"].map((d) => (
+            ["Paris", "Bali", "Tokyo", "Marrakech", "Rome", "Bangkok", "Barcelona", "Djerba", "New York", "Santorini"].map((d) => (
               <span
                 key={`${k}-${d}`}
                 className="whitespace-nowrap rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-bold text-white/70"
@@ -227,7 +227,7 @@ export default function Home() {
       <section className="border-y border-white/10 bg-white/[0.02]">
         <div className="mx-auto grid max-w-5xl items-center gap-8 px-5 py-14 md:grid-cols-2">
           <div>
-            <p className="w-fit rounded-full bg-[#7c3aed]/20 px-3 py-1 text-xs font-black text-[#b79bff]">
+            <p className="w-fit rounded-full bg-[#3B41C8]/20 px-3 py-1 text-xs font-black text-[#9db4ff]">
               Live tracker & journal
             </p>
             <h2 className="mt-3 text-2xl font-black md:text-3xl">
@@ -255,13 +255,13 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-2 gap-3" aria-hidden="true">
             {[
-              ["📍", "Live map", "Crew pins update in real time"],
-              ["📝", "Stop journals", "Notes + photos per city"],
-              ["🏨", "Stays", "Manual or booked, all synced"],
-              ["📸", "Memories", "Timeline of the whole trip"],
+              ["LM", "Live map", "Crew pins update in real time"],
+              ["SJ", "Stop journals", "Notes + photos per city"],
+              ["ST", "Stays", "Manual or booked, all synced"],
+              ["ME", "Memories", "Timeline of the whole trip"],
             ].map(([icon, t, d]) => (
               <div key={t} className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <span className="text-2xl">{icon}</span>
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-[11px] font-black text-white">{icon}</span>
                 <p className="mt-2 text-sm font-black">{t}</p>
                 <p className="mt-1 text-xs text-white/55">{d}</p>
               </div>
@@ -279,7 +279,7 @@ export default function Home() {
           </p>
           <ul className="mt-8 grid gap-4 md:grid-cols-3">
             <li className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#3B41C8]/25 to-transparent p-6 md:col-span-2 md:row-span-2">
-              <span className="text-3xl" aria-hidden="true">🗺️</span>
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-xs font-black text-white" aria-hidden="true">IT</span>
               <h3 className="mt-3 text-xl font-black">Shared itinerary</h3>
               <p className="mt-1.5 max-w-md text-sm leading-relaxed text-white/60">
                 Build the route stop by stop. Everyone sees the same plan, dates
@@ -288,12 +288,12 @@ export default function Home() {
               <div className="mt-5 space-y-2" aria-hidden="true">
                 {[
                   ["France", "Sep 13 – Sep 15 · 2d", "from-[#3B41C8] to-[#06C4D4]"],
-                  ["Marseille", "Sep 16 – Sep 19 · 3d", "from-[#7c3aed] to-[#ec4899]"],
+                  ["Marseille", "Sep 16 – Sep 19 · 3d", "from-[#3B41C8] to-[#ec4899]"],
                   ["Barcelona", "Sep 20 – Sep 23 · 3d", "from-[#06C4D4] to-[#10b981]"],
                 ].map(([city, dates, grad]) => (
                   <div key={city} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
-                    <span className={`flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br text-sm ${grad}`}>
-                      📍
+                    <span className={`flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br text-[10px] font-black text-white ${grad}`}>
+                      {city.charAt(0)}
                     </span>
                     <div>
                       <p className="text-sm font-black">{city}</p>
@@ -304,14 +304,14 @@ export default function Home() {
               </div>
             </li>
             <li className="rounded-3xl border border-white/10 bg-white/5 p-6">
-              <span className="text-3xl" aria-hidden="true">📍</span>
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-xs font-black text-white" aria-hidden="true">CR</span>
               <h3 className="mt-3 font-black">Live crew tracking</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-white/60">
                 Real-time GPS pins so nobody gets lost on day one.
               </p>
             </li>
             <li className="rounded-3xl border border-white/10 bg-white/5 p-6">
-              <span className="text-3xl" aria-hidden="true">💰</span>
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-xs font-black text-white" aria-hidden="true">BU</span>
               <h3 className="mt-3 font-black">Budget & split bills</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-white/60">
                 Track spending and split costs fairly — no spreadsheets.
@@ -322,7 +322,7 @@ export default function Home() {
                 key={f.title}
                 className="rounded-3xl border border-white/10 bg-white/5 p-6 transition-colors hover:border-white/25"
               >
-                <span className="text-2xl" aria-hidden="true">{f.icon}</span>
+                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-xs font-black text-white" aria-hidden="true">{f.icon}</span>
                 <h3 className="mt-3 font-black">{f.title}</h3>
                 <p className="mt-1.5 text-sm leading-relaxed text-white/60">{f.text}</p>
               </li>
@@ -383,12 +383,12 @@ export default function Home() {
                 </span>
               </div>
               {[
-                ["🚌", "Bus to Marseille", "Ref pp55 · 5h", "€22"],
-                ["🏨", "Novotel Marseille", "Sep 16 → Sep 19", "€180"],
-                ["🎟️", "Calanques boat tour", "Sep 17 · 4 going", "€35"],
+                ["BU", "Bus to Marseille", "Ref pp55 · 5h", "€22"],
+                ["NO", "Novotel Marseille", "Sep 16 → Sep 19", "€180"],
+                ["CA", "Calanques boat tour", "Sep 17 · 4 going", "€35"],
               ].map(([icon, t, d, p]) => (
                 <div key={t} className="flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2.5">
-                  <span className="text-lg">{icon}</span>
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-[10px] font-black text-white">{icon}</span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-bold">{t}</p>
                     <p className="text-[10px] text-white/45">{d}</p>
@@ -446,20 +446,20 @@ export default function Home() {
               Start free
             </a>
           </div>
-          <div className="relative rounded-3xl border border-[#7c3aed]/50 bg-gradient-to-b from-[#7c3aed]/20 to-transparent p-6">
-            <span className="absolute -top-3 left-6 rounded-full bg-[#7c3aed] px-3 py-1 text-[11px] font-black">
+          <div className="relative rounded-3xl border border-[#3B41C8]/50 bg-gradient-to-b from-[#3B41C8]/20 to-transparent p-6">
+            <span className="absolute -top-3 left-6 rounded-full bg-[#3B41C8] px-3 py-1 text-[11px] font-black">
               Coming soon
             </span>
             <h3 className="font-black">Pro crew</h3>
             <p className="mt-1 text-3xl font-black">3 €<span className="text-sm font-normal text-white/50">/mo</span></p>
             <ul className="mt-4 space-y-2 text-sm text-white/65">
               {["Offline maps & tickets", "Priority sync + backups", "Custom trip themes", "Early new features"].map((t) => (
-                <li key={t} className="flex gap-2"><span className="text-[#b79bff]">✓</span>{t}</li>
+                <li key={t} className="flex gap-2"><span className="text-[#9db4ff]">✓</span>{t}</li>
               ))}
             </ul>
             <Link
               href="/contact"
-              className="mt-6 block rounded-2xl bg-gradient-to-r from-[#7c3aed] to-[#06C4D4] py-3 text-center font-black"
+              className="mt-6 block rounded-2xl bg-gradient-to-r from-[#3B41C8] to-[#06C4D4] py-3 text-center font-black"
             >
               Join the waitlist
             </Link>

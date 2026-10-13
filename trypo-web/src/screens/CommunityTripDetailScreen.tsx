@@ -22,7 +22,7 @@ import {
 } from "../lib/communityLive"
 import { getCommunityTripSelection } from "../lib/community"
 import { useIsDesktop } from "../lib/useIsDesktop"
-import { HeartIcon, NoteIcon, PlaneIcon, SparklesIcon } from "../components/icons"
+import { HeartIcon, NoteIcon, PlaneIcon, SparklesIcon, QuestionIcon } from "../components/icons"
 
 interface Props {
   navigate: (s: Screen) => void
@@ -73,22 +73,25 @@ type Comment = {
 const DEFAULT_AVATAR =
   "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop"
 
-const typeLabel: Record<CommentType, { label: string; color: string; bg: string }> = {
-  advice: { label: "Tip", color: "#3B41C8", bg: "rgba(59,65,200,0.08)" },
+const typeLabel: Record<CommentType, { label: string; color: string; bg: string; Icon: (p: { size?: number }) => React.ReactElement }> = {
+  advice: { label: "Tip", color: "#3B41C8", bg: "rgba(59,65,200,0.08)", Icon: SparklesIcon },
   opinion: {
     label: "Opinion",
     color: "#7C3AED",
     bg: "rgba(124,58,237,0.08)",
+    Icon: NoteIcon,
   },
   question: {
     label: "Question",
     color: "#f59e0b",
     bg: "rgba(245,158,11,0.1)",
+    Icon: QuestionIcon,
   },
   "join-interest": {
     label: "Wants to join",
     color: "#FF6347",
     bg: "rgba(255,99,71,0.08)",
+    Icon: PlaneIcon,
   },
 }
 
@@ -490,36 +493,38 @@ export default function CommunityTripDetailScreen({
 
       {/* Author + stats */}
       <div
-        className="bg-white px-5 md:px-8 py-3.5 flex items-center gap-3"
+        className="bg-white px-5 md:px-8 py-3.5"
         style={{ boxShadow: "0 2px 8px rgba(59,65,200,0.06)" }}
       >
-        <img
-          src={isOwner ? myAvatar : trip.avatar}
-          className="w-10 h-10 rounded-full object-cover"
-          alt=""
-          style={{ border: "2px solid #3B41C8" }}
-        />
-        <div className="flex-1">
-          <p className="text-navy font-black text-[14px]">
-            {trip.author}
-          </p>
-          <p className="text-slate-400 text-[11px]">
-            {trip.duration} · {trip.budget}
-          </p>
+        <div className="flex items-center gap-3">
+          <img
+            src={isOwner ? myAvatar : trip.avatar}
+            className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+            alt=""
+            style={{ border: "2px solid #3B41C8" }}
+          />
+          <div className="flex-1 min-w-0">
+            <p className="text-navy font-black text-[14px] truncate">
+              {trip.author}
+            </p>
+            <p className="text-slate-400 text-[11px] truncate">
+              {trip.duration} · {trip.budget}
+            </p>
+          </div>
         </div>
-        <div className="flex gap-3 text-[12px] text-slate-400">
-          <span className="flex items-center gap-1">
-            <HeartIcon size={12} />
+        <div className="flex gap-5 mt-2.5 text-[12px]">
+          <span className="flex items-center gap-1.5">
+            <HeartIcon size={13} />
             <span className="font-bold text-navy">{reactionTotal}</span>
             <span className="text-slate-400">likes</span>
           </span>
-          <span className="flex items-center gap-1">
-            <PlaneIcon size={12} />
+          <span className="flex items-center gap-1.5">
+            <PlaneIcon size={13} />
             <span className="font-bold text-navy">{trip.joiners + (acceptedMember ? 1 : 0)}</span>
             <span className="text-slate-400">going</span>
           </span>
-          <span className="flex items-center gap-1">
-            <NoteIcon size={12} />
+          <span className="flex items-center gap-1.5">
+            <NoteIcon size={13} />
             <span className="font-bold text-navy">{comments.length}</span>
             <span className="text-slate-400">comments</span>
           </span>
@@ -836,11 +841,13 @@ export default function CommunityTripDetailScreen({
         <div className="px-5 md:px-8 pb-8">
           {/* Type selector */}
           <div className="flex gap-1.5 mb-3 overflow-x-auto pb-1">
-            {(Object.keys(typeLabel) as CommentType[]).map((t) => (
+            {(Object.keys(typeLabel) as CommentType[]).map((t) => {
+              const TypeIcon = typeLabel[t].Icon
+              return (
               <button
                 key={t}
                 onClick={() => setCommentType(t)}
-                className="flex-shrink-0 px-3 py-1.5 rounded-full text-[10px] font-bold"
+                className="flex-shrink-0 px-3 py-1.5 rounded-full text-[10px] font-bold flex items-center gap-1"
                 style={{
                   background: commentType === t ? typeLabel[t].bg : "white",
                   color: commentType === t ? typeLabel[t].color : "#94a3b8",
@@ -851,9 +858,11 @@ export default function CommunityTripDetailScreen({
                   boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
                 }}
               >
+                <TypeIcon size={11} />
                 {typeLabel[t].label}
               </button>
-            ))}
+              )
+            })}
           </div>
 
           {/* Input */}
@@ -913,6 +922,7 @@ export default function CommunityTripDetailScreen({
             )}
             {comments.map((c) => {
               const badge = typeLabel[c.type]
+              const BadgeIcon = badge.Icon
               return (
                 <div
                   key={c.id}
@@ -938,9 +948,10 @@ export default function CommunityTripDetailScreen({
                       <p className="text-slate-400 text-[10px]">{c.time}</p>
                     </div>
                     <span
-                      className="px-2 py-0.5 rounded-full text-[9px] font-black flex-shrink-0"
+                      className="px-2 py-0.5 rounded-full text-[9px] font-black flex-shrink-0 flex items-center gap-1"
                       style={{ background: badge.bg, color: badge.color }}
                     >
+                      <BadgeIcon size={10} />
                       {badge.label}
                     </span>
                   </div>

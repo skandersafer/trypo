@@ -292,6 +292,16 @@ export function LockIcon(props: IconProps) {
   )
 }
 
+export function QuestionIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.6 9.4a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1.1.8-1.1 1.8" />
+      <path d="M12 17h.01" />
+    </Svg>
+  )
+}
+
 export function ChevronIcon(props: IconProps) {  return (
     <Svg {...props}>
       <path d="M9 5l7 7-7 7" />

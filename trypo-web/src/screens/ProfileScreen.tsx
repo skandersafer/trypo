@@ -84,6 +84,11 @@ export default function ProfileScreen({ navigate }: Props) {
       action: "trips" as Screen | null,
     },
     {
+      label: "My World Map",
+      sub: `${profileStats.visitedCountriesCount} ${profileStats.visitedCountriesCount === 1 ? "country" : "countries"} colored in`,
+      action: "world-map" as Screen | null,
+    },
+    {
       label: "Saved Places",
       sub: `${profileStats.savedPlacesCount} place${profileStats.savedPlacesCount > 1 ? "s" : ""} saved`,
       action: "saved-places" as Screen | null,

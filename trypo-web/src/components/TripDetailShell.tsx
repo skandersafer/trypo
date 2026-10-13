@@ -29,6 +29,21 @@ const MORE_TOOLS: Array<{ label: string; hint: string; target: Screen }> = [
   { label: "Split bills", hint: "Shared costs", target: "split-bills" },
 ]
 
+const SCREEN_LABELS: Partial<Record<Screen, { label: string; hint: string }>> = {
+  "trip-overview": { label: "Overview", hint: "Route, progress & tools" },
+  itinerary: { label: "Itinerary", hint: "Day-by-day plan" },
+  map: { label: "Route map", hint: "Numbered stops on the map" },
+  weather: { label: "Weather", hint: "Forecast per stop" },
+  "find-stay": { label: "Find stay", hint: "Hotels for each stop" },
+  "stay-details": { label: "Stay details", hint: "About this stay" },
+  transport: { label: "Transport", hint: "Legs between stops" },
+  bookings: { label: "Bookings", hint: "All confirmations" },
+  "booking-detail": { label: "Booking detail", hint: "Ticket & reference" },
+  budget: { label: "Budget", hint: "Spending overview" },
+  "split-bills": { label: "Split bills", hint: "Shared costs" },
+  currency: { label: "Currency", hint: "Converter & rates" },
+}
+
 export const TRIP_SCREENS: Screen[] = Array.from(
   new Set(GROUPS.flatMap((g) => g.screens)),
 )
@@ -39,6 +54,7 @@ export function tripGroupOf(screen: Screen): string {
 
 export default function TripDetailShell({ current, navigate, goBack, children }: Props) {
   const [showMore, setShowMore] = useState(false)
+  const [showGroup, setShowGroup] = useState<string | null>(null)
   const active = tripGroupOf(current)
 
   const goTab = (key: string) => {
@@ -46,9 +62,18 @@ export default function TripDetailShell({ current, navigate, goBack, children }:
       setShowMore(true)
       return
     }
+    // Tapping the active tab again reveals the other screens in that group
+    // (e.g. Plan holds Itinerary + Route map + Weather).
+    if (key === active) {
+      const g = GROUPS.find((x) => x.key === key)
+      if (g && g.screens.length > 1) setShowGroup(key)
+      return
+    }
     const g = GROUPS.find((x) => x.key === key)
     if (g && g.target !== current) navigate(g.target)
   }
+
+  const groupSheet = showGroup ? GROUPS.find((x) => x.key === showGroup) : null
 
   return (
     <div className="min-h-full">
@@ -90,6 +115,61 @@ export default function TripDetailShell({ current, navigate, goBack, children }:
       </div>
 
       <div>{children}</div>
+
+      {/* Group sheet — switch screens inside one tab */}
+      {groupSheet && (
+        <div
+          className="fixed inset-0 z-[100] flex items-end justify-center"
+          style={{ background: "rgba(13,15,46,0.45)", backdropFilter: "blur(4px)" }}
+          onClick={() => setShowGroup(null)}
+        >
+          <div
+            className="w-full bg-white rounded-t-[28px] p-5 pb-8 safe-pb"
+            style={{ maxWidth: 480 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-10 h-1 rounded-full mx-auto mb-4" style={{ background: "#E2E8F0" }} />
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-navy font-black text-[17px]">{groupSheet.label}</h3>
+              <button onClick={() => setShowGroup(null)} className="text-[13px] font-bold text-brand">
+                Done
+              </button>
+            </div>
+            <p className="text-[12px] mb-4" style={{ color: "#94A3B8" }}>
+              You're here — switch view.
+            </p>
+            <div className="grid grid-cols-1 gap-2">
+              {groupSheet.screens.map((s) => {
+                const meta = SCREEN_LABELS[s] ?? { label: s, hint: "" }
+                const isCurrent = s === current
+                return (
+                  <button
+                    key={s}
+                    onClick={() => {
+                      setShowGroup(null)
+                      if (!isCurrent) navigate(s)
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-left trypo-card active:scale-[0.99] transition-transform"
+                    style={isCurrent ? { border: "1.5px solid #3B41C8" } : undefined}
+                  >
+                    <span className="flex-1 min-w-0">
+                      <span className="block text-navy font-bold text-[14px]">
+                        {meta.label}{isCurrent ? " · current" : ""}
+                      </span>
+                      {!!meta.hint && (
+                        <span className="block text-[12px]" style={{ color: "#94A3B8" }}>{meta.hint}</span>
+                      )}
+                    </span>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#94A3B8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 3.5 9.5 7 5 10.5" />
+                    </svg>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* More sheet — secondary tools live here, not on Home */}
       {showMore && (

@@ -3,11 +3,14 @@ import type { Screen } from "../App"
 import { useAuth, useMyAvatar } from "../lib/auth"
 import {
   getActiveTripId,
+  getCommunityTripPlan,
   getMyTrips,
   getTripDetails,
   setActiveTripId,
 } from "../lib/trips"
-import { useMyNotifications, useMyTripsRealtime } from "../lib/communityLive"
+import { useMyNotifications, useMyTripsRealtime, useCommunityFeed } from "../lib/communityLive"
+import { setCommunityTripSelection } from "../lib/community"
+import CommunityTripCover, { formatTripDateRange } from "../components/CommunityTripCover"
 import { useIsDesktop } from "../lib/useIsDesktop"
 
 interface Props {
@@ -26,6 +29,7 @@ export default function HomeScreen({ navigate }: Props) {
   const [myTrips, setMyTrips] = useState<Array<any>>([])
   const [activeTrip, setActiveTrip] = useState<any>(null)
   const { unread: unreadNotifs } = useMyNotifications()
+  const { trips: communityFeed } = useCommunityFeed()
 
   const loadData = async () => {
     try {
@@ -265,6 +269,52 @@ export default function HomeScreen({ navigate }: Props) {
           Budget, bookings and trip tools live inside each trip — open a trip to find them.
         </p>
       </div>
+
+      {/* Community — shared trips from other travelers */}
+      {communityFeed.length > 0 && (
+        <div className="mt-6 mb-2">
+          <div className="px-5 md:px-8 flex items-center justify-between mb-3">
+            <p className="trypo-section-label">Community trips</p>
+            <button onClick={() => navigate("trip-social")} className="text-[12px] font-bold text-brand">
+              See all
+            </button>
+          </div>
+          <div className={isDesktop ? "grid grid-cols-3 gap-4 px-5 md:px-8" : "flex gap-3 px-5 overflow-x-auto no-scrollbar pb-1"}>
+            {communityFeed.slice(0, 6).map((trip: any) => {
+              const cities = (trip.destinations || []).filter((d: any) => d.city).map((d: any) => d.city)
+              return (
+                <button
+                  key={trip.id}
+                  onClick={() => {
+                    const plan = { destinations: trip.destinations, itinerary: [] }
+                    setCommunityTripSelection({ meta: trip, plan })
+                    navigate("community-trip-detail")
+                    void getCommunityTripPlan(trip.id).then((livePlan: any) => {
+                      setCommunityTripSelection({ meta: trip, plan: livePlan })
+                    })
+                  }}
+                  className="flex-shrink-0 rounded-[20px] overflow-hidden relative text-left trypo-card"
+                  style={isDesktop ? { width: "100%", height: 200, padding: 0, border: "none" } : { width: 160, height: 190, padding: 0, border: "none" }}
+                >
+                  <CommunityTripCover
+                    coverImageUrl={trip.coverImageUrl}
+                    city={cities[0]}
+                    title={trip.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(13,15,46,0.8) 0%, transparent 60%)" }} />
+                  <div className="absolute bottom-0 left-0 right-0 p-3">
+                    <p className="text-white font-bold text-[13px] leading-tight truncate">{trip.title}</p>
+                    <p className="text-white/60 text-[11px] truncate mt-0.5">
+                      {formatTripDateRange(trip.startDate, trip.endDate) || cities.slice(0, 2).join(" → ") || "Community trip"}
+                    </p>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

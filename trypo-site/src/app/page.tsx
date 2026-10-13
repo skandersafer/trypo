@@ -1,5 +1,137 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import type { FC } from "react";
+
+type IconProps = { className?: string };
+
+function RouteIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <circle cx="6" cy="19" r="3" />
+      <path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15" />
+      <circle cx="18" cy="5" r="3" />
+    </svg>
+  );
+}
+
+function BedIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <path d="M2 4v16" />
+      <path d="M2 8h18a2 2 0 0 1 2 2v10" />
+      <path d="M2 17h20" />
+      <path d="M6 8v9" />
+    </svg>
+  );
+}
+
+function BusIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <path d="M8 6v6" />
+      <path d="M15 6v6" />
+      <path d="M2 12h19.6" />
+      <path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C19.6 5 19.1 4 18 4H6c-1.2 0-1.6 1-2.4 3.5L2.2 12.8c-.1.4-.2.8-.2 1.2 0 .4.1.8.2 1.2C2.5 16.3 3 18 3 18h3" />
+      <circle cx="7" cy="18" r="2" />
+      <circle cx="17" cy="18" r="2" />
+    </svg>
+  );
+}
+
+function WalletIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
+      <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
+      <path d="M18 12a2 2 0 0 0 0 4h4v-4Z" />
+    </svg>
+  );
+}
+
+function UsersIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  );
+}
+
+function UserIcon({ className = "h-4 w-4" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  );
+}
+
+function CompassIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <circle cx="12" cy="12" r="10" />
+      <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+    </svg>
+  );
+}
+
+function MapPinIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+      <circle cx="12" cy="10" r="3" />
+    </svg>
+  );
+}
+
+function PencilIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+      <path d="m15 5 4 4" />
+    </svg>
+  );
+}
+
+function CameraIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+      <circle cx="12" cy="13" r="3" />
+    </svg>
+  );
+}
+
+function TicketIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
+      <path d="M13 5v2" />
+      <path d="M13 11v2" />
+      <path d="M13 17v2" />
+    </svg>
+  );
+}
+
+const tileIcons: Record<string, FC<IconProps>> = {
+  IT: RouteIcon,
+  ST: BedIcon,
+  TR: BusIcon,
+  BU: WalletIcon,
+  CR: UsersIcon,
+  HG: CompassIcon,
+  LM: MapPinIcon,
+  SJ: PencilIcon,
+  ME: CameraIcon,
+};
+
+const showcaseIcons: Record<string, FC<IconProps>> = {
+  BU: BusIcon,
+  NO: BedIcon,
+  CA: TicketIcon,
+};
 
 const APP_URL = "https://trypo-app.vercel.app";
 
@@ -139,13 +271,13 @@ export default function Home() {
                   Marseille
                 </span>
                 <span className="absolute left-[38%] top-[30%] flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-indigo-500 to-cyan-400 text-[11px] font-black text-white shadow-lg">
-                  MO
+                  <UserIcon className="h-4 w-4 text-white" />
                 </span>
                 <span className="absolute left-[60%] top-[48%] flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-amber-400 to-rose-400 text-[10px] font-black text-white shadow-lg">
-                  AM
+                  <UserIcon className="h-4 w-4 text-white" />
                 </span>
                 <span className="absolute bottom-[38%] left-[30%] flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-emerald-400 to-teal-500 text-[10px] font-black text-white shadow-lg">
-                  YB
+                  <UserIcon className="h-4 w-4 text-white" />
                 </span>
                 <div className="absolute inset-x-3 bottom-3 space-y-2">
                   <div className="rounded-2xl bg-white/95 p-2.5 shadow-lg">
@@ -166,7 +298,7 @@ export default function Home() {
             {/* Floating photo card */}
             <div className="absolute -left-20 top-16 w-28 -rotate-12 overflow-hidden rounded-xl border-2 border-white bg-white shadow-xl">
               <div className="flex h-24 items-center justify-center bg-gradient-to-br from-amber-300 via-rose-300 to-indigo-400 text-sm font-black text-white">
-                DJ
+                <CameraIcon className="h-8 w-8 text-white" />
               </div>
               <p className="px-2 py-1.5 text-[9px] font-bold text-slate-600">Djerba laughed too much</p>
             </div>
@@ -259,13 +391,16 @@ export default function Home() {
               ["SJ", "Stop journals", "Notes + photos per city"],
               ["ST", "Stays", "Manual or booked, all synced"],
               ["ME", "Memories", "Timeline of the whole trip"],
-            ].map(([icon, t, d]) => (
+            ].map(([icon, t, d]) => {
+              const Icon = tileIcons[icon];
+              return (
               <div key={t} className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-[11px] font-black text-white">{icon}</span>
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-[11px] font-black text-white"><Icon className="h-5 w-5 text-white" /></span>
                 <p className="mt-2 text-sm font-black">{t}</p>
                 <p className="mt-1 text-xs text-white/55">{d}</p>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -279,7 +414,7 @@ export default function Home() {
           </p>
           <ul className="mt-8 grid gap-4 md:grid-cols-3">
             <li className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#3B41C8]/25 to-transparent p-6 md:col-span-2 md:row-span-2">
-              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-xs font-black text-white" aria-hidden="true">IT</span>
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-xs font-black text-white" aria-hidden="true"><RouteIcon className="h-5 w-5 text-white" /></span>
               <h3 className="mt-3 text-xl font-black">Shared itinerary</h3>
               <p className="mt-1.5 max-w-md text-sm leading-relaxed text-white/60">
                 Build the route stop by stop. Everyone sees the same plan, dates
@@ -293,7 +428,7 @@ export default function Home() {
                 ].map(([city, dates, grad]) => (
                   <div key={city} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
                     <span className={`flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br text-[10px] font-black text-white ${grad}`}>
-                      {city.charAt(0)}
+                      <MapPinIcon className="h-4 w-4 text-white" />
                     </span>
                     <div>
                       <p className="text-sm font-black">{city}</p>
@@ -304,29 +439,32 @@ export default function Home() {
               </div>
             </li>
             <li className="rounded-3xl border border-white/10 bg-white/5 p-6">
-              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-xs font-black text-white" aria-hidden="true">CR</span>
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-xs font-black text-white" aria-hidden="true"><UsersIcon className="h-5 w-5 text-white" /></span>
               <h3 className="mt-3 font-black">Live crew tracking</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-white/60">
                 Real-time GPS pins so nobody gets lost on day one.
               </p>
             </li>
             <li className="rounded-3xl border border-white/10 bg-white/5 p-6">
-              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-xs font-black text-white" aria-hidden="true">BU</span>
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-xs font-black text-white" aria-hidden="true"><WalletIcon className="h-5 w-5 text-white" /></span>
               <h3 className="mt-3 font-black">Budget & split bills</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-white/60">
                 Track spending and split costs fairly — no spreadsheets.
               </p>
             </li>
-            {features.slice(1).map((f) => (
+            {features.slice(1).map((f) => {
+              const Icon = tileIcons[f.icon] ?? RouteIcon;
+              return (
               <li
                 key={f.title}
                 className="rounded-3xl border border-white/10 bg-white/5 p-6 transition-colors hover:border-white/25"
               >
-                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-xs font-black text-white" aria-hidden="true">{f.icon}</span>
+                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-xs font-black text-white" aria-hidden="true"><Icon className="h-5 w-5 text-white" /></span>
                 <h3 className="mt-3 font-black">{f.title}</h3>
                 <p className="mt-1.5 text-sm leading-relaxed text-white/60">{f.text}</p>
               </li>
-            ))}
+              );
+            })}
           </ul>
           <Link
             href="/features"
@@ -386,16 +524,19 @@ export default function Home() {
                 ["BU", "Bus to Marseille", "Ref pp55 · 5h", "€22"],
                 ["NO", "Novotel Marseille", "Sep 16 → Sep 19", "€180"],
                 ["CA", "Calanques boat tour", "Sep 17 · 4 going", "€35"],
-              ].map(([icon, t, d, p]) => (
+              ].map(([icon, t, d, p]) => {
+                const Icon = showcaseIcons[icon] ?? BusIcon;
+                return (
                 <div key={t} className="flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2.5">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-[10px] font-black text-white">{icon}</span>
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-[10px] font-black text-white"><Icon className="h-4 w-4 text-white" /></span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-bold">{t}</p>
                     <p className="text-[10px] text-white/45">{d}</p>
                   </div>
                   <span className="text-xs font-black">{p}</span>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

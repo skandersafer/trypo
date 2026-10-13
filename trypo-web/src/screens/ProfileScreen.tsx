@@ -3,6 +3,7 @@ import type { Screen } from "../App"
 import { useIsDesktop } from "../lib/useIsDesktop"
 import { useAuth } from "../lib/auth"
 import { getUserProfile, getSavedPlaces, getPackingItems, getMyTrips, getTripDetails } from "../lib/trips"
+import { PencilIcon, CalendarIcon, HeartIcon, SparklesIcon, GearIcon, DoorIcon, TrashIcon, PinIcon, GlobeIcon } from "../components/icons"
 
 interface Props {
   navigate: (s: Screen) => void
@@ -234,6 +235,9 @@ export default function ProfileScreen({ navigate }: Props) {
           className="w-full border-t border-white/10 py-3 px-5 flex items-center justify-between"
         >
           <div className="flex items-center gap-2">
+            <span className="text-white/70 flex items-center">
+              <GlobeIcon size={16} />
+            </span>
             <span className="text-white/70 text-[12px] font-semibold">
               View my world map · {profileStats.visitedCountriesCount} countr{profileStats.visitedCountriesCount > 1 ? "ies" : "y"}
             </span>
@@ -268,7 +272,7 @@ export default function ProfileScreen({ navigate }: Props) {
               className="w-10 h-10 rounded-xl flex items-center justify-center text-[16px] font-black text-brand flex-shrink-0"
               style={{ background: "rgba(59,65,200,0.08)" }}
             >
-              {(activeTrip.title || "T").charAt(0).toUpperCase()}
+              <PinIcon size={20} />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-navy font-bold text-[13px] truncate">
@@ -335,7 +339,21 @@ export default function ProfileScreen({ navigate }: Props) {
                     : "rgba(59,65,200,0.07)",
                 }}
               >
-                {item.label.charAt(0).toUpperCase()}
+                {item.label === "Edit Profile" ? (
+                  <PencilIcon size={20} />
+                ) : item.label === "My Trips" ? (
+                  <CalendarIcon size={20} />
+                ) : item.label === "Saved Places" ? (
+                  <HeartIcon size={20} />
+                ) : item.label === "Tripo AI" ? (
+                  <SparklesIcon size={20} />
+                ) : item.label === "Settings" ? (
+                  <GearIcon size={20} />
+                ) : item.label === "Logout" ? (
+                  <DoorIcon size={20} />
+                ) : (
+                  <TrashIcon size={20} />
+                )}
               </div>
               <div className="flex-1">
                 <p
@@ -382,7 +400,7 @@ export default function ProfileScreen({ navigate }: Props) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-14 h-14 rounded-full bg-red-50 text-red-500 flex items-center justify-center text-2xl font-black mb-3.5 border border-red-100">
-              !
+              <TrashIcon size={24} />
             </div>
             <h3 className="text-[17px] font-black text-navy mb-1.5">
               Delete your account?

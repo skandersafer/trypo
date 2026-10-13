@@ -1,5 +1,6 @@
 import { useState } from "react"
 import type { Screen } from "../App"
+import { ToolIcon } from "./icons"
 
 interface Props {
   current: Screen
@@ -121,6 +122,12 @@ export default function TripDetailShell({ current, navigate, goBack, children }:
                   }}
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-left trypo-card active:scale-[0.99] transition-transform"
                 >
+                  <span
+                    className="w-9 h-9 rounded-xl flex items-center justify-center text-brand flex-shrink-0"
+                    style={{ background: "rgba(59,65,200,0.07)" }}
+                  >
+                    <ToolIcon name={t.label} size={18} />
+                  </span>
                   <span className="flex-1 min-w-0">
                     <span className="block text-navy font-bold text-[14px]">{t.label}</span>
                     <span className="block text-[12px]" style={{ color: "#94A3B8" }}>{t.hint}</span>

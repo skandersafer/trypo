@@ -7,6 +7,7 @@ import GoogleMapsPlacePicker from "../components/GoogleMapsPlacePicker"
 import { useAuth } from "../lib/auth"
 import { searchDestinations, type DestinationSuggestion } from "../lib/travelApi"
 import { hasMapboxToken } from "../lib/mapbox"
+import { TransportIcon, MapIcon } from "../components/icons"
 import { addBooking, addItineraryItem, updateBooking, updateItineraryItem, deleteBooking, deleteItineraryItem, claimMissingServerMembership, generateTripInviteCode, getActiveTripId, getDestinationStayDays, getMyTrips, getTripDetails, getUserTripPermission, setActiveTripId, syncTripDestinations, deleteTrip, generateUuid, updateTripDates } from "../lib/trips"
 import { getMyTripMembership, setTripVisibility } from "../lib/communityLive"
 import { useIsDesktop } from "../lib/useIsDesktop"
@@ -1048,7 +1049,7 @@ function TransportLegModal({
                           : "2px solid transparent",
                     }}
                   >
-                    <span className="w-10 h-10 rounded-2xl flex items-center justify-center text-[13px] font-black text-brand" style={{ background: "rgba(59,65,200,0.08)" }}>{t.label.charAt(0).toUpperCase()}</span>
+                    <span className="w-10 h-10 rounded-2xl flex items-center justify-center text-[13px] font-black text-brand" style={{ background: "rgba(59,65,200,0.08)" }}><TransportIcon type={t.label} size={20} /></span>
                     <span
                       className="text-[11px] font-bold"
                       style={{
@@ -1133,7 +1134,7 @@ function TransportLegModal({
                             className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-[12px] font-black text-brand"
                             style={{ background: "rgba(59,65,200,0.07)" }}
                           >
-                            {op.name.charAt(0).toUpperCase()}
+                            <TransportIcon type={selectedType} size={18} />
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
@@ -1264,7 +1265,7 @@ function TransportLegModal({
                   border: "1px solid rgba(59,65,200,0.12)",
                 }}
               >
-                <span className="w-11 h-11 rounded-2xl flex items-center justify-center text-[14px] font-black text-brand flex-shrink-0" style={{ background: "rgba(59,65,200,0.08)" }}>{selectedType.charAt(0).toUpperCase()}</span>
+                <span className="w-11 h-11 rounded-2xl flex items-center justify-center text-[14px] font-black text-brand flex-shrink-0" style={{ background: "rgba(59,65,200,0.08)" }}><TransportIcon type={selectedType} size={22} /></span>
                 <div>
                   <p className="text-navy font-bold text-[13px]">
                     {fromCity} → {toCity}
@@ -2598,7 +2599,7 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
                                 </p>
                                 <div className="flex items-center gap-2.5">
                                   <span className="w-8 h-8 rounded-xl flex items-center justify-center text-[11px] font-black text-brand flex-shrink-0" style={{ background: "rgba(59,65,200,0.08)" }}>
-                                    {arrivalLeg.label.charAt(0).toUpperCase()}
+                                    <TransportIcon type={arrivalLeg.label} size={16} />
                                   </span>
                                   <div className="flex-1">
                                     <p className="text-navy font-bold text-[12px]">
@@ -2753,7 +2754,7 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
                               border: "1px solid rgba(59,65,200,0.1)",
                             }}
                           >
-                            <span className="w-8 h-8 rounded-xl flex items-center justify-center text-[11px] font-black text-brand flex-shrink-0" style={{ background: "rgba(59,65,200,0.08)" }}>{leg.label.charAt(0).toUpperCase()}</span>
+                            <span className="w-8 h-8 rounded-xl flex items-center justify-center text-[11px] font-black text-brand flex-shrink-0" style={{ background: "rgba(59,65,200,0.08)" }}><TransportIcon type={leg.label} size={16} /></span>
                             <div className="flex-1 min-w-0">
                               <p className="text-navy font-bold text-[12px]">
                                 {leg.label}
@@ -3332,7 +3333,7 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-brand/15 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-                  <span className="text-[13px] font-black text-brand">MAP</span>
+                  <span className="text-brand flex items-center justify-center"><MapIcon size={20} /></span>
                 </div>
                 <div>
                   <p className="text-navy font-black text-[13px] flex items-center gap-1.5">

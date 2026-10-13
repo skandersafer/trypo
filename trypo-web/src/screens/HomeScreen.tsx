@@ -11,6 +11,7 @@ import {
 import { useMyNotifications, useMyTripsRealtime, useCommunityFeed } from "../lib/communityLive"
 import { setCommunityTripSelection } from "../lib/community"
 import CommunityTripCover, { formatTripDateRange } from "../components/CommunityTripCover"
+import { HeartIcon } from "../components/icons"
 import { useIsDesktop } from "../lib/useIsDesktop"
 
 interface Props {
@@ -293,21 +294,37 @@ export default function HomeScreen({ navigate }: Props) {
                       setCommunityTripSelection({ meta: trip, plan: livePlan })
                     })
                   }}
-                  className="flex-shrink-0 rounded-[20px] overflow-hidden relative text-left trypo-card"
-                  style={isDesktop ? { width: "100%", height: 200, padding: 0, border: "none" } : { width: 160, height: 190, padding: 0, border: "none" }}
+                  className="flex-shrink-0 rounded-[20px] overflow-hidden text-left trypo-card"
+                  style={isDesktop ? { width: "100%", padding: 0 } : { width: 180, padding: 0 }}
                 >
-                  <CommunityTripCover
-                    coverImageUrl={trip.coverImageUrl}
-                    city={cities[0]}
-                    title={trip.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(13,15,46,0.8) 0%, transparent 60%)" }} />
-                  <div className="absolute bottom-0 left-0 right-0 p-3">
-                    <p className="text-white font-bold text-[13px] leading-tight truncate">{trip.title}</p>
-                    <p className="text-white/60 text-[11px] truncate mt-0.5">
-                      {formatTripDateRange(trip.startDate, trip.endDate) || cities.slice(0, 2).join(" → ") || "Community trip"}
+                  <div className="relative" style={{ height: 110 }}>
+                    <CommunityTripCover
+                      coverImageUrl={trip.coverImageUrl}
+                      city={cities[0]}
+                      title={trip.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(13,15,46,0.8) 0%, transparent 60%)" }} />
+                    <div className="absolute bottom-0 left-0 right-0 p-3">
+                      <p className="text-white font-bold text-[13px] leading-tight truncate">{trip.title}</p>
+                      <p className="text-white/60 text-[11px] truncate mt-0.5">
+                        {formatTripDateRange(trip.startDate, trip.endDate) || cities.slice(0, 2).join(" → ") || "Community trip"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="bg-white px-3 py-2.5 flex items-center gap-2">
+                    <img
+                      src={trip.authorAvatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&auto=format"}
+                      alt={trip.authorName || "Traveler"}
+                      className="w-6 h-6 rounded-full object-cover flex-shrink-0"
+                    />
+                    <p className="flex-1 min-w-0 text-navy font-bold text-[12px] truncate">
+                      {trip.authorName || "Traveler"}
                     </p>
+                    <span className="flex items-center gap-1 text-navy font-bold text-[11px] flex-shrink-0">
+                      <HeartIcon size={12} />
+                      {trip.reactionsCount ?? 0}
+                    </span>
                   </div>
                 </button>
               )

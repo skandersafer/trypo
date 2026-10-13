@@ -2245,6 +2245,63 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
         </div>
       </div>
 
+      {/* Route map preview — numbered stops, tap for the full map */}
+      <div className="px-5 md:px-8 mt-4">
+        <button
+          onClick={() => navigate("map")}
+          className="w-full trypo-card p-4 text-left active:scale-[0.99] transition-transform"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <p className="trypo-section-label">Route map</p>
+            <span className="text-[12px] font-bold text-brand">Open map →</span>
+          </div>
+          {stops.length > 0 ? (
+            <svg viewBox="0 0 320 86" className="w-full" style={{ height: 86 }} aria-hidden="true">
+              <defs>
+                <linearGradient id="trypo-route-line" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0" stopColor="#3B41C8" />
+                  <stop offset="1" stopColor="#06C4D4" />
+                </linearGradient>
+              </defs>
+              {[20, 43, 66].map((y) => (
+                <line key={y} x1="8" y1={y} x2="312" y2={y} stroke="#EEF0F8" strokeWidth="1" />
+              ))}
+              <path
+                d={`M 20 52 ${stops.map((_, i) => {
+                  const x = stops.length === 1 ? 160 : 20 + (i * 280) / (stops.length - 1)
+                  const y = 52 - (i % 2 === 0 ? 0 : 14)
+                  return `L ${x} ${y}`
+                }).join(" ")}`}
+                fill="none"
+                stroke="url(#trypo-route-line)"
+                strokeWidth="2.5"
+                strokeDasharray="1 0"
+                strokeLinecap="round"
+              />
+              {stops.map((stop, i) => {
+                const x = stops.length === 1 ? 160 : 20 + (i * 280) / (stops.length - 1)
+                const y = 52 - (i % 2 === 0 ? 0 : 14)
+                return (
+                  <g key={stop.id || i}>
+                    <circle cx={x} cy={y} r="11" fill="#0D0F2E" />
+                    <text x={x} y={y + 4} textAnchor="middle" fontSize="10" fontWeight="800" fill="#fff">
+                      {i + 1}
+                    </text>
+                    <text x={x} y={y + 26} textAnchor="middle" fontSize="9" fontWeight="700" fill="#64748B">
+                      {(stop.city || "").length > 10 ? `${stop.city.slice(0, 9)}…` : stop.city}
+                    </text>
+                  </g>
+                )
+              })}
+            </svg>
+          ) : (
+            <div className="rounded-2xl border border-dashed px-4 py-5 text-center" style={{ borderColor: "#CBD5E1" }}>
+              <p className="text-[13px] font-bold" style={{ color: "#64748B" }}>No stops yet — add destinations to see your route</p>
+            </div>
+          )}
+        </button>
+      </div>
+
       {/* Tabs live in TripDetailShell — one nav for all trip tools. */}
 
       {/* Community banner */}

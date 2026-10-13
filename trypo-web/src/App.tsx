@@ -247,7 +247,7 @@ const NAV_SCREENS: Screen[] = [
 ]
 
 export default function App() {
-  const { configured, loading, user, signOut } = useAuth()
+  const { configured, loading, user, signOut, recovery } = useAuth()
   const { settings, t } = useSettings()
   const avatar = useMyAvatar()
   const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Traveler"
@@ -309,6 +309,13 @@ export default function App() {
     historyRef.current = []
     setScreen(s)
   }
+  // Password-reset link opened: Supabase establishes a recovery session.
+  // Force the login screen so the user sets the new password instead of
+  // landing straight inside the app with the old one still active.
+  useEffect(() => {
+    if (recovery) navigateRoot("auth")
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recovery])
   // True "back": returns to the screen you actually came from. Falls back
   // to the screen's legacy hardcoded destination when the stack is empty
   // (e.g. after a full reload straight onto a deep screen).

@@ -117,10 +117,13 @@ export default function AuthScreen({ onSuccess, navigate }: Props) {
   }
 
   // Auto-advance when a session arrives (APK browser OAuth return).
+  // Never auto-advance in recovery mode: the user must set the new
+  // password first, otherwise the reset link just logs them in and the
+  // "Choose a new password" form is skipped.
   useEffect(() => {
-    if (user) onSuccess()
+    if (user && !recovery) onSuccess()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user])
+  }, [user, recovery])
 
   // APK OAuth feedback from the native shell: the system browser was
   // closed early, the provider returned an error, or no session came back.

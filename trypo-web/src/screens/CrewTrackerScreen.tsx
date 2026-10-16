@@ -306,11 +306,12 @@ export default function CrewTrackerScreen({ navigate, goBack }: Props) {
   const anchor = useMemo(() => {
     const dest = trip?.trip_destinations?.[0]
     if (dest) {
-      const cityCoords = resolveCityCoords(dest.city)
-      if (cityCoords) return cityCoords
+      // Real GPS first (worldwide, exact) — known list only as fallback.
       if (Number.isFinite(Number(dest.lat)) && Number.isFinite(Number(dest.lng)) && Number(dest.lat) !== 0) {
         return { lat: Number(dest.lat), lng: Number(dest.lng) }
       }
+      const cityCoords = resolveCityCoords(dest.city)
+      if (cityCoords) return cityCoords
     }
     return DEFAULT_COORDS
   }, [trip])

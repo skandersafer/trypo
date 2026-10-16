@@ -312,7 +312,7 @@ function sanitizeDestinationForDb(d: Record<string, any>): Record<string, any> {
   if (arrival && departure && departure < arrival) {
     departure = null
   }
-  return {
+  const row: Record<string, any> = {
     id: d.id,
     trip_id: d.trip_id,
     city: d.city,
@@ -322,6 +322,17 @@ function sanitizeDestinationForDb(d: Record<string, any>): Record<string, any> {
     departure_date: departure,
     notes: d.notes ?? null,
   }
+  // Universal GPS (migration 20261016): real coords from the worldwide search
+  // so every map pins the exact city/ville without re-geocoding. Omitted when
+  // missing so older servers without the columns still accept the row — the
+  // caller retries without lat/lng on schema-cache errors.
+  const lat = Number(d.lat)
+  const lng = Number(d.lng)
+  if (Number.isFinite(lat) && Number.isFinite(lng) && lat !== 0 && lng !== 0) {
+    row.lat = lat
+    row.lng = lng
+  }
+  return row
 }
 
 /**
@@ -1229,9 +1240,23 @@ export async function createTrip(tripData: NewTrip): Promise<DbTrip> {
       }
 
       if (destinations.length > 0) {
-        await supabase
-          .from("trip_destinations")
-          .insert(destinations.map((d) => sanitizeDestinationForDb(d)))
+        try {
+          const { error } = await supabase
+            .from("trip_destinations")
+            .insert(destinations.map((d) => sanitizeDestinationForDb(d)))
+          if (error) throw error
+        } catch {
+          // Older servers without the lat/lng migration reject the columns —
+          // retry with names/dates only so the destinations still sync.
+          const legacy = destinations.map((d) => {
+            const row = sanitizeDestinationForDb(d)
+            delete row.lat
+            delete row.lng
+            return row
+          })
+          const { error } = await supabase.from("trip_destinations").insert(legacy)
+          if (error) throw error
+        }
       }
     } catch (e) {
       console.warn("Supabase createTrip insert error:", e)
@@ -1326,7 +1351,21 @@ export async function syncTripDestinations(tripId: string, destinations: any[]):
         const { error: upsertError } = await supabase
           .from("trip_destinations")
           .upsert(rows, { onConflict: "id" })
-        if (upsertError) throw upsertError
+        if (upsertError) {
+          // Older servers without lat/lng columns: strip GPS and retry once.
+          if (/lat|lng|column|schema cache/i.test(String(upsertError.message || ""))) {
+            const legacy = rows.map((r) => {
+              const { lat, lng, ...rest } = r
+              return rest
+            })
+            const { error: retryError } = await supabase
+              .from("trip_destinations")
+              .upsert(legacy, { onConflict: "id" })
+            if (retryError) throw retryError
+          } else {
+            throw upsertError
+          }
+        }
       } else {
         const { error: clearError } = await supabase
           .from("trip_destinations")

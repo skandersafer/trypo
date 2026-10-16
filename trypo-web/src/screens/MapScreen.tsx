@@ -5,7 +5,7 @@ import type { Screen } from "../App"
 import { getDestinationStayDays, getTripDetails } from "../lib/trips"
 import {
   resolveKnownCoords,
-  geocodeCity,
+  resolveCityCoordsLive,
   type KnownCoords,
 } from "../lib/geocode"
 import {
@@ -99,15 +99,30 @@ export async function enhanceStopsWithGeocode(current: Stop[]): Promise<Stop[] |
       const known = resolveKnownCoords(stop.city)
       const onFallback = isFallbackPin(stop.lat, stop.lng)
       // Known city already pinned at its real coords → nothing to do.
-      if (known && !onFallback) return stop
+      // But a stale wrong pin (Pai→Indonesia, >100km from Pai, Thailand)
+      // is corrected immediately without network.
+      if (known && !onFallback) {
+        try {
+          const dist = calculateDistanceKm(stop.lat, stop.lng, known.lat, known.lng)
+          if (Number.isFinite(dist) && dist > 100) {
+            changed = true
+            return { ...stop, lat: known.lat, lng: known.lng, country: stop.country && stop.country !== "Destination" ? stop.country : known.country }
+          }
+        } catch {
+          /* fall through to live */
+        }
+        return stop
+      }
       // Try the part before any ", Country" suffix first — Open-Meteo
       // returns nothing for "Madrid, Espagne" but Madrid alone works.
+      // Universal resolver: Mapbox first, Open-Meteo best-pick second —
+      // works for every city/ville worldwide, not just the built-in list.
       const firstToken = String(stop.city || "").split(",")[0].trim()
       const queries = firstToken && firstToken !== stop.city
         ? [firstToken, stop.city]
         : [stop.city]
       for (const q of queries) {
-        const live = await geocodeCity(q)
+        const live = await resolveCityCoordsLive(q)
         if (live && Number.isFinite(live.lat) && Number.isFinite(live.lng)) {
           changed = true
           return {
@@ -149,8 +164,22 @@ const buildRouteStops = (route: any[] = []): Stop[] => {
     // Real GPS from trip creation wins — but only when it is a real finite
     // number. NaN/0/"" fall back to name resolution so a missing second
     // stop never inherits (0,0) or the first stop's pin.
-    const lat = finiteOr(stop.lat, resolved.lat)
-    const lng = finiteOr(stop.lng, resolved.lng)
+    let lat = finiteOr(stop.lat, resolved.lat)
+    let lng = finiteOr(stop.lng, resolved.lng)
+    // Self-heal stale wrong GPS (e.g. "Pai" stored as Pai, Indonesia before
+    // the homonym fix): when the stored pin is >100km from the known city,
+    // trust the known coords so Bangkok → Pai stays inside Thailand.
+    if (!resolved.isFallback && Number.isFinite(Number(stop.lat)) && Number.isFinite(Number(stop.lng))) {
+      try {
+        const dist = calculateDistanceKm(Number(stop.lat), Number(stop.lng), resolved.lat, resolved.lng)
+        if (Number.isFinite(dist) && dist > 100) {
+          lat = resolved.lat
+          lng = resolved.lng
+        }
+      } catch {
+        /* keep stored */
+      }
+    }
 
     return {
       id: String(stop.id ?? `stop-${index + 1}`),

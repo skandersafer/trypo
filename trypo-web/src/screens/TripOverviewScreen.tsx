@@ -5,7 +5,7 @@ import SyncStatusBadge from "../components/SyncStatusBadge"
 import DestinationHubModal, { type DestinationHubTarget } from "../components/DestinationHubModal"
 import GoogleMapsPlacePicker from "../components/GoogleMapsPlacePicker"
 import { useAuth } from "../lib/auth"
-import { searchDestinations, type DestinationSuggestion } from "../lib/travelApi"
+import { searchDestinations, type TravelSearchItem } from "../lib/travelApi"
 import { hasMapboxToken } from "../lib/mapbox"
 import { TransportIcon, MapIcon, ToolIcon } from "../components/icons"
 import { addBooking, addItineraryItem, updateBooking, updateItineraryItem, deleteBooking, deleteItineraryItem, claimMissingServerMembership, generateTripInviteCode, getActiveTripId, getDestinationStayDays, getMyTrips, getTripDetails, getUserTripPermission, setActiveTripId, syncTripDestinations, deleteTrip, generateUuid, updateTripDates } from "../lib/trips"
@@ -26,6 +26,11 @@ type Stop = {
   emoji: string
   startDate?: string
   endDate?: string
+  /** Real GPS from the search suggestion (Mapbox worldwide) — saved so the
+   * map never has to re-guess "Pai" vs homonyms later. */
+  lat?: number
+  lng?: number
+  country?: string
 }
 
 type TransportLeg = {
@@ -363,6 +368,10 @@ type DestinationSuggestion = {
   dates?: string
   days?: number
   country?: string
+  /** Real GPS from searchDestinations (Mapbox worldwide). Carried through
+   * addStop -> persistStops so every ville/city pins exactly. */
+  lat?: number
+  lng?: number
 }
 
 function getSmartSuggestedDestinations(
@@ -1524,7 +1533,7 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
 
       setIsSearchingDestinations(true)
       try {
-        const matches = await searchDestinations(query)
+        const matches: TravelSearchItem[] = await searchDestinations(query)
         if (cancelled) return
 
         setDestinationResults(
@@ -1534,6 +1543,8 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
             emoji: "📍",
             dates: "Dates TBD",
             days: 1,
+            lat: Number(item.lat),
+            lng: Number(item.lng),
           })),
         )
       } catch {
@@ -1598,6 +1609,9 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
           emoji: "📍",
           startDate: d.arrival_date || undefined,
           endDate: d.departure_date || undefined,
+          lat: Number.isFinite(Number(d.lat)) ? Number(d.lat) : undefined,
+          lng: Number.isFinite(Number(d.lng)) ? Number(d.lng) : undefined,
+          country: typeof d.country === "string" ? d.country : undefined,
         }))
         const normalizedStops = normalizeStopDates(liveStops, tripData.start_date)
         setStops(normalizedStops)
@@ -1738,11 +1752,15 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
     const destinationRows = nextStops.map((stop, index) => ({
       id: stop.id,
       city: stop.city,
-      country: "Destination",
+      country: (stop as any).country || "Destination",
       position: index,
       arrival_date: stop.startDate || null,
       departure_date: stop.endDate || null,
       days: stop.days || 1,
+      // Real GPS from the worldwide search — kept locally so every map
+      // pins the exact ville/city without re-geocoding.
+      lat: Number.isFinite(Number((stop as any).lat)) ? Number((stop as any).lat) : undefined,
+      lng: Number.isFinite(Number((stop as any).lng)) ? Number((stop as any).lng) : undefined,
     }))
     syncTripDestinations(targetId, destinationRows)
       .catch((error) => {
@@ -1965,12 +1983,17 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
 
   const addStop = (dest: DestinationSuggestion) => {
     // Every new destination starts at 1 day — the user extends with +.
+    // GPS + country from the worldwide suggestion are kept so the pin is
+    // exact for any city/ville on the map.
     const newStop: Stop = {
       id: generateUuid(),
       city: dest.city,
       dates: dest.dates || "Dates TBD",
       days: 1,
       emoji: dest.emoji || "📍",
+      lat: Number.isFinite(Number(dest.lat)) ? Number(dest.lat) : undefined,
+      lng: Number.isFinite(Number(dest.lng)) ? Number(dest.lng) : undefined,
+      country: dest.country,
     }
     const nextStops = normalizeStopDates([...stops, newStop], trip?.start_date)
     persistStops(nextStops, trip)

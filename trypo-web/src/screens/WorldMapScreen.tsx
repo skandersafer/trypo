@@ -4,7 +4,7 @@ import "mapbox-gl/dist/mapbox-gl.css"
 import type { Screen } from "../App"
 import { useAuth, useMyAvatar } from "../lib/auth"
 import { getMyTrips, processAvatarFile } from "../lib/trips"
-import { geocodeCity, resolveKnownCoords } from "../lib/geocode"
+import { resolveKnownCoords, resolveCityCoordsLive } from "../lib/geocode"
 import {
   configureMapbox,
   hasMapboxToken,
@@ -1325,7 +1325,7 @@ async function buildDynamicCountries(): Promise<Country[]> {
         const firstToken = city.split(",")[0].trim()
         for (const q of firstToken !== city ? [firstToken, city] : [city]) {
           try {
-            const live = await geocodeCity(q)
+            const live = await resolveCityCoordsLive(q)
             if (live && Number.isFinite(live.lat) && Number.isFinite(live.lng)) {
               lat = live.lat
               lng = live.lng

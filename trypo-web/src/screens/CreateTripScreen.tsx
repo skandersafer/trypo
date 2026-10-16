@@ -108,9 +108,13 @@ export default function CreateTripScreen({ navigate, goBack }: Props) {
         const known = resolveKnownCoords(city)
         if (known) return { city, lat: known.lat, lng: known.lng, country: known.country }
         try {
-          const [first] = await searchDestinations(city)
-          if (first && Number.isFinite(Number(first.lat)) && Number.isFinite(Number(first.lng))) {
-            return { city, lat: Number(first.lat), lng: Number(first.lng), country: first.country }
+          const results = await searchDestinations(city)
+          const normCity = city.trim().toLowerCase()
+          const exact =
+            results.find((r) => String(r.city || "").toLowerCase() === normCity) ||
+            results[0]
+          if (exact && Number.isFinite(Number(exact.lat)) && Number.isFinite(Number(exact.lng))) {
+            return { city, lat: Number(exact.lat), lng: Number(exact.lng), country: exact.country }
           }
         } catch {
           /* offline — map will resolve it later */

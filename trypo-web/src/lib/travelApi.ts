@@ -224,7 +224,33 @@ export async function searchDestinations(query: string): Promise<TravelSearchIte
     const data = await response.json()
     const results = (data.results ?? []) as Array<any>
 
-    const mapped = results
+    // Same homonym trap as geocodeCity: Open-Meteo returns Pai, Indonesia
+    // before Pai, Thailand. Rank exact name + populated places first so the
+    // suggestion the user taps (and the [0] fallback) is the real city.
+    const normQuery = value
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "")
+    const ranked = results.slice().sort((a, b) => {
+      const an = String(a?.name || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/\p{Diacritic}/gu, "")
+      const bn = String(b?.name || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/\p{Diacritic}/gu, "")
+      const aExact = an === normQuery ? 1 : 0
+      const bExact = bn === normQuery ? 1 : 0
+      if (aExact !== bExact) return bExact - aExact
+      const ap = Number(a?.population) || 0
+      const bp = Number(b?.population) || 0
+      if (ap !== bp) return bp - ap
+      return 0
+    })
+
+    const mapped = ranked
       .filter((item) => item.name && item.country)
       .map((item) => ({
         city: item.name,
@@ -340,14 +366,9 @@ export async function searchPlaces(
     console.warn("Place search failed:", err)
   }
 
-  return [
-    {
-      name: value,
-      address: cityContext ? `${value}, ${cityContext}` : value,
-      lat: 48.8566,
-      lng: 2.3522,
-    },
-  ]
+  // Never return a fake Paris pin for an unknown worldwide query — callers
+  // would draw the place in Paris. Empty lets the UI say "no results".
+  return []
 }
 
 export async function reverseGeocode(lat: number, lng: number): Promise<PlaceSearchResult | null> {

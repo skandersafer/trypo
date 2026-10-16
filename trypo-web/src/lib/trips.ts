@@ -1352,19 +1352,39 @@ export async function syncTripDestinations(tripId: string, destinations: any[]):
           .from("trip_destinations")
           .upsert(rows, { onConflict: "id" })
         if (upsertError) {
+          const msg = String((upsertError as any)?.message || upsertError || "")
           // Older servers without lat/lng columns: strip GPS and retry once.
-          if (/lat|lng|column|schema cache/i.test(String(upsertError.message || ""))) {
-            const legacy = rows.map((r) => {
-              const { lat, lng, ...rest } = r
-              return rest
-            })
+          const needsLegacyRetry = /lat|lng|column|schema cache/i.test(msg)
+          const rowsForRetry = needsLegacyRetry
+            ? rows.map((r) => {
+                const { lat, lng, ...rest } = r
+                return rest
+              })
+            : rows
+          if (needsLegacyRetry) {
             const { error: retryError } = await supabase
               .from("trip_destinations")
-              .upsert(legacy, { onConflict: "id" })
-            if (retryError) throw retryError
-          } else {
+              .upsert(rowsForRetry, { onConflict: "id" })
+            if (!retryError) return
+            // Fall through to the reorder-safe path below on persistent errors.
+            const retryMsg = String((retryError as any)?.message || retryError || "")
+            if (!/duplicate|unique|position|23505/i.test(retryMsg)) throw retryError
+          } else if (!/duplicate|unique|position|23505/i.test(msg)) {
             throw upsertError
           }
+          // Reorder-safe fallback: swapping positions via upsert can transiently
+          // violate UNIQUE(trip_id, position) and abort the whole statement,
+          // so the server keeps the old order and the UI "forgets" the drag.
+          // Delete-all + insert can't collide and preserves the exact order.
+          const { error: wipeError } = await supabase
+            .from("trip_destinations")
+            .delete()
+            .eq("trip_id", tripId)
+          if (wipeError) throw wipeError
+          const { error: insertError } = await supabase
+            .from("trip_destinations")
+            .insert(rowsForRetry)
+          if (insertError) throw insertError
         }
       } else {
         const { error: clearError } = await supabase

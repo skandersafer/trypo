@@ -90,6 +90,14 @@ const cityCoordinates: Record<string, { lat: number; lng: number }> = {
   berlin: { lat: 52.52, lng: 13.405 },
   tokyo: { lat: 35.6762, lng: 139.6503 },
   bangkok: { lat: 13.7563, lng: 100.5018 },
+  pai: { lat: 19.36168, lng: 98.43973 },
+  chiangmai: { lat: 18.7883, lng: 98.9853 },
+  "chiang mai": { lat: 18.7883, lng: 98.9853 },
+  "mae hong son": { lat: 19.302, lng: 97.9654 },
+  maehongson: { lat: 19.302, lng: 97.9654 },
+  phuket: { lat: 7.8804, lng: 98.3923 },
+  krabi: { lat: 8.0863, lng: 98.9063 },
+  pattaya: { lat: 12.9236, lng: 100.8825 },
 }
 
 const parseIsoDate = (date: string) => {
@@ -178,31 +186,49 @@ const normalizeStopDates = (route: Stop[], tripStartDate?: string) => {
   })
 }
 
-const getDistanceBetweenCities = (from: string, to: string) => {
+const haversineKm = (a: { lat: number; lng: number }, b: { lat: number; lng: number }): number | null => {
+  if (!Number.isFinite(a?.lat) || !Number.isFinite(a?.lng) || !Number.isFinite(b?.lat) || !Number.isFinite(b?.lng)) return null
+  const toRadians = (value: number) => (value * Math.PI) / 180
+  const earthRadiusKm = 6371
+  const dLat = toRadians(b.lat - a.lat)
+  const dLng = toRadians(b.lng - a.lng)
+  const lat1 = toRadians(a.lat)
+  const lat2 = toRadians(b.lat)
+  const h =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.sin(dLng / 2) * Math.sin(dLng / 2) * Math.cos(lat1) * Math.cos(lat2)
+  return 2 * earthRadiusKm * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h))
+}
+
+const formatKmFr = (km: number): string => `${Math.round(km).toLocaleString("fr-FR")} km`
+
+const stopCoord = (s: any): { lat: number; lng: number } | null => {
+  const lat = Number(s?.lat)
+  const lng = Number(s?.lng)
+  return Number.isFinite(lat) && Number.isFinite(lng) && lat !== 0 && lng !== 0 ? { lat, lng } : null
+}
+
+const getDistanceBetweenCities = (
+  from: string,
+  to: string,
+  fromCoord?: { lat: number; lng: number } | null,
+  toCoord?: { lat: number; lng: number } | null,
+) => {
+  // Universal first: real GPS carried by the stops (works for every
+  // city/ville worldwide — Phuket, Chiang Mai, Pai — no hardcoded list).
+  const liveKm = fromCoord && toCoord ? haversineKm(fromCoord, toCoord) : null
+  if (liveKm !== null && Number.isFinite(liveKm)) return formatKmFr(liveKm)
+
   const a = (from || "").trim().toLowerCase()
   const b = (to || "").trim().toLowerCase()
   if (!a || !b || a === b) return "Distance à définir"
 
-  const fromCoord = cityCoordinates[a] || cityCoordinates[a.replace(/\s+/g, "")]
-  const toCoord = cityCoordinates[b] || cityCoordinates[b.replace(/\s+/g, "")]
+  const fromHard = cityCoordinates[a] || cityCoordinates[a.replace(/\s+/g, "")]
+  const toHard = cityCoordinates[b] || cityCoordinates[b.replace(/\s+/g, "")]
 
-  if (fromCoord && toCoord) {
-    const toRadians = (value: number) => (value * Math.PI) / 180
-    const earthRadiusKm = 6371
-    const dLat = toRadians(toCoord.lat - fromCoord.lat)
-    const dLng = toRadians(toCoord.lng - fromCoord.lng)
-    const lat1 = toRadians(fromCoord.lat)
-    const lat2 = toRadians(toCoord.lat)
-
-    const haversine =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.sin(dLng / 2) *
-        Math.sin(dLng / 2) *
-        Math.cos(lat1) *
-        Math.cos(lat2)
-
-    const distanceKm = 2 * earthRadiusKm * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine))
-    return `${Math.round(distanceKm).toLocaleString("fr-FR")} km`
+  if (fromHard && toHard) {
+    const km = haversineKm(fromHard, toHard)
+    if (km !== null) return formatKmFr(km)
   }
 
   const knownPairs: Record<string, string> = {
@@ -925,7 +951,7 @@ function TransportLegModal({
     transportOptions.find((t) => t.label === selectedType)?.icon ?? "🚌"
 
   const confirmOperator = (op: OperatorOption) => {
-    const distance = getDistanceBetweenCities(fromCity, toCity)
+    const distance = getDistanceBetweenCities(fromCity, toCity, stopCoord(fromStop), stopCoord(toStop))
     const departureTime = manualTime || "12:00"
     const departure = defaultDate ? new Date(`${defaultDate}T${departureTime}:00`) : null
     const arrival = departure
@@ -946,7 +972,7 @@ function TransportLegModal({
   }
 
   const confirmManual = () => {
-    const distance = getDistanceBetweenCities(fromCity, toCity)
+    const distance = getDistanceBetweenCities(fromCity, toCity, stopCoord(fromStop), stopCoord(toStop))
     const duration = normalizeDuration(manualDuration)
     const departure = manualDate && manualTime ? new Date(`${manualDate}T${manualTime}:00`) : null
     const arrival = departure ? new Date(departure.getTime() + durationToMinutes(duration) * 60000) : null
@@ -2008,7 +2034,7 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
 
     const nextStop = route[index + 1]
     if (nextStop) {
-      const distance = getDistanceBetweenCities(currentStop.city, nextStop.city)
+      const distance = getDistanceBetweenCities(currentStop.city, nextStop.city, stopCoord(currentStop), stopCoord(nextStop))
       if (distance !== "Distance à définir") return Math.max(1, Math.round(Number.parseInt(distance, 10) / 100) || 1)
     }
 
@@ -2421,7 +2447,7 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
             const legKey = nextStop ? `${stop.id}→${nextStop.id}` : null
             const leg = legKey ? (transportLegs[legKey] ?? defaultLeg) : null
             const hasLeg = leg && leg.icon !== "➕"
-            const legDistance = nextStop ? getDistanceBetweenCities(stop.city, nextStop.city) : ""
+            const legDistance = nextStop ? getDistanceBetweenCities(stop.city, nextStop.city, stopCoord(stop), stopCoord(nextStop)) : ""
 
             const swipeBg =
               offset < -20

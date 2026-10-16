@@ -1022,6 +1022,14 @@ function poiFromElement(el: OverpassElement, fallbackKind: string): GuidePoi | n
   }
 }
 
+/** Public Overpass mirrors, tried in order — single endpoints rate-limit
+ *  (429/406/500) often, so one hard failure must never mean an empty screen. */
+const OVERPASS_MIRRORS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
+  "https://overpass.nchc.org.tw/api/interpreter",
+]
+
 async function fetchOverpassPois(
   lat: number,
   lng: number,
@@ -1030,40 +1038,52 @@ async function fetchOverpassPois(
   limit: number,
 ): Promise<GuidePoi[]> {
   const query = `[out:json][timeout:20];(nwr[${filter}](around:${radiusM},${lat},${lng}););out center ${limit * 2};`
-  try {
-    const res = await fetch("https://overpass-api.de/api/interpreter", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: `data=${encodeURIComponent(query)}`,
-    })
-    if (!res.ok) throw new Error(`Overpass status ${res.status}`)
-    const data = await res.json()
-    const elements = (data.elements ?? []) as OverpassElement[]
-    const seen = new Set<string>()
-    const out: GuidePoi[] = []
-    // Prefer well-described POIs (website/wikipedia tag) first.
-    const scored = elements
-      .map((el) => {
-        const poi = poiFromElement(el, "Place")
-        if (!poi) return null
-        const tags = el.tags || {}
-        const score = (tags.wikipedia ? 2 : 0) + (tags.website ? 1 : 0)
-        return { poi, score }
-      })
-      .filter((x): x is { poi: GuidePoi; score: number } => Boolean(x))
-      .sort((a, b) => b.score - a.score)
-    for (const { poi } of scored) {
-      const key = poi.name.toLowerCase()
-      if (seen.has(key)) continue
-      seen.add(key)
-      out.push(poi)
-      if (out.length >= limit) break
+  for (const endpoint of OVERPASS_MIRRORS) {
+    try {
+      const ctrl = new AbortController()
+      const timer = setTimeout(() => ctrl.abort(), 25000)
+      let res: Response
+      try {
+        res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded", Accept: "application/json" },
+          body: `data=${encodeURIComponent(query)}`,
+          signal: ctrl.signal,
+        })
+      } finally {
+        clearTimeout(timer)
+      }
+      if (!res.ok) continue
+      const data = await res.json()
+      const elements = (data.elements ?? []) as OverpassElement[]
+      if (elements.length === 0) continue
+      const seen = new Set<string>()
+      const out: GuidePoi[] = []
+      // Prefer well-described POIs (website/wikipedia tag) first.
+      const scored = elements
+        .map((el) => {
+          const poi = poiFromElement(el, "Place")
+          if (!poi) return null
+          const tags = el.tags || {}
+          const score = (tags.wikipedia ? 2 : 0) + (tags.website ? 1 : 0)
+          return { poi, score }
+        })
+        .filter((x): x is { poi: GuidePoi; score: number } => Boolean(x))
+        .sort((a, b) => b.score - a.score)
+      for (const { poi } of scored) {
+        const key = poi.name.toLowerCase()
+        if (seen.has(key)) continue
+        seen.add(key)
+        out.push(poi)
+        if (out.length >= limit) break
+      }
+      if (out.length > 0) return out
+    } catch {
+      continue
     }
-    return out
-  } catch (err) {
-    console.warn("Overpass POI fetch failed:", err)
-    return []
   }
+  console.warn("Overpass POI fetch failed on all mirrors")
+  return []
 }
 
 async function getWikipediaSummary(city: string): Promise<{ extract: string | null; image: string | null }> {
@@ -1117,6 +1137,13 @@ export function getDestinationGuide(city: string, country?: string): Promise<Des
   })()
   guideCache.set(key, task)
   task.catch(() => guideCache.delete(key))
+  // Never cache an empty guide: a rate-limited Overpass response must not
+  // poison the city — Retry refetches live instead of replaying [].
+  void task.then((g) => {
+    if (!g.coords && g.places.length === 0 && g.hotels.length === 0 && g.activities.length === 0 && !g.wikiExtract) {
+      guideCache.delete(key)
+    }
+  })
   return task
 }
 

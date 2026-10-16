@@ -158,6 +158,7 @@ export default function FindStayScreen({ navigate, openBooking, goBack }: Props)
   const [cityCountry, setCityCountry] = useState<Record<string, string>>({})
   const [tripRange, setTripRange] = useState("")
   const [activeCountry, setActiveCountry] = useState("")
+  const [retryNonce, setRetryNonce] = useState(0)
 
   // Sync saved stays from persistent store
   useEffect(() => {
@@ -372,7 +373,7 @@ export default function FindStayScreen({ navigate, openBooking, goBack }: Props)
     return () => {
       active = false
     }
-  }, [activeCity, activeCountry])
+  }, [activeCity, activeCountry, retryNonce])
 
   const filtered = stays
     .filter((s) => stayType === "all" || s.category === stayType)
@@ -558,14 +559,45 @@ export default function FindStayScreen({ navigate, openBooking, goBack }: Props)
         )}
 
         {!loading && filtered.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="flex flex-col items-center justify-center py-16 text-center px-6">
             <span className="text-5xl mb-3">🔍</span>
             <p className="text-navy font-black text-[16px] mb-1">
-              No stays found
+              {search.trim() ? `No match for “${search.trim()}”` : "No stays found"}
             </p>
-            <p className="text-slate-400 text-[13px]">
-              Try adjusting your filters
+            <p className="text-slate-400 text-[13px] mb-5">
+              {search.trim()
+                ? "Try another name, or clear the search"
+                : "Live sources are rate-limited right now — retry or check Booking.com"}
             </p>
+            {search.trim() ? (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                className="px-6 py-3 rounded-2xl font-black text-[13px] text-white"
+                style={{ background: "linear-gradient(135deg, #3B41C8, #06C4D4)" }}
+              >
+                Clear search
+              </button>
+            ) : (
+              <div className="flex flex-col gap-2 w-full max-w-[260px]">
+                <button
+                  type="button"
+                  onClick={() => setRetryNonce((n) => n + 1)}
+                  className="px-6 py-3 rounded-2xl font-black text-[13px] text-white"
+                  style={{ background: "linear-gradient(135deg, #3B41C8, #06C4D4)" }}
+                >
+                  Retry live search
+                </button>
+                <a
+                  href={`https://www.booking.com/searchresults.html?ss=${encodeURIComponent(activeCountry ? `${activeCity}, ${activeCountry}` : activeCity)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-6 py-3 rounded-2xl font-black text-[13px] text-center text-brand bg-white border border-slate-200"
+                >
+                  Search {activeCity} on Booking.com ↗
+                </a>
+              </div>
+            )}
           </div>
         )}
 

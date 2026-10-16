@@ -624,31 +624,45 @@ export default function ItineraryScreen({ navigate, goBack }: Props) {
         Add to Day
       </button>
 
-      {/* Add sheet overlay */}
+      {/* Add sheet overlay — fixed to the viewport (not the scroll container)
+          so the sheet always anchors to the visible screen bottom on phones. */}
       {showAddSheet && (
         <div
-          className="absolute inset-0 z-50"
+          className="fixed inset-0 z-50 flex items-end justify-center md:items-center md:p-6"
           onClick={() => setShowAddSheet(false)}
         >
           <div className="absolute inset-0 bg-navy/50" />
           <div
-            className="absolute bottom-0 left-0 right-0 max-h-[88%] overflow-y-auto rounded-t-[28px] bg-white p-6"
+            className="relative w-full md:max-w-[430px] max-h-[88dvh] overflow-y-auto rounded-t-[28px] md:rounded-[28px] bg-white px-6 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-10 h-1 rounded-full bg-slate-200 mx-auto mb-5" />
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-navy font-black text-[18px]">
+            <div className="w-10 h-1 rounded-full bg-slate-200 mx-auto mb-3" />
+            <div className="flex items-center justify-between mb-4 gap-2">
+              <h3 className="text-navy font-black text-[18px] min-w-0">
                 {addType ? `Add ${addType === "stay" ? "stay manually" : addType}` : "What do you want to add?"}
               </h3>
-              {addType && (
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {addType && (
+                  <button
+                    type="button"
+                    onClick={() => setAddType(null)}
+                    className="text-[12px] font-bold text-brand"
+                  >
+                    Back
+                  </button>
+                )}
                 <button
                   type="button"
-                  onClick={() => setAddType(null)}
-                  className="text-[12px] font-bold text-brand"
+                  onClick={() => {
+                    setShowAddSheet(false)
+                    setAddType(null)
+                  }}
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold flex items-center justify-center text-[13px]"
+                  aria-label="Close"
                 >
-                  Back
+                  ✕
                 </button>
-              )}
+              </div>
             </div>
             {!addType && (
               <div className="flex flex-col gap-2">

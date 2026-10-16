@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import type { Screen } from "../App"
-import { searchHotels } from "../lib/travelApi"
+import { getDestinationGuide, searchDestinations, searchHotels } from "../lib/travelApi"
 import { getTripDetails, getSavedPlaces, toggleSavedPlace } from "../lib/trips"
 import { useIsDesktop } from "../lib/useIsDesktop"
 
@@ -104,21 +104,49 @@ const defaultStays: Stay[] = [
   },
 ]
 
-type FilterKey = "all" | "hostel" | "hotel" | "private" | "budget" | "top"
+type StayType = "all" | "hostel" | "hotel" | "private"
+type DealKey = "all" | "budget" | "top"
 type SortKey = "recommended" | "price" | "rating"
 
-const filters: { label: string; key: FilterKey }[] = [
-  { label: "All", key: "all" },
-  { label: "🏨 Hostel", key: "hostel" },
-  { label: "🏩 Hotel", key: "hotel" },
-  { label: "🏠 Private", key: "private" },
-  { label: "💸 Budget", key: "budget" },
-  { label: "⭐ Top Rated", key: "top" },
+/** "Tunisie 🇹🇳" → "Tunisie" (flags break matching/saving). */
+function cleanCountry(raw: string): string {
+  return (raw || "")
+    .replace(/[^\p{L}\p{M}\s\-']/gu, "")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+function formatStayRange(start?: string | null, end?: string | null): string {
+  if (!start || !end) return ""
+  const a = new Date(`${String(start).slice(0, 10)}T00:00:00`)
+  const b = new Date(`${String(end).slice(0, 10)}T00:00:00`)
+  if (Number.isNaN(a.getTime()) || Number.isNaN(b.getTime()) || b <= a) return ""
+  const nights = Math.round((b.getTime() - a.getTime()) / 86400000)
+  const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+  return `${fmt(a)}–${fmt(b)} · ${nights} night${nights > 1 ? "s" : ""}`
+}
+
+function haversineKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number | null {
+  if (!Number.isFinite(a?.lat) || !Number.isFinite(a?.lng) || !Number.isFinite(b?.lat) || !Number.isFinite(b?.lng)) return null
+  const r = (v: number) => (v * Math.PI) / 180
+  const dLat = r(b.lat - a.lat)
+  const dLng = r(b.lng - a.lng)
+  const h = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.sin(dLng / 2) * Math.sin(dLng / 2) * Math.cos(r(a.lat)) * Math.cos(r(b.lat))
+  return 2 * 6371 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h))
+}
+
+// Generic photos for live OSM stays (OpenStreetMap has no images).
+const LIVE_STAY_IMAGES = [
+  "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=500&h=350&fit=crop&auto=format",
+  "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=500&h=350&fit=crop&auto=format",
+  "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=500&h=350&fit=crop&auto=format",
+  "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=500&h=350&fit=crop&auto=format",
 ]
 
 export default function FindStayScreen({ navigate, openBooking, goBack }: Props) {
   const isDesktop = useIsDesktop()
-  const [activeFilter, setActiveFilter] = useState<FilterKey>("all")
+  const [stayType, setStayType] = useState<StayType>("all")
+  const [deal, setDeal] = useState<DealKey>("all")
   const [sort, setSort] = useState<SortKey>("recommended")
   const [search, setSearch] = useState("")
   const [routeCities, setRouteCities] = useState<string[]>([])
@@ -126,6 +154,10 @@ export default function FindStayScreen({ navigate, openBooking, goBack }: Props)
   const [stays, setStays] = useState<Stay[]>(defaultStays)
   const [loading, setLoading] = useState(true)
   const [savedStayNames, setSavedStayNames] = useState<Set<string>>(new Set())
+  const [showFilters, setShowFilters] = useState(false)
+  const [cityCountry, setCityCountry] = useState<Record<string, string>>({})
+  const [tripRange, setTripRange] = useState("")
+  const [activeCountry, setActiveCountry] = useState("")
 
   // Sync saved stays from persistent store
   useEffect(() => {
@@ -172,7 +204,7 @@ export default function FindStayScreen({ navigate, openBooking, goBack }: Props)
         name: stay.name,
         address: stay.location,
         city: activeCity,
-        country: "Tunisia",
+        country: activeCountry || "Unknown",
         category: "stays",
         rating: stay.rating,
         image_url: stay.image,
@@ -185,25 +217,61 @@ export default function FindStayScreen({ navigate, openBooking, goBack }: Props)
 
   // Derive the destination chips from the active trip's route so the screen
   // reflects the user's real plan instead of hardcoded demo cities.
+  // Also captures each city's real country + the trip dates for the header.
   useEffect(() => {
     let active = true
     getTripDetails()
       .then((trip) => {
         if (!active) return
-        const cities = (trip?.trip_destinations || [])
+        const dests = (trip?.trip_destinations || [])
           .slice()
           .sort((a: any, b: any) => (a.position || 0) - (b.position || 0))
+        const cities = dests
           .map((d: any) => d.city)
           .filter((c: string) => c && c.trim())
         const uniqueCities = [...new Set(cities)] as string[]
         setRouteCities(uniqueCities)
         if (uniqueCities.length > 0) setSelectedCity(uniqueCities[0])
+        const cmap: Record<string, string> = {}
+        for (const d of dests) {
+          const c = String(d?.city || "").trim()
+          const co = cleanCountry(String(d?.country || ""))
+          if (c && co && !/^(destination|unknown|monde)$/i.test(co)) cmap[c] = co
+        }
+        setCityCountry(cmap)
+        setTripRange(formatStayRange(trip?.start_date, trip?.end_date))
       })
       .catch(() => {})
     return () => {
       active = false
     }
   }, [])
+
+  // Real country for the active city (trip data first, worldwide search second)
+  // so saved stays and results are never stuck on "Tunisia".
+  useEffect(() => {
+    let alive = true
+    const local = cityCountry[activeCity]
+    if (local) {
+      setActiveCountry(local)
+      return
+    }
+    if (!activeCity) {
+      setActiveCountry("")
+      return
+    }
+    void searchDestinations(activeCity)
+      .then((list) => {
+        if (!alive) return
+        const norm = activeCity.trim().toLowerCase()
+        const hit = list.find((i) => String(i.city || "").toLowerCase() === norm) || list[0]
+        if (hit?.country) setActiveCountry(cleanCountry(hit.country))
+      })
+      .catch(() => {})
+    return () => {
+      alive = false
+    }
+  }, [activeCity, cityCountry])
 
   useEffect(() => {
     let active = true
@@ -242,12 +310,60 @@ export default function FindStayScreen({ navigate, openBooking, goBack }: Props)
           setLoading(false)
           return
         }
+
+        // No keyed provider (Amadeus needs API keys): live OpenStreetMap stays
+        // around the real city — Bangkok shows Bangkok hostels/hotels, never
+        // the Tunis demo list.
+        try {
+          const guide = await getDestinationGuide(activeCity, activeCountry || undefined)
+          if (!active) return
+          const live = (guide.hotels || []).slice(0, 8)
+          if (live.length > 0) {
+            setStays(
+              live.map((h, i) => {
+                const kind = String(h.kind || "Hotel")
+                const kl = kind.toLowerCase()
+                const category: Stay["category"] = kl.includes("hostel")
+                  ? "hostel"
+                  : kl.includes("apartment") || kl.includes("guest") || kl.includes("resort") || kl.includes("motel")
+                    ? "private"
+                    : "hotel"
+                const km = guide.coords ? haversineKm(guide.coords, { lat: h.lat, lng: h.lng }) : null
+                return {
+                  name: h.name,
+                  rating: 4.4,
+                  location: activeCity,
+                  priceNum: Number.MAX_SAFE_INTEGER,
+                  price: "Check price",
+                  category,
+                  tags: [
+                    km !== null ? `📍 ${km.toFixed(1)} km from center` : "🌍 Great location",
+                    `🏷️ ${kind}`,
+                    "🔴 Live",
+                  ],
+                  image: LIVE_STAY_IMAGES[i % LIVE_STAY_IMAGES.length],
+                  vibe: kind,
+                  distance: km !== null ? `${km.toFixed(1)} km` : "—",
+                }
+              }),
+            )
+            setLoading(false)
+            return
+          }
+        } catch {
+          /* fall through to last resort */
+        }
+        if (!active) return
       } catch (error) {
         console.warn("Hotel search failed:", error)
       }
 
       if (active) {
-        setStays(defaultStays)
+        // Last resort, offline only: demo stays fit Tunis-area trips; any
+        // other city shows an empty state instead of wrong-city hotels.
+        const normA = activeCity.trim().toLowerCase()
+        const isTunisia = /tunis|sousse|sfax|djerba|hammamet|monastir|bizerte|tozeur|tunisie/.test(normA)
+        setStays(isTunisia ? defaultStays : [])
         setLoading(false)
       }
     }
@@ -256,15 +372,13 @@ export default function FindStayScreen({ navigate, openBooking, goBack }: Props)
     return () => {
       active = false
     }
-  }, [activeCity])
+  }, [activeCity, activeCountry])
 
   const filtered = stays
+    .filter((s) => stayType === "all" || s.category === stayType)
     .filter((s) => {
-      if (activeFilter === "hostel") return s.category === "hostel"
-      if (activeFilter === "hotel") return s.category === "hotel"
-      if (activeFilter === "private") return s.category === "private"
-      if (activeFilter === "budget") return s.priceNum <= 25
-      if (activeFilter === "top") return s.rating >= 4.7
+      if (deal === "budget") return s.priceNum <= 25
+      if (deal === "top") return s.rating >= 4.7
       return true
     })
     .filter(
@@ -278,6 +392,23 @@ export default function FindStayScreen({ navigate, openBooking, goBack }: Props)
       if (sort === "rating") return b.rating - a.rating
       return 0
     })
+
+  const activeFilterCount = (stayType !== "all" ? 1 : 0) + (deal !== "all" ? 1 : 0) + (sort !== "recommended" ? 1 : 0)
+  const hasActiveFilters = activeFilterCount > 0
+  const filterSummary = (() => {
+    const parts: string[] = []
+    if (stayType !== "all") parts.push(stayType.charAt(0).toUpperCase() + stayType.slice(1))
+    if (deal === "budget") parts.push("Budget")
+    if (deal === "top") parts.push("Top rated")
+    if (sort === "price") parts.push("Price")
+    if (sort === "rating") parts.push("Rating")
+    return parts.length > 0 ? parts.join(" · ") : "All stays"
+  })()
+  const clearFilters = () => {
+    setStayType("all")
+    setDeal("all")
+    setSort("recommended")
+  }
 
   return (
     <div className="min-h-full bg-surface">
@@ -302,11 +433,11 @@ export default function FindStayScreen({ navigate, openBooking, goBack }: Props)
             </svg>
           </button>
           <div className="min-w-0">
-            <h1 className={isDesktop ? "text-[20px] md:text-[26px] font-black text-navy max-w-none" : "text-[20px] font-black text-navy truncate"}>
+            <h1 className={isDesktop ? "text-[20px] md:text-[26px] font-black text-navy max-w-none" : "text-[18px] font-black text-navy leading-tight"}>
               Find Your Perfect Stay
             </h1>
             <p className={isDesktop ? "text-slate-400 text-[12px] max-w-none" : "text-slate-400 text-[12px] truncate"}>
-              {activeCity} · Jun 5–8 · 3 nights
+              {activeCity}{activeCountry ? ` · ${activeCountry}` : ""}{tripRange ? ` · ${tripRange}` : ""}
             </p>
           </div>
         </div>
@@ -383,59 +514,46 @@ export default function FindStayScreen({ navigate, openBooking, goBack }: Props)
         ))}
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-2 px-5 md:px-8 mb-3 overflow-x-auto pb-1">
-        {filters.map((f) => (
-          <button
-            key={f.key}
-            onClick={() => setActiveFilter(f.key)}
-            className="flex-shrink-0 px-4 py-1.5 rounded-full text-[12px] font-bold transition-all"
-            style={{
-              background: f.key === activeFilter ? "#3B41C8" : "white",
-              color: f.key === activeFilter ? "white" : "#64748b",
-              boxShadow:
-                f.key === activeFilter
-                  ? "0 4px 12px rgba(59,65,200,0.3)"
-                  : "0 1px 4px rgba(0,0,0,0.06)",
-            }}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Sort + count */}
-      <div className="px-5 md:px-8 mb-4 flex items-center justify-between">
-        <span className="text-[12px] font-semibold text-slate-400">
+      {/* Filters — one button opens the full panel (type, offers, sort) */}
+      <div className="px-5 md:px-8 mb-4 flex items-center justify-between gap-2">
+        <button
+          type="button"
+          onClick={() => setShowFilters(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-full text-[12px] font-bold transition-all flex-shrink-0"
+          style={{
+            background: hasActiveFilters ? "#3B41C8" : "white",
+            color: hasActiveFilters ? "white" : "#475569",
+            boxShadow: hasActiveFilters
+              ? "0 4px 12px rgba(59,65,200,0.3)"
+              : "0 1px 4px rgba(0,0,0,0.06)",
+          }}
+        >
+          <span>⚙️</span>
+          <span>{filterSummary === "All stays" ? "Filters" : filterSummary}</span>
+          {activeFilterCount > 0 && (
+            <span
+              className="min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-black flex items-center justify-center"
+              style={{
+                background: "rgba(255,255,255,0.25)",
+                color: "white",
+              }}
+            >
+              {activeFilterCount}
+            </span>
+          )}
+        </button>
+        <span className="text-[12px] font-semibold text-slate-400 truncate">
           {loading
             ? "Loading live stays…"
             : `${filtered.length} stay${filtered.length !== 1 ? "s" : ""} found`}
         </span>
-        <div className="flex gap-1">
-          {(["recommended", "price", "rating"] as SortKey[]).map((s) => (
-            <button
-              key={s}
-              onClick={() => setSort(s)}
-              className="px-3 py-1 rounded-full text-[11px] font-bold capitalize transition-all"
-              style={{
-                background: sort === s ? "#0D0F2E" : "white",
-                color: sort === s ? "white" : "#94a3b8",
-                boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-              }}
-            >
-              {s === "recommended"
-                ? "Best"
-                : s.charAt(0).toUpperCase() + s.slice(1)}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Cards */}
       <div className={isDesktop ? "grid grid-cols-1 lg:grid-cols-2 gap-4 px-5 md:px-8 pb-6" : "px-5 flex flex-col gap-4 pb-6"}>
         {loading && (
           <div className="rounded-[22px] bg-white px-4 py-6 text-center text-[12px] text-slate-500">
-            Looking up live hotel options in Tunisia…
+            Looking up live stays in {activeCity}…
           </div>
         )}
 
@@ -547,7 +665,9 @@ export default function FindStayScreen({ navigate, openBooking, goBack }: Props)
                   <p className="text-navy font-black text-[17px]">
                     {stay.price}
                   </p>
-                  <p className="text-slate-400 text-[10px]">per night</p>
+                  {stay.priceNum !== Number.MAX_SAFE_INTEGER && (
+                    <p className="text-slate-400 text-[10px]">per night</p>
+                  )}
                 </div>
               </div>
               <div className="flex gap-1.5 flex-wrap mb-3">
@@ -599,6 +719,143 @@ export default function FindStayScreen({ navigate, openBooking, goBack }: Props)
           </div>
         )})}
       </div>
+
+      {/* Filter panel — one button, all options (type, offers, sort) */}
+      {showFilters && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center md:items-center md:p-6"
+          onClick={() => setShowFilters(false)}
+        >
+          <div className="absolute inset-0 bg-navy/50" />
+          <div
+            className="relative w-full md:max-w-[400px] max-h-[85dvh] overflow-y-auto rounded-t-[28px] md:rounded-[28px] bg-white px-6 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-10 h-1 rounded-full bg-slate-200 mx-auto mb-3" />
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-navy font-black text-[18px]">Filters</h3>
+              <div className="flex items-center gap-2">
+                {hasActiveFilters && (
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    className="text-[12px] font-bold text-brand"
+                  >
+                    Clear all
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowFilters(false)}
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold flex items-center justify-center text-[13px]"
+                  aria-label="Close filters"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <p className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">
+              Stay type
+            </p>
+            <div className="flex flex-col gap-1.5 mb-5">
+              {(
+                [
+                  { key: "all", icon: "✨", label: "All stays", sub: "Everything in " + activeCity },
+                  { key: "hostel", icon: "🏨", label: "Hostel", sub: "Social & budget" },
+                  { key: "hotel", icon: "🏩", label: "Hotel", sub: "Comfort & services" },
+                  { key: "private", icon: "🏠", label: "Private", sub: "Apartments & villas" },
+                ] as { key: StayType; icon: string; label: string; sub: string }[]
+              ).map((o) => (
+                <button
+                  key={o.key}
+                  type="button"
+                  onClick={() => setStayType(o.key)}
+                  className="flex items-center gap-3 p-3 rounded-2xl border text-left transition-all"
+                  style={
+                    stayType === o.key
+                      ? { borderColor: "#3B41C8", background: "rgba(59,65,200,0.07)" }
+                      : { borderColor: "#e2e8f0", background: "white" }
+                  }
+                >
+                  <span className="text-[20px]">{o.icon}</span>
+                  <span className="flex-1">
+                    <span className="block text-navy font-bold text-[14px]">{o.label}</span>
+                    <span className="block text-slate-400 text-[12px]">{o.sub}</span>
+                  </span>
+                  {stayType === o.key && <span className="text-brand font-black">✓</span>}
+                </button>
+              ))}
+            </div>
+
+            <p className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">
+              Offers
+            </p>
+            <div className="flex gap-2 mb-5">
+              {(
+                [
+                  { key: "all", label: "All" },
+                  { key: "budget", label: "💸 Budget ≤ $25" },
+                  { key: "top", label: "⭐ Top rated 4.7+" },
+                ] as { key: DealKey; label: string }[]
+              ).map((o) => (
+                <button
+                  key={o.key}
+                  type="button"
+                  onClick={() => setDeal(o.key)}
+                  className="flex-1 px-3 py-2 rounded-full text-[12px] font-bold transition-all"
+                  style={{
+                    background: deal === o.key ? "#0D0F2E" : "white",
+                    color: deal === o.key ? "white" : "#64748b",
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+                  }}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
+
+            <p className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">
+              Sort by
+            </p>
+            <div className="flex gap-2 mb-5">
+              {(
+                [
+                  { key: "recommended", label: "✨ Best" },
+                  { key: "price", label: "💰 Price" },
+                  { key: "rating", label: "⭐ Rating" },
+                ] as { key: SortKey; label: string }[]
+              ).map((o) => (
+                <button
+                  key={o.key}
+                  type="button"
+                  onClick={() => setSort(o.key)}
+                  className="flex-1 px-3 py-2 rounded-full text-[12px] font-bold transition-all"
+                  style={{
+                    background: sort === o.key ? "#0D0F2E" : "white",
+                    color: sort === o.key ? "white" : "#64748b",
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+                  }}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowFilters(false)}
+              className="w-full py-3.5 rounded-2xl text-white font-black text-[14px]"
+              style={{
+                background: "linear-gradient(135deg, #3B41C8, #06C4D4)",
+                boxShadow: "0 8px 24px rgba(59,65,200,0.35)",
+              }}
+            >
+              Show {filtered.length} stay{filtered.length !== 1 ? "s" : ""} in {activeCity}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

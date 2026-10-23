@@ -1227,6 +1227,9 @@ function finiteCoord(v: unknown): number | null {
 
 const MANUAL_VISITED_KEY = "trypo_manual_visited_v1"
 
+/** How long each story photo stays on screen. */
+const STORY_DURATION_MS = 5000
+
 type ManualEntry = {
   name: string
   frenchName: string
@@ -1407,7 +1410,8 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
   const [modalCountry, setModalCountry] = useState<Country | null>(null)
   const [activeModalTab, setActiveModalTab] = useState<"photos" | "stories" | "cities">("photos")
   const [selectedCityFilter, setSelectedCityFilter] = useState<string>("All")
-  const [activeLightboxPhoto, setActiveLightboxPhoto] = useState<MemoryPhoto | null>(null)
+  const [storyIndex, setStoryIndex] = useState<number | null>(null)
+  const [storyElapsed, setStoryElapsed] = useState(0)
 
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<mapboxgl.Map | null>(null)
@@ -1929,6 +1933,25 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
     (p) => selectedCityFilter === "All" || p.city === selectedCityFilter
   )
 
+  // Story-style slideshow: auto-advance through this place's photos.
+  const storyCount = modalPhotos.length
+  useEffect(() => {
+    if (storyIndex === null) return
+    setStoryElapsed(0)
+    const startedAt = Date.now()
+    const timer = window.setInterval(() => {
+      const elapsed = Date.now() - startedAt
+      setStoryElapsed(elapsed)
+      if (elapsed >= STORY_DURATION_MS) {
+        setStoryIndex((prev) => {
+          if (prev === null) return null
+          return prev + 1 < storyCount ? prev + 1 : null
+        })
+      }
+    }, 50)
+    return () => window.clearInterval(timer)
+  }, [storyIndex, storyCount])
+
   const worldPercentage = Math.min(100, Math.round((visited.length / 195) * 100))
 
   return (
@@ -2442,6 +2465,21 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
                   >
                     <span>{uploadingPhoto ? "⏳ Uploading…" : "📷 Add a photo from my phone"}</span>
                   </button>
+                  {modalPhotos.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setStoryIndex(0)}
+                      className="w-full mb-3 py-3 rounded-2xl text-slate-900 text-[12px] font-black flex items-center justify-center gap-2 active:scale-[0.99] transition-all cursor-pointer"
+                      style={{
+                        background: "linear-gradient(135deg, #22D3EE 0%, #3B82F6 100%)",
+                        boxShadow: "0 6px 18px rgba(34,211,238,0.25)",
+                      }}
+                    >
+                      <span>▶</span>
+                      <span>Défiler mes photos</span>
+                      <span className="text-slate-900/60 font-bold">· {modalPhotos.length}</span>
+                    </button>
+                  )}
                   {modalPhotos.length === 0 ? (
                     <div className="text-center py-10 text-white/40">
                       <p className="text-3xl mb-2">📸</p>
@@ -2449,10 +2487,10 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {modalPhotos.map((photo) => (
+                      {modalPhotos.map((photo, idx) => (
                         <div
                           key={photo.id}
-                          onClick={() => setActiveLightboxPhoto(photo)}
+                          onClick={() => setStoryIndex(idx)}
                           className="group relative rounded-2xl overflow-hidden aspect-[4/5] bg-slate-800 shadow-lg cursor-pointer border border-white/10 hover:border-white/30 transition-all hover:scale-[1.02]"
                         >
                           <img
@@ -2565,50 +2603,94 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
       )}
 
       {/* ────────────────────────────────────────────────────────────────────── */}
-      {/* PHOTO LIGHTBOX (FULL PREVIEW) */}
+      {/* STORY VIEWER (FULLSCREEN SLIDESHOW OF THIS PLACE'S PHOTOS) */}
       {/* ────────────────────────────────────────────────────────────────────── */}
-      {activeLightboxPhoto && (
-        <div
-          className="fixed inset-0 z-[60] flex flex-col justify-between p-4 bg-black/95 backdrop-blur-2xl animate-in fade-in duration-200"
-          onClick={() => setActiveLightboxPhoto(null)}
-        >
-          {/* Top Bar */}
-          <div className="flex items-center justify-between pt-8 pb-2" onClick={(e) => e.stopPropagation()}>
-            <div>
-              <p className="text-cyan-300 text-[11px] font-bold">📍 {activeLightboxPhoto.city}</p>
-              <h3 className="text-white font-bold text-[15px]">{activeLightboxPhoto.title}</h3>
+      {storyIndex !== null && modalPhotos[storyIndex] && (
+        <div className="fixed inset-0 z-[70] bg-black overflow-hidden animate-in fade-in duration-200">
+          {/* Photo */}
+          <img
+            key={modalPhotos[storyIndex].id}
+            src={modalPhotos[storyIndex].url}
+            alt={modalPhotos[storyIndex].title}
+            className="absolute inset-0 w-full h-full object-cover animate-in fade-in duration-300"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-black/85 pointer-events-none" />
+
+          {/* Progress bars */}
+          <div className="absolute top-0 inset-x-0 z-20 flex gap-1 px-3 pt-5">
+            {modalPhotos.map((p, i) => (
+              <div key={p.id} className="flex-1 h-[3px] rounded-full bg-white/30 overflow-hidden">
+                <div
+                  className="h-full bg-white"
+                  style={{
+                    width:
+                      i < storyIndex
+                        ? "100%"
+                        : i === storyIndex
+                          ? `${Math.min(100, (storyElapsed / STORY_DURATION_MS) * 100)}%`
+                          : "0%",
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Header: flag + city + counter + close */}
+          <div className="absolute top-8 inset-x-0 z-20 flex items-center justify-between px-4 pt-3 pb-2">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="text-2xl leading-none drop-shadow-md">{modalCountry?.flag}</span>
+              <div className="min-w-0">
+                <p className="text-white font-black text-[13px] truncate drop-shadow">
+                  {modalPhotos[storyIndex].city}
+                </p>
+                <p className="text-white/60 text-[10px] font-bold tracking-wide">
+                  {storyIndex + 1} / {modalPhotos.length}
+                </p>
+              </div>
             </div>
             <button
-              onClick={() => setActiveLightboxPhoto(null)}
-              className="w-9 h-9 rounded-full bg-white/20 text-white flex items-center justify-center font-bold text-lg"
+              type="button"
+              onClick={() => setStoryIndex(null)}
+              aria-label="Fermer"
+              className="w-9 h-9 rounded-full bg-black/35 hover:bg-black/55 backdrop-blur-md border border-white/20 text-white flex items-center justify-center font-bold text-base active:scale-95 transition-all cursor-pointer flex-shrink-0"
             >
               ✕
             </button>
           </div>
 
-          {/* Center Image */}
-          <div
-            className="flex-1 flex items-center justify-center my-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <img
-              src={activeLightboxPhoto.url}
-              alt={activeLightboxPhoto.title}
-              className="max-h-[60vh] max-w-full rounded-2xl object-contain shadow-2xl border border-white/15"
-            />
-          </div>
+          {/* Tap zones: left third = previous, right two-thirds = next */}
+          <button
+            type="button"
+            aria-label="Photo précédente"
+            onClick={() =>
+              setStoryIndex((prev) => (prev === null ? prev : Math.max(0, prev - 1)))
+            }
+            className="absolute inset-y-0 left-0 w-1/3 z-10 cursor-pointer"
+          />
+          <button
+            type="button"
+            aria-label="Photo suivante"
+            onClick={() =>
+              setStoryIndex((prev) =>
+                prev === null ? prev : prev + 1 < modalPhotos.length ? prev + 1 : null
+              )
+            }
+            className="absolute inset-y-0 right-0 w-2/3 z-10 cursor-pointer"
+          />
 
-          {/* Bottom Caption */}
-          <div
-            className="p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 text-white"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p className="text-[12px] text-white/90 leading-relaxed mb-2">
-              {activeLightboxPhoto.caption}
+          {/* Bottom caption */}
+          <div className="absolute bottom-0 inset-x-0 z-20 px-5 pb-8 pt-16 bg-gradient-to-t from-black/90 via-black/60 to-transparent pointer-events-none">
+            <p className="text-white font-black text-[16px] leading-tight mb-1.5">
+              {modalPhotos[storyIndex].title}
             </p>
-            <div className="flex items-center justify-between text-[11px] text-white/50">
-              <span>📅 {activeLightboxPhoto.date}</span>
-              <span className="text-coral font-bold">❤️ {activeLightboxPhoto.likes} coups de cœur</span>
+            {modalPhotos[storyIndex].caption && (
+              <p className="text-white/80 text-[12px] leading-relaxed mb-3">
+                {modalPhotos[storyIndex].caption}
+              </p>
+            )}
+            <div className="flex items-center justify-between text-[11px] text-white/55 font-semibold">
+              <span>📅 {modalPhotos[storyIndex].date}</span>
+              <span className="text-coral">❤️ {modalPhotos[storyIndex].likes}</span>
             </div>
           </div>
         </div>

@@ -2342,28 +2342,26 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
       {/* ────────────────────────────────────────────────────────────────────── */}
       {showMemoriesModal && modalCountry && (
         <div
-          className="fixed inset-0 z-50 flex flex-col justify-end"
+          className="fixed inset-0 z-50 flex justify-center items-end md:items-center md:p-6"
+          onClick={() => setShowMemoriesModal(false)}
           style={{
-            background: "rgba(3, 7, 18, 0.75)",
-            backdropFilter: "blur(12px)",
+            background: "rgba(3, 7, 18, 0.72)",
+            backdropFilter: "blur(14px)",
           }}
         >
-          {/* Modal Container */}
+          {/* Modal Container: compact bottom sheet on mobile, centered card on desktop */}
           <div
-            className="w-full max-h-[88%] rounded-t-[32px] flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300"
-            style={{
-              background: "#0D0F2E",
-              border: "1px solid rgba(255,255,255,0.15)",
-            }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full md:max-w-lg max-h-[82%] md:max-h-[78vh] rounded-t-[28px] md:rounded-[28px] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300 bg-[#0A0C2E]/95 backdrop-blur-2xl border border-white/10 shadow-[0_-8px_40px_rgba(0,0,0,0.45)] md:shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
           >
             {/* Modal Header */}
-            <div className="p-5 pb-3 border-b border-white/10 flex-shrink-0">
-              <div className="w-10 h-1 rounded-full bg-white/20 mx-auto mb-3" />
+            <div className="px-4 pt-2.5 pb-3 border-b border-white/[0.07] flex-shrink-0">
+              <div className="w-9 h-1 rounded-full bg-white/20 mx-auto mb-2.5" />
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="relative flex-shrink-0">
                     <div
-                      className="w-12 h-12 rounded-2xl flex items-center justify-center text-3xl shadow-lg overflow-hidden"
+                      className="w-10 h-10 rounded-xl flex items-center justify-center text-2xl shadow-lg overflow-hidden"
                       style={{
                         background: CONTINENT_COLORS[modalCountry.continent] || "#4F46E5",
                       }}
@@ -2378,14 +2376,14 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
                     />
                   </div>
                   <div>
-                    <h2 className="text-white font-black text-[20px] leading-tight flex items-center gap-2">
+                    <h2 className="text-white font-black text-[17px] leading-tight flex items-center gap-2">
                       <span>{modalCountry.frenchName}</span>
-                      <span className="text-[11px] font-bold text-indigo-200 bg-white/10 px-2 py-0.5 rounded-md">
+                      <span className="text-[10px] font-bold text-indigo-200 bg-white/10 px-1.5 py-0.5 rounded">
                         {modalCountry.year}
                       </span>
                     </h2>
-                    <p className="text-white/50 text-[12px] mt-0.5">
-                      {modalCountry.cities.length} villes explorées • {modalCountry.photos.length + modalCountry.stories.length} souvenirs
+                    <p className="text-white/45 text-[11px] mt-0.5">
+                      {modalCountry.cities.length} villes • {modalCountry.photos.length + modalCountry.stories.length} souvenirs
                     </p>
                   </div>
                 </div>
@@ -2400,7 +2398,7 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
               </div>
 
               {/* Tabs: Photos / Stories / Cities */}
-              <div className="flex gap-1.5 mt-4 bg-white/5 p-1 rounded-2xl border border-white/5">
+              <div className="flex gap-1 mt-3 bg-white/5 p-1 rounded-xl border border-white/5">
                 {[
                   { id: "photos", label: `📸 Photos (${modalCountry.photos?.length || 0})` },
                   { id: "stories", label: `✨ Moments (${modalCountry.stories?.length || 0})` },
@@ -2410,7 +2408,7 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
                     key={tab.id}
                     type="button"
                     onClick={() => setActiveModalTab(tab.id as any)}
-                    className={`flex-1 py-2 rounded-xl text-[11px] font-bold transition-all ${
+                    className={`flex-1 py-1.5 rounded-lg text-[10.5px] font-bold transition-all ${
                       activeModalTab === tab.id
                         ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
                         : "text-white/60 hover:text-white hover:bg-white/5"
@@ -2423,7 +2421,7 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
 
               {/* City filter chips inside modal (for photos) */}
               {activeModalTab === "photos" && modalCountry.cities && modalCountry.cities.length > 0 && (
-                <div className="flex gap-2 overflow-x-auto pt-3 pb-0.5 no-scrollbar">
+                <div className="flex gap-2 overflow-x-auto pt-2.5 pb-0.5 no-scrollbar">
                   <button
                     type="button"
                     onClick={() => setSelectedCityFilter("All")}
@@ -2455,7 +2453,7 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
             </div>
 
             {/* Modal Body */}
-            <div className="flex-1 overflow-y-auto p-5 pt-3 space-y-4 no-scrollbar">
+            <div className="flex-1 overflow-y-auto px-4 pt-3 pb-4 space-y-3 no-scrollbar">
               {/* TAB 1: PHOTOS GALLERY */}
               {activeModalTab === "photos" && (
                 <div>
@@ -2613,14 +2611,14 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
             </div>
 
             {/* Modal Footer Action */}
-            <div className="p-4 border-t border-white/10 flex-shrink-0 bg-[#0A0C2E]/90 backdrop-blur-md">
+            <div className="px-4 py-3 border-t border-white/[0.07] flex-shrink-0 bg-white/[0.02]">
               <button
                 type="button"
                 onClick={() => {
                   setShowMemoriesModal(false)
                   navigate("trip-memories")
                 }}
-                className="w-full py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[13px] shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
+                className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[12.5px] shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
               >
                 <span>🎬</span>
                 <span>Ouvrir l'album complet du voyage</span>

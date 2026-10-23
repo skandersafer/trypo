@@ -2358,7 +2358,7 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
           >
             {/* Modal Header */}
             <div className="p-5 pb-3 border-b border-white/10 flex-shrink-0">
-              <div className="w-12 h-1 rounded-full bg-white/20 mx-auto mb-3" />
+              <div className="w-10 h-1 rounded-full bg-white/20 mx-auto mb-3" />
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="relative flex-shrink-0">
@@ -2374,32 +2374,33 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
                       src={myAvatar}
                       alt={displayName}
                       title={displayName}
-                      className="absolute -bottom-1.5 -right-1.5 w-6 h-6 rounded-full object-cover border-2 border-[#0D0F2E] shadow-md"
+                      className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full object-cover border-2 border-[#0A0C2E] shadow-md"
                     />
                   </div>
                   <div>
                     <h2 className="text-white font-black text-[20px] leading-tight flex items-center gap-2">
                       <span>{modalCountry.frenchName}</span>
-                      <span className="text-[11px] font-bold text-white/50 bg-white/10 px-2 py-0.5 rounded-full">
+                      <span className="text-[11px] font-bold text-indigo-200 bg-white/10 px-2 py-0.5 rounded-md">
                         {modalCountry.year}
                       </span>
                     </h2>
-                    <p className="text-white/50 text-[12px]">
-                      {modalCountry.cities.length} villes explorées • {modalCountry.photos.length + modalCountry.stories.length} souvenirs enregistrés
+                    <p className="text-white/50 text-[12px] mt-0.5">
+                      {modalCountry.cities.length} villes explorées • {modalCountry.photos.length + modalCountry.stories.length} souvenirs
                     </p>
                   </div>
                 </div>
 
                 <button
+                  type="button"
                   onClick={() => setShowMemoriesModal(false)}
-                  className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center font-bold text-lg transition-all"
+                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center text-sm font-semibold transition-all backdrop-blur-md"
                 >
                   ✕
                 </button>
               </div>
 
               {/* Tabs: Photos / Stories / Cities */}
-              <div className="flex gap-2 mt-4 bg-white/5 p-1 rounded-2xl">
+              <div className="flex gap-1.5 mt-4 bg-white/5 p-1 rounded-2xl border border-white/5">
                 {[
                   { id: "photos", label: `📸 Photos (${modalCountry.photos?.length || 0})` },
                   { id: "stories", label: `✨ Moments (${modalCountry.stories?.length || 0})` },
@@ -2407,11 +2408,12 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
                 ].map((tab) => (
                   <button
                     key={tab.id}
+                    type="button"
                     onClick={() => setActiveModalTab(tab.id as any)}
-                    className={`flex-1 py-1.5 rounded-xl text-[11px] font-bold transition-all ${
+                    className={`flex-1 py-2 rounded-xl text-[11px] font-bold transition-all ${
                       activeModalTab === tab.id
-                        ? "bg-coral text-white shadow-md"
-                        : "text-white/60 hover:text-white"
+                        ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
+                        : "text-white/60 hover:text-white hover:bg-white/5"
                     }`}
                   >
                     {tab.label}
@@ -2421,28 +2423,31 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
 
               {/* City filter chips inside modal (for photos) */}
               {activeModalTab === "photos" && modalCountry.cities && modalCountry.cities.length > 0 && (
-                <div className="flex gap-1.5 overflow-x-auto pt-3 pb-0.5 no-scrollbar">
+                <div className="flex gap-2 overflow-x-auto pt-3 pb-0.5 no-scrollbar">
                   <button
+                    type="button"
                     onClick={() => setSelectedCityFilter("All")}
-                    className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition-all ${
+                    className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all flex-shrink-0 ${
                       selectedCityFilter === "All"
-                        ? "bg-cyan-400 text-slate-900 shadow-sm"
-                        : "bg-white/10 text-white/60"
+                        ? "bg-white text-slate-900 shadow-md"
+                        : "bg-white/5 text-white/70 hover:bg-white/10 hover:text-white border border-white/10"
                     }`}
                   >
-                    Toutes les photos
+                    Toutes ({modalCountry.photos?.length || 0})
                   </button>
                   {modalCountry.cities.map((city) => (
                     <button
                       key={city.name}
+                      type="button"
                       onClick={() => setSelectedCityFilter(city.name)}
-                      className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition-all flex-shrink-0 ${
+                      className={`px-3 py-1.5 rounded-full text-[11px] font-medium transition-all flex-shrink-0 flex items-center gap-1.5 ${
                         selectedCityFilter === city.name
-                          ? "bg-cyan-400 text-slate-900 shadow-sm"
-                          : "bg-white/10 text-white/60"
+                          ? "bg-white text-slate-900 font-bold shadow-md"
+                          : "bg-white/5 text-white/70 hover:bg-white/10 hover:text-white border border-white/10"
                       }`}
                     >
-                      📍 {city.name}
+                      <span>📍</span>
+                      <span>{city.name}</span>
                     </button>
                   ))}
                 </div>
@@ -2454,36 +2459,41 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
               {/* TAB 1: PHOTOS GALLERY */}
               {activeModalTab === "photos" && (
                 <div>
-                  {/* Upload from phone (camera or gallery) */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      modalCountryForUpload.current = modalCountry
-                      worldFileRef.current?.click()
-                    }}
-                    className="w-full mb-3 py-3 rounded-2xl border-2 border-dashed border-white/20 text-white/70 text-[12px] font-bold hover:border-cyan-300 hover:text-white transition-all flex items-center justify-center gap-2"
-                  >
-                    <span>{uploadingPhoto ? "⏳ Uploading…" : "📷 Add a photo from my phone"}</span>
-                  </button>
-                  {modalPhotos.length > 0 && (
+                  {/* Action Bar: Add photo + Slideshow */}
+                  <div className="flex items-center gap-2 mb-4">
                     <button
                       type="button"
-                      onClick={() => setStoryIndex(0)}
-                      className="w-full mb-3 py-3 rounded-2xl text-slate-900 text-[12px] font-black flex items-center justify-center gap-2 active:scale-[0.99] transition-all cursor-pointer"
-                      style={{
-                        background: "linear-gradient(135deg, #22D3EE 0%, #3B82F6 100%)",
-                        boxShadow: "0 6px 18px rgba(34,211,238,0.25)",
+                      onClick={() => {
+                        modalCountryForUpload.current = modalCountry
+                        worldFileRef.current?.click()
                       }}
+                      className="flex-1 py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white text-[12px] font-semibold border border-dashed border-white/20 hover:border-indigo-400 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
                     >
-                      <span>▶</span>
-                      <span>Défiler mes photos</span>
-                      <span className="text-slate-900/60 font-bold">· {modalPhotos.length}</span>
+                      <span className="text-indigo-400 font-bold">➕</span>
+                      <span>{uploadingPhoto ? "⏳ Envoi…" : "Ajouter une photo"}</span>
                     </button>
-                  )}
+
+                    {modalPhotos.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setStoryIndex(0)}
+                        className="py-2.5 px-4 rounded-xl text-white text-[12px] font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-indigo-500/25 active:scale-[0.98] transition-all cursor-pointer flex-shrink-0"
+                        style={{
+                          background: "linear-gradient(135deg, #4F46E5 0%, #3B82F6 100%)",
+                        }}
+                      >
+                        <span>▶</span>
+                        <span>Diaporama</span>
+                        <span className="text-white/70 font-semibold text-[11px]">({modalPhotos.length})</span>
+                      </button>
+                    )}
+                  </div>
+
                   {modalPhotos.length === 0 ? (
-                    <div className="text-center py-10 text-white/40">
-                      <p className="text-3xl mb-2">📸</p>
-                      <p className="text-sm font-semibold">Aucune photo dans cette ville</p>
+                    <div className="text-center py-12 px-4 rounded-2xl bg-white/[0.02] border border-white/5">
+                      <p className="text-4xl mb-2.5">📸</p>
+                      <p className="text-sm font-bold text-white/80 mb-1">Aucune photo dans cette sélection</p>
+                      <p className="text-xs text-white/40">Ajoutez votre premier souvenir pour donner vie à ce voyage.</p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -2491,7 +2501,7 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
                         <div
                           key={photo.id}
                           onClick={() => setStoryIndex(idx)}
-                          className="group relative rounded-2xl overflow-hidden aspect-[4/5] bg-slate-800 shadow-lg cursor-pointer border border-white/10 hover:border-white/30 transition-all hover:scale-[1.02]"
+                          className="group relative rounded-2xl overflow-hidden aspect-[4/5] bg-slate-900 shadow-lg cursor-pointer border border-white/10 hover:border-white/30 transition-all hover:scale-[1.02]"
                         >
                           <img
                             src={photo.url}
@@ -2503,19 +2513,26 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
                             className="absolute inset-0 flex flex-col justify-end p-2.5"
                             style={{
                               background:
-                                "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 50%, transparent 100%)",
+                                "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 50%, transparent 100%)",
                             }}
                           >
-                            <span className="text-[9px] font-bold text-cyan-300 mb-0.5">
-                              📍 {photo.city}
-                            </span>
-                            <p className="text-white font-bold text-[11px] line-clamp-2 leading-tight">
+                            {/* Top badge tags */}
+                            <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-black/50 backdrop-blur-md text-[10px] font-semibold text-white/90 border border-white/10 flex items-center gap-1">
+                              <span className="text-rose-400">📍</span>
+                              <span className="truncate max-w-[80px]">{photo.city}</span>
+                            </div>
+
+                            {photo.likes > 0 && (
+                              <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-full bg-black/50 backdrop-blur-md text-[10px] font-semibold text-rose-300 border border-white/10 flex items-center gap-1">
+                                <span>❤️</span>
+                                <span>{photo.likes}</span>
+                              </div>
+                            )}
+
+                            <p className="text-white font-bold text-[11px] line-clamp-1 leading-tight mb-0.5">
                               {photo.title}
                             </p>
-                            <div className="flex items-center justify-between mt-1 text-[9px] text-white/60">
-                              <span>{photo.date}</span>
-                              <span className="text-coral font-bold">❤️ {photo.likes}</span>
-                            </div>
+                            <span className="text-[10px] text-white/50">{photo.date}</span>
                           </div>
                         </div>
                       ))}
@@ -2527,31 +2544,40 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
               {/* TAB 2: STORIES / KEY MOMENTS */}
               {activeModalTab === "stories" && (
                 <div className="space-y-3">
-                  {(modalCountry.stories || []).map((st) => (
-                    <div
-                      key={st.id}
-                      className="p-3.5 rounded-2xl border border-white/10 flex items-start gap-3"
-                      style={{ background: "rgba(255,255,255,0.05)" }}
-                    >
-                      <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-xl flex-shrink-0">
-                        {st.icon}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <h4 className="text-white font-bold text-[13px]">{st.title}</h4>
-                          <span className="text-[9px] font-bold text-coral bg-coral/10 px-2 py-0.5 rounded-full">
-                            {st.category}
-                          </span>
-                        </div>
-                        <p className="text-white/70 text-[11px] leading-relaxed mb-1.5">
-                          {st.notes}
-                        </p>
-                        <p className="text-white/40 text-[10px]">
-                          📍 {st.city} • {st.date}
-                        </p>
-                      </div>
+                  {(modalCountry.stories || []).length === 0 ? (
+                    <div className="text-center py-12 px-4 rounded-2xl bg-white/[0.02] border border-white/5">
+                      <p className="text-4xl mb-2.5">✨</p>
+                      <p className="text-sm font-bold text-white/80 mb-1">Aucun moment marquant</p>
+                      <p className="text-xs text-white/40">Vos anecdotes et temps forts s'afficheront ici.</p>
                     </div>
-                  ))}
+                  ) : (
+                    (modalCountry.stories || []).map((st) => (
+                      <div
+                        key={st.id}
+                        className="p-3.5 rounded-2xl border border-white/10 flex items-start gap-3 bg-white/[0.04] hover:bg-white/[0.07] transition-all"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-xl flex-shrink-0">
+                          {st.icon}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-1">
+                            <h4 className="text-white font-bold text-[13px]">{st.title}</h4>
+                            <span className="text-[10px] font-bold text-indigo-300 bg-indigo-500/15 px-2 py-0.5 rounded-md border border-indigo-500/20">
+                              {st.category}
+                            </span>
+                          </div>
+                          <p className="text-white/70 text-[11px] leading-relaxed mb-1.5">
+                            {st.notes}
+                          </p>
+                          <p className="text-white/40 text-[10px] flex items-center gap-1">
+                            <span>📍 {st.city}</span>
+                            <span>•</span>
+                            <span>{st.date}</span>
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               )}
 
@@ -2565,18 +2591,20 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
                         setSelectedCityFilter(city.name)
                         setActiveModalTab("photos")
                       }}
-                      className="p-3 rounded-2xl border border-white/10 flex items-center justify-between cursor-pointer hover:bg-white/10 transition-all"
-                      style={{ background: "rgba(255,255,255,0.04)" }}
+                      className="p-3 rounded-2xl border border-white/10 flex items-center justify-between cursor-pointer bg-white/[0.04] hover:bg-white/[0.08] transition-all group"
                     >
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-xl">🏙️</span>
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center text-lg">
+                          🏙️
+                        </div>
                         <div>
-                          <p className="text-white font-bold text-[13px]">{city.name}</p>
+                          <p className="text-white font-bold text-[13px] group-hover:text-indigo-300 transition-colors">{city.name}</p>
                           <p className="text-white/40 text-[10px]">Visité en {city.visitedYear}</p>
                         </div>
                       </div>
-                      <span className="text-[11px] font-bold text-cyan-300">
-                        Voir photos →
+                      <span className="text-[11px] font-bold text-indigo-300 bg-indigo-500/10 group-hover:bg-indigo-500/20 px-2.5 py-1 rounded-lg border border-indigo-500/20 transition-all flex items-center gap-1">
+                        <span>Voir</span>
+                        <span>→</span>
                       </span>
                     </div>
                   ))}
@@ -2585,17 +2613,18 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
             </div>
 
             {/* Modal Footer Action */}
-            <div className="p-4 border-t border-white/10 flex-shrink-0 flex items-center justify-between bg-black/40">
+            <div className="p-4 border-t border-white/10 flex-shrink-0 bg-[#0A0C2E]/90 backdrop-blur-md">
               <button
                 type="button"
                 onClick={() => {
                   setShowMemoriesModal(false)
                   navigate("trip-memories")
                 }}
-                className="w-full py-3 rounded-2xl bg-brand text-white font-bold text-[13px] shadow-lg flex items-center justify-center gap-2 hover:bg-brand/90 active:scale-98 transition-all"
+                className="w-full py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[13px] shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
               >
                 <span>🎬</span>
                 <span>Ouvrir l'album complet du voyage</span>
+                <span className="text-white/60">→</span>
               </button>
             </div>
           </div>

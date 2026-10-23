@@ -13,7 +13,6 @@ import {
   hasMapboxToken,
   MAPBOX_STYLES,
   applyMapTheme,
-  setGlobeProjection,
   type MapboxStyleKey,
 } from "../lib/mapbox"
 import { openInMaps } from "../lib/crewLocations"
@@ -358,7 +357,6 @@ export default function MapScreen({ navigate, goBack }: Props) {
   const [selected, setSelected] = useState<Stop | null>(null)
   const [savedPlaces, setSavedPlaces] = useState<SavedPlace[]>([])
   const [layerType, setLayerType] = useState<MapboxStyleKey>("trypo")
-  const [viewMode, setViewMode] = useState<"route" | "globe">("route")
 
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<mapboxgl.Map | null>(null)
@@ -569,24 +567,6 @@ export default function MapScreen({ navigate, goBack }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stops, selected, savedPlaces])
 
-  // Center on globe or route
-  const handleToggleView = (mode: "route" | "globe") => {
-    setViewMode(mode)
-    const map = mapInstanceRef.current
-    if (!map) return
-
-    if (mode === "globe") {
-      setGlobeProjection(map, true)
-      map.flyTo({ center: [10, 32], zoom: 1.5, duration: 1500 })
-    } else {
-      setGlobeProjection(map, false)
-      const b = routeBounds(stops)
-      if (b) {
-        map.fitBounds(b, { padding: 50, maxZoom: 14, duration: 1200 })
-      }
-    }
-  }
-
   // Calculate total route distance in km
   const totalDistanceKm = stops.reduce((total, stop, i) => {
     if (i === 0) return 0
@@ -632,43 +612,6 @@ export default function MapScreen({ navigate, goBack }: Props) {
               {stops.length} étapes • Vue mondiale interactive
             </p>
           </div>
-        </div>
-
-        {/* Mode Switcher: Globe vs Route */}
-        <div
-          className="flex items-center gap-1 bg-white p-1 rounded-2xl border border-slate-100"
-          style={{ boxShadow: "0 2px 8px rgba(59,65,200,0.08)" }}
-        >
-          <button
-            onClick={() => handleToggleView("route")}
-            className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all ${
-              viewMode === "route"
-                ? "text-white shadow-md"
-                : "text-slate-400 hover:text-navy"
-            }`}
-            style={
-              viewMode === "route"
-                ? { background: "linear-gradient(135deg, #3B41C8, #06C4D4)" }
-                : undefined
-            }
-          >
-            🗺️ Route
-          </button>
-          <button
-            onClick={() => handleToggleView("globe")}
-            className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all ${
-              viewMode === "globe"
-                ? "text-white shadow-md"
-                : "text-slate-400 hover:text-navy"
-            }`}
-            style={
-              viewMode === "globe"
-                ? { background: "linear-gradient(135deg, #3B41C8, #06C4D4)" }
-                : undefined
-            }
-          >
-            🌍 Monde
-          </button>
         </div>
       </div>
 

@@ -201,7 +201,7 @@ export function subscribeToCrewLocations(
       .subscribe()
     cleanups.push(() => {
       try {
-        supabase.removeChannel(channel)
+        supabase?.removeChannel(channel)
       } catch {}
     })
   }

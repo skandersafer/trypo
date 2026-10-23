@@ -49,9 +49,12 @@ export type DbTrip = {
   travel_style?: string
   companion_type?: string
   status?: "planning" | "upcoming" | "active" | "past" | "archived"
+  visibility?: "public" | "private"
   planning_progress?: number
   created_at?: string
   invite_code?: string
+  /** Origin marker used for diagnostics: where the trip row was resolved from. */
+  source?: string
   members?: Array<DbTripMember>
   trip_destinations?: Array<{
     id: string
@@ -644,7 +647,7 @@ export function subscribeToTripChanges(tripId?: string, onEvent?: () => void): (
   channel.subscribe()
   return () => {
     try {
-      supabase.removeChannel(channel)
+      supabase?.removeChannel(channel)
     } catch {}
   }
 }
@@ -693,6 +696,7 @@ type LocalStoreData = {
     bio: string
     homeCountry: string
     travelStyle: string
+    tripsCount: number
     visitedCountriesCount: number
     totalCitiesCount: number
     totalMemoriesCount: number
@@ -735,6 +739,7 @@ function loadStore(): LocalStoreData {
     bio: "Passionate traveler discovering new places and cultures.",
     homeCountry: "Tunisia",
     travelStyle: "Explorer & Culture",
+    tripsCount: 0,
     visitedCountriesCount: 0,
     totalCitiesCount: 0,
     totalMemoriesCount: 0,
@@ -1037,7 +1042,7 @@ export async function getTripDetails(tripId?: string | null): Promise<DbTrip | n
         if (freshLeft.includes(serverData.id)) {
           store.trips = store.trips.filter((t) => t.id !== serverData.id)
           saveStore(store)
-          if (targetId === serverData.id) trip = null
+          if (targetId === serverData.id) trip = undefined
           return trip || null
         }
         const localTrip = trip && trip.id === serverData.id ? trip : undefined
@@ -1099,7 +1104,7 @@ export async function getTripDetails(tripId?: string | null): Promise<DbTrip | n
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("trypo:db_changed"))
     }
-    trip = null
+    trip = undefined
   }
 
   if (!trip && !sessionUid) {

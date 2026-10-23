@@ -20,7 +20,7 @@ import {
   useTripComments,
   useTripReactions,
 } from "../lib/communityLive"
-import { getCommunityTripSelection } from "../lib/community"
+import { getCommunityTripSelection, type CommunityTripSelection } from "../lib/community"
 import { useIsDesktop } from "../lib/useIsDesktop"
 import { HeartIcon, NoteIcon, PlaneIcon, SparklesIcon, QuestionIcon } from "../components/icons"
 
@@ -209,8 +209,9 @@ export default function CommunityTripDetailScreen({
 
   // Live data (realtime when Supabase is enabled)
   const { comments: serverComments } = useTripComments(contentId)
-  const { status: joinStatus, isMember: acceptedMember, refresh: refreshJoinStatus } =
-    useMyJoinStatus(contentId)
+  const { status: joinState, refresh: refreshJoinStatus } = useMyJoinStatus(contentId)
+  const joinStatus = joinState.status
+  const acceptedMember = joinState.isMember
   const { myActive: myReaction, total: reactionTotal } = useTripReactions(contentId)
   const { signedIn } = useServerSignedIn()
 
@@ -584,7 +585,7 @@ export default function CommunityTripDetailScreen({
         </button>
         <button
           onClick={onJoinTap}
-          disabled={joinDisabled || requestFlow === "sending"}
+          disabled={joinDisabled}
           className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-black flex-1 justify-center text-white min-h-[44px] whitespace-nowrap"
           style={{
             background:
@@ -797,7 +798,7 @@ export default function CommunityTripDetailScreen({
           {/* Join CTA */}
           <button
             onClick={onJoinTap}
-            disabled={joinDisabled || requestFlow === "sending"}
+            disabled={joinDisabled}
             className="w-full py-4 rounded-2xl text-white font-black text-[15px] mt-2"
             style={{
               background:

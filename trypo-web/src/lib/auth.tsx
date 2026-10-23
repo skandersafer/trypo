@@ -139,11 +139,12 @@ if (nextSession?.user) {
   // APK OAuth completion: the native shell opens Google in the system
   // browser and delivers the auth code back via this window event.
   useEffect(() => {
-    if (!supabase) return
+    const client = supabase
+    if (!client) return
     const onOAuthCode = (e: Event) => {
       const code = (e as CustomEvent).detail?.code
       if (typeof code !== "string" || !code) return
-      void supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+      void client.auth.exchangeCodeForSession(code).then(({ error }) => {
         if (error) console.warn("OAuth code exchange failed:", error.message)
       })
     }

@@ -78,8 +78,9 @@ export function useServerSignedIn() {
       setChecked(true)
       return
     }
+    const client = supabase
     const check = () => {
-      void supabase.auth.getSession().then(({ data }) => {
+      void client.auth.getSession().then(({ data }) => {
         if (!active) return
         setSignedIn(Boolean(data?.session))
         setChecked(true)
@@ -363,7 +364,7 @@ export function useCommunityFeed() {
     channel.subscribe()
     return () => {
       active = false
-      void supabase.removeChannel(channel)
+      void supabase?.removeChannel(channel)
     }
   }, [])
 
@@ -391,7 +392,7 @@ export function useMyTripsRealtime(onReload: () => void) {
     )
     channel.subscribe()
     return () => {
-      void supabase.removeChannel(channel)
+      void supabase?.removeChannel(channel)
     }
   }, [uid])
 }
@@ -428,7 +429,7 @@ export function useTripComments(tripId?: string | null) {
     channel.subscribe()
     return () => {
       active = false
-      void supabase.removeChannel(channel)
+      void supabase?.removeChannel(channel)
     }
   }, [tripId])
 
@@ -519,7 +520,7 @@ export function useMyJoinStatus(tripId?: string | null) {
     return () => {
       active = false
       window.removeEventListener("trypo:db_changed", onDbChanged)
-      void supabase.removeChannel(channel)
+      void supabase?.removeChannel(channel)
     }
   }, [tripId])
 
@@ -562,7 +563,7 @@ export function useTripJoinRequests(tripId?: string | null) {
     channel.subscribe()
     return () => {
       active = false
-      void supabase.removeChannel(channel)
+      void supabase?.removeChannel(channel)
     }
   }, [tripId])
 
@@ -599,7 +600,7 @@ export function useMyJoinRequests() {
     return () => {
       active = false
       window.removeEventListener("trypo:db_changed", onDbChanged)
-      void supabase.removeChannel(channel)
+      void supabase?.removeChannel(channel)
     }
   }, [])
 
@@ -641,7 +642,7 @@ export function useTripReactions(tripId?: string | null) {
     channel.subscribe()
     return () => {
       active = false
-      void supabase.removeChannel(channel)
+      void supabase?.removeChannel(channel)
     }
   }, [tripId])
 
@@ -702,9 +703,10 @@ export function useMyNotifications() {
       return
     }
     let active = true
+    const client = supabase
 
     const load = async () => {
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from("notifications")
         .select("*")
         .order("created_at", { ascending: false })
@@ -754,7 +756,7 @@ export function useMyNotifications() {
     return () => {
       active = false
       window.removeEventListener("trypo:notifications_changed", onResync)
-      void supabase.removeChannel(channel)
+      void supabase?.removeChannel(channel)
     }
   }, [uid])
 

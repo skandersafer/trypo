@@ -480,7 +480,7 @@ export async function getWeatherByCity(city: string): Promise<WeatherSnapshot | 
       humidity: Math.round(Number(current.relative_humidity_2m ?? 0)),
       rain: Math.round(Number(current.precipitation ?? 0)),
       wind: Math.round(Number(current.wind_speed_10m ?? 0)),
-      forecast: dailyForecast.map((entry) => ({
+      forecast: dailyForecast.map((entry: { day: string; icon: string; high: number; low: number }) => ({
         day: new Date(entry.day).toLocaleDateString("en-US", {
           weekday: "short",
           month: "short",

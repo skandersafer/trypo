@@ -1639,7 +1639,7 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
           lng: Number.isFinite(Number(d.lng)) ? Number(d.lng) : undefined,
           country: typeof d.country === "string" ? d.country : undefined,
         }))
-        const normalizedStops = normalizeStopDates(liveStops, tripData.start_date)
+        const normalizedStops = normalizeStopDates(liveStops, tripData.start_date ?? undefined)
         setStops(normalizedStops)
 
         // Route legs from synced bookings: a transport saved on another
@@ -1673,7 +1673,7 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
           return pruned
         })
 
-        void getUserTripPermission(activeId, user?.id || user?.email).then((perm) => {
+        void getUserTripPermission(activeId ?? undefined, user?.id || user?.email).then((perm) => {
           setUserRole(perm.role)
         })
 
@@ -3305,7 +3305,7 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
                   // the other account sees the edit (previously local-only).
                   const fresh = await getTripDetails(trip.id)
                   const link = fresh
-                    ? findLegBookingLink(fresh.bookings, fresh.itinerary_items, legModalKey, stops)
+                    ? findLegBookingLink(fresh.bookings ?? [], fresh.itinerary_items ?? [], legModalKey, stops)
                     : null
                   if (link?.item) {
                     await updateItineraryItem(
@@ -3355,7 +3355,7 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
                 if (trip?.id) {
                   const fresh = await getTripDetails(trip.id)
                   const link = fresh
-                    ? findLegBookingLink(fresh.bookings, fresh.itinerary_items, legModalKey, stops)
+                    ? findLegBookingLink(fresh.bookings ?? [], fresh.itinerary_items ?? [], legModalKey, stops)
                     : null
                   if (link?.booking) await deleteBooking(link.booking.id, trip.id)
                   if (link?.item) await deleteItineraryItem(link.item.id, trip.id)

@@ -182,7 +182,7 @@ export default function ExploreScreen({ navigate }: Props) {
         category: "places",
         rating: targetDest.rating,
         image_url: targetDest.image,
-        notes: targetDest.description || targetDest.bestTime,
+        notes: targetDest.bestTime,
       })
     } catch (err) {
       console.warn("Failed to toggle saved place:", err)

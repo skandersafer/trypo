@@ -290,12 +290,13 @@ export default function FindStayScreen({ navigate, openBooking, goBack }: Props)
             location: offer.city,
             priceNum: offer.price,
             price: `$${offer.price}`,
-            category:
+            category: (
               offer.name.toLowerCase().includes("suite")
                 ? "private"
                 : offer.price <= 70
                   ? "hostel"
-                  : "hotel",
+                  : "hotel"
+            ) as Stay["category"],
             tags: [
               offer.distanceKm ? `📍 ${offer.distanceKm} km away` : "🌍 Great location",
               "⭐ Travel-ready",

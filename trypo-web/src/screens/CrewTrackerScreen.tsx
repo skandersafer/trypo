@@ -365,7 +365,7 @@ export default function CrewTrackerScreen({ navigate, goBack }: Props) {
       if (m.user_id && m.status !== "pending") {
         const key = `user:${m.user_id}`
         const loc = locationForUser(m.user_id)
-        const fresh = Boolean(loc && now - new Date(loc.updatedAt).getTime() < 3 * 60 * 1000)
+        const fresh = loc != null && now - new Date(loc.updatedAt).getTime() < 3 * 60 * 1000
         let lat = mapAnchor.lat
         let lng = mapAnchor.lng
         let live = false

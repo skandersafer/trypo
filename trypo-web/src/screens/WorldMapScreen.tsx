@@ -1029,13 +1029,6 @@ const CONTINENT_CENTERS: Record<string, { lat: number; lng: number; zoom: number
   Oceania: { lat: -25, lng: 135, zoom: 3.5 },
 }
 
-const MAPBOX_STYLE_OPTIONS: { key: MapboxStyleKey; label: string; short: string }[] = [
-  { key: "trypo", label: "✨ Trypo Plan", short: "✨ Trypo" },
-  { key: "streets", label: "🗺️ Mapbox Plan", short: "🗺️ Plan" },
-  { key: "satellite", label: "🛰️ Satellite HD", short: "🛰️ Sat" },
-  { key: "dark", label: "🌙 Nuit", short: "🌙 Nuit" },
-]
-
 // Name matching helper between GeoJSON feature and a country list.
 function findCountryMatch(featureName: string, list: Country[]): Country | undefined {
   if (!featureName) return undefined
@@ -1148,8 +1141,8 @@ const FLAG_BY_COUNTRY: Record<string, string> = {
   poland: "🇵🇱", pologne: "🇵🇱", ireland: "🇮🇪", irlande: "🇮🇪", norway: "🇳🇴",
   norvege: "🇳🇴", sweden: "🇸🇪", suede: "🇸🇪", denmark: "🇩🇰", danemark: "🇩🇰",
   finland: "🇫🇮", finlande: "🇫🇮", iceland: "🇮🇸", islande: "🇮🇸",
-  china: "🇨🇳", chine: "🇨🇳", "south korea": "🇰🇷", "czech republic": "🇨🇿",
-  brazil: "🇧🇷", argentina: "🇦🇷", chile: "🇨🇱",
+  china: "🇨🇳", chine: "🇨🇳", "south korea": "🇰🇷",
+  chile: "🇨🇱",
   malaysia: "🇲🇾", singapore: "🇸🇬", philippines: "🇵🇭",
   "saudi arabia": "🇸🇦", "united arab emirates": "🇦🇪", qatar: "🇶🇦",
   nigeria: "🇳🇬", ghana: "🇬🇭", senegal: "🇸🇳", ethiopia: "🇪🇹",
@@ -1157,6 +1150,12 @@ const FLAG_BY_COUNTRY: Record<string, string> = {
   israel: "🇮🇱", jordan: "🇯🇴", lebanon: "🇱🇧", "new zealand": "🇳🇿",
   tanzania: "🇹🇿", madagascar: "🇲🇬", libya: "🇱🇾", libye: "🇱🇾",
 }
+
+/** Static name → coordinates, used to place pins for legacy manual entries
+ *  that were stored before lat/lng were persisted. */
+const COUNTRY_COORDS_BY_KEY: Record<string, { lat: number; lng: number }> = Object.fromEntries(
+  COUNTRIES.map((c) => [normCountryKey(c.name), { lat: c.lat, lng: c.lng }]),
+)
 
 const CONTINENT_BY_COUNTRY: Record<string, Country["continent"]> = {
   france: "Europe", spain: "Europe", espagne: "Europe", italy: "Europe", italie: "Europe",
@@ -1176,7 +1175,7 @@ const CONTINENT_BY_COUNTRY: Record<string, Country["continent"]> = {
   australia: "Oceania", australie: "Oceania",
   china: "Asia", chine: "Asia", "south korea": "Asia", "czech republic": "Europe",
   // Extended so a manually checked country lands on the right continent tab.
-  "united states of america": "Americas", canada: "Americas", brazil: "Americas",
+  "united states of america": "Americas",
   argentine: "Americas", chile: "Americas", venezuela: "Americas", ecuador: "Americas",
   bolivia: "Americas", paraguay: "Americas", uruguay: "Americas", cuba: "Americas",
   jamaica: "Americas", haiti: "Americas", "dominican republic": "Americas",
@@ -1234,6 +1233,9 @@ type ManualEntry = {
   flag: string
   continent: Country["continent"]
   year: number
+  /** Coordinates captured at check time so the map pin can fly to the country. */
+  lat?: number
+  lng?: number
 }
 
 function readManualVisited(): Record<string, ManualEntry> {
@@ -1398,7 +1400,7 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
   const isDesktop = useIsDesktop()
   const [selected, setSelected] = useState<Country | null>(null)
   const [activeContinent, setActiveContinent] = useState<string>("All")
-  const [layerType, setLayerType] = useState<MapboxStyleKey>("trypo")
+  const [layerType] = useState<MapboxStyleKey>("trypo")
 
   // Memories & Photos Modal state
   const [showMemoriesModal, setShowMemoriesModal] = useState<boolean>(false)
@@ -1432,6 +1434,8 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
       flag: c.flag || "🏳️",
       continent: c.continent || "Europe",
       year: new Date().getFullYear(),
+      lat: c.lat,
+      lng: c.lng,
     }
     setManualVisited((prev) => {
       const next = { ...prev, [key]: entry }
@@ -1496,6 +1500,8 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
       if (!byKey.has(key)) {
         byKey.set(key, {
           ...entry,
+          lat: entry.lat ?? COUNTRY_COORDS_BY_KEY[key]?.lat ?? 0,
+          lng: entry.lng ?? COUNTRY_COORDS_BY_KEY[key]?.lng ?? 0,
           citiesCount: 0,
           memoriesCount: 0,
           visited: true,
@@ -1967,51 +1973,38 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
             </svg>
           </button>
 
-          {/* Minimalist Title Pill */}
-          <div className="flex items-center gap-2 bg-slate-900/80 backdrop-blur-xl border border-white/15 px-3 py-1.5 rounded-full shadow-xl">
-            <img
-              src={myAvatar}
-              alt={displayName}
-              className="w-7 h-7 rounded-full object-cover border border-white/30"
-            />
-            <span className="text-white font-extrabold text-sm tracking-tight">
-              My World Map
-            </span>
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-emerald-400 font-bold text-xs">
-              {visited.length} pays
-            </span>
+          {/* Title Pill */}
+          <div className="flex items-center gap-2.5 pl-1.5 pr-3.5 py-1.5 rounded-full shadow-xl backdrop-blur-xl bg-slate-900/70 border border-white/10">
+            <div className="relative flex-shrink-0">
+              <img
+                src={myAvatar}
+                alt={displayName}
+                className="w-8 h-8 rounded-full object-cover ring-2 ring-white/20"
+              />
+              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-slate-900" />
+            </div>
+            <div className="flex flex-col leading-none">
+              <span className="text-white font-extrabold text-[13px] tracking-tight">
+                My World Map
+              </span>
+              <span className="text-white/45 font-semibold text-[10px] mt-1">
+                {visited.length} pays explorés
+              </span>
+            </div>
           </div>
 
-          {/* Right Action Icons: Style Toggle + World View */}
+          {/* Recenter World View */}
           <div className="flex items-center gap-1.5 flex-shrink-0">
-            {/* Style Switcher Pill */}
-            <div className="flex items-center bg-slate-900/80 backdrop-blur-xl border border-white/15 p-1 rounded-full shadow-xl gap-0.5">
-              {MAPBOX_STYLE_OPTIONS.map((opt) => (
-                <button
-                  key={opt.key}
-                  type="button"
-                  onClick={() => setLayerType(opt.key)}
-                  className={`w-7 h-7 rounded-full text-xs flex items-center justify-center transition-all cursor-pointer ${
-                    layerType === opt.key
-                      ? "bg-brand text-white shadow-sm"
-                      : "text-white/40 hover:text-white"
-                  }`}
-                  title={opt.label}
-                >
-                  {opt.key === "trypo" ? "✨" : opt.key === "streets" ? "🗺️" : opt.key === "satellite" ? "🛰️" : "🌙"}
-                </button>
-              ))}
-            </div>
-
-            {/* Recenter World View Button */}
             <button
               type="button"
               onClick={() => handleContinentChange("All")}
-              className="w-10 h-10 rounded-full bg-slate-900/80 hover:bg-slate-800 text-white backdrop-blur-xl border border-white/15 shadow-xl flex items-center justify-center active:scale-95 transition-all cursor-pointer text-base"
-              title="Vue d'ensemble du monde"
+              aria-label="Vue d'ensemble du monde"
+              className="w-10 h-10 rounded-full bg-slate-900/70 hover:bg-slate-800 text-white/80 hover:text-white backdrop-blur-xl border border-white/10 shadow-xl flex items-center justify-center active:scale-95 transition-all cursor-pointer"
             >
-              🌍
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
+              </svg>
             </button>
           </div>
         </div>
@@ -2022,7 +2015,7 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
         <div className="max-w-md md:max-w-3xl mx-auto pointer-events-auto">
           {selected ? (
             /* Selected Country Glass Card */
-            <div className="rounded-3xl p-4 shadow-2xl backdrop-blur-2xl bg-slate-900/90 border border-white/20 animate-in fade-in slide-in-from-bottom duration-300">
+            <div className="rounded-[26px] p-4 shadow-2xl backdrop-blur-2xl bg-slate-900/85 border border-white/12 animate-in fade-in slide-in-from-bottom duration-300">
               <div className="flex items-start justify-between gap-3 mb-2.5">
                 <div className="flex items-center gap-3">
                   <div className="relative flex-shrink-0">
@@ -2076,7 +2069,7 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
                         handleOpenMemories(selected)
                         setSelectedCityFilter(city.name)
                       }}
-                      className="px-2.5 py-0.5 rounded-lg text-[10px] font-semibold bg-white/10 hover:bg-white/20 text-white/90 flex-shrink-0 border border-white/10 hover:border-white/25 active:scale-95 transition-all cursor-pointer"
+                      className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-white/10 hover:bg-white/20 text-white/90 flex-shrink-0 border border-white/10 hover:border-white/25 active:scale-95 transition-all cursor-pointer"
                     >
                       📍 {city.name}
                     </button>
@@ -2204,14 +2197,14 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
                       key={cont}
                       type="button"
                       onClick={() => handleContinentChange(cont)}
-                      className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-bold transition-all backdrop-blur-xl cursor-pointer ${
+                      className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-[11px] font-bold tracking-wide transition-all backdrop-blur-xl cursor-pointer ${
                         isActive
-                          ? "text-white shadow-md"
-                          : "bg-slate-900/80 text-white/70 hover:text-white border border-white/10"
+                          ? "text-white shadow-lg"
+                          : "bg-slate-900/60 text-white/55 hover:text-white hover:bg-slate-900/80 border border-white/10"
                       }`}
                       style={{
-                        background: isActive ? color : undefined,
-                        boxShadow: isActive ? `0 2px 10px ${color}66` : undefined,
+                        background: isActive ? `linear-gradient(135deg, ${color}, ${color}c4)` : undefined,
+                        boxShadow: isActive ? `0 4px 14px ${color}55` : undefined,
                       }}
                     >
                       {cont === "All" ? "🌍 Monde" : cont}
@@ -2223,11 +2216,11 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
               {/* Stats & Souvenirs summary row */}
               <div className="flex items-center justify-between px-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-black text-white/90 tracking-wider uppercase">
-                    {activeContinent === "All" ? "Pays Explorés" : activeContinent} ({filtered.length})
+                  <span className="text-[10px] font-black text-white/80 tracking-[0.14em] uppercase">
+                    {activeContinent === "All" ? "Pays explorés" : activeContinent} · {filtered.length}
                   </span>
-                  <span className="text-white/40 text-[10px]">•</span>
-                  <span className="text-white/50 text-[11px]">
+                  <span className="text-white/25 text-[10px]">•</span>
+                  <span className="text-white/45 text-[10px] font-semibold">
                     {worldPercentage}% du globe
                   </span>
                 </div>
@@ -2237,9 +2230,9 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
                   onClick={() => {
                     if (selected) handleOpenMemories(selected)
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-coral/25 to-pink-500/20 hover:from-coral/35 border border-coral/40 text-coral text-xs font-bold active:scale-95 transition-all cursor-pointer shadow-md"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/15 text-white text-[11px] font-bold backdrop-blur-xl active:scale-95 transition-all cursor-pointer"
                 >
-                  <span>📸</span>
+                  <span className="text-coral">📸</span>
                   <span>{totalMemories} Souvenirs</span>
                 </button>
               </div>
@@ -2265,41 +2258,41 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
                           mapInstanceRef.current.flyTo({ center: [c.lng, c.lat], zoom: 5, duration: 1200 })
                         }
                       }}
-                      className={isDesktop ? "rounded-2xl p-3 backdrop-blur-xl bg-slate-900/80 hover:bg-slate-800/90 border border-white/15 hover:border-cyan-400/50 shadow-xl cursor-pointer group active:scale-95 transition-all flex flex-col justify-between w-full" : "min-w-[155px] max-w-[170px] flex-shrink-0 rounded-2xl p-3 backdrop-blur-xl bg-slate-900/80 hover:bg-slate-800/90 border border-white/15 hover:border-cyan-400/50 shadow-xl cursor-pointer group active:scale-95 transition-all flex flex-col justify-between"}
+                      className={isDesktop ? "rounded-3xl p-3.5 backdrop-blur-xl bg-slate-900/60 hover:bg-slate-800/75 border border-white/10 hover:border-cyan-400/40 shadow-lg hover:shadow-xl hover:-translate-y-0.5 cursor-pointer group active:scale-[0.97] transition-all flex flex-col justify-between w-full" : "min-w-[150px] max-w-[165px] flex-shrink-0 rounded-3xl p-3.5 backdrop-blur-xl bg-slate-900/60 hover:bg-slate-800/75 border border-white/10 hover:border-cyan-400/40 shadow-lg hover:shadow-xl cursor-pointer group active:scale-[0.97] transition-all flex flex-col justify-between"}
                     >
                       <div className="flex items-start justify-between gap-1 mb-2">
                         <span className="text-2xl filter drop-shadow group-hover:scale-110 transition-transform">
                           {c.flag}
                         </span>
                         <span
-                          className="text-[9px] font-bold px-1.5 py-0.5 rounded-md text-white"
-                          style={{ background: `${color}cc` }}
+                          className="text-[9px] font-bold px-2 py-0.5 rounded-full text-white"
+                          style={{ background: `${color}b8` }}
                         >
                           {c.year}
                         </span>
                       </div>
 
-                      <div className="mb-2">
-                        <h3 className="text-white font-black text-xs truncate leading-tight group-hover:text-cyan-300 transition-colors">
+                      <div className="mb-2.5">
+                        <h3 className="text-white font-black text-[13px] truncate leading-tight tracking-tight group-hover:text-cyan-300 transition-colors">
                           {c.frenchName}
                         </h3>
-                        <p className="text-white/45 text-[10px] font-medium truncate mt-0.5">
+                        <p className="text-white/40 text-[10px] font-medium truncate mt-1">
                           {c.cities.length} {c.cities.length > 1 ? "villes" : "ville"}
                         </p>
                       </div>
 
-                      <div className="flex items-center justify-between pt-2 border-t border-white/10">
+                      <div className="flex items-center justify-between pt-2.5 border-t border-white/[0.08]">
                         <span
                           onClick={(e) => {
                             e.stopPropagation()
                             handleOpenMemories(c)
                           }}
-                          className="text-[10px] text-coral hover:text-white font-bold flex items-center gap-1 bg-coral/10 hover:bg-coral/25 px-2 py-0.5 rounded-lg transition-colors cursor-pointer"
+                          className="text-[10px] font-bold flex items-center gap-1 bg-white/10 hover:bg-white/15 px-2 py-1 rounded-full transition-colors cursor-pointer text-white/70 hover:text-white"
                         >
-                          <span>📸</span>
+                          <span className="text-coral">📸</span>
                           <span>{totalMem}</span>
                         </span>
-                        <span className="text-[10px] text-white/40 group-hover:text-cyan-300 transition-colors font-bold">
+                        <span className="text-[10px] text-white/35 group-hover:text-cyan-300 transition-colors font-bold tracking-wide">
                           Voir →
                         </span>
                       </div>

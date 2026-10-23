@@ -265,7 +265,7 @@ export default function TripSocialScreen({ navigate, goBack }: Props) {
   const heroTitle = ownerTrip?.title || "Tunisia Coast Escape"
   const heroRoute =
     (ownerTrip?.trip_destinations || []).length > 0
-      ? (ownerTrip.trip_destinations || [])
+      ? (ownerTrip?.trip_destinations || [])
           .slice()
           .sort((a: any, b: any) => (a.position || 0) - (b.position || 0))
           .map((d: any) => d.city)

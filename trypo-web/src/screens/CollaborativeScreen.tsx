@@ -198,7 +198,7 @@ export default function CollaborativeScreen({ navigate, goBack }: Props) {
 
   // Polls/Activities from trip itinerary items
   const itineraryItems = trip?.itinerary_items || []
-  const pollActivities =
+  const pollActivities: Array<{ id: string; name: string; location: string; votes: number; total: number }> =
     itineraryItems.length > 0
       ? itineraryItems.slice(0, 4).map((it: any, i: number) => ({
           id: it.id || `act-${i}`,

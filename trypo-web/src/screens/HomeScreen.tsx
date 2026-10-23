@@ -219,33 +219,33 @@ export default function HomeScreen({ navigate }: Props) {
         {upcomingTrip ? (
           <button
             onClick={() => openTrip(upcomingTrip.id)}
-            className="w-full rounded-[24px] overflow-hidden relative text-left trypo-card"
-            style={{ height: isDesktop ? 300 : 210, padding: 0, border: "none" }}
+            className="w-full rounded-[22px] overflow-hidden relative text-left trypo-card"
+            style={{ height: isDesktop ? 260 : 190, padding: 0, border: "none" }}
           >
             <img src={upcomingTrip.image} alt={upcomingTrip.name} className="w-full h-full object-cover" />
             <div
               className="absolute inset-0"
               style={{ background: "linear-gradient(to top, rgba(13,15,46,0.88) 0%, rgba(13,15,46,0.15) 60%, transparent 100%)" }}
             />
-            <div className="absolute top-3 right-3 flex flex-col items-end gap-1.5">
-              <span className="px-3 py-1 rounded-full text-[11px] font-bold text-white" style={{ background: "rgba(13,15,46,0.55)", backdropFilter: "blur(8px)" }}>
+            <div className="absolute top-2.5 right-2.5 flex flex-col items-end gap-1">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold text-white" style={{ background: "rgba(13,15,46,0.6)", backdropFilter: "blur(8px)" }}>
                 {upcomingTrip.dates}
               </span>
               {upcomingBadge && (
-                <span className="px-3 py-1 rounded-full text-[11px] font-black text-white" style={{ background: "linear-gradient(135deg, #3B41C8, #06C4D4)", boxShadow: "0 4px 12px rgba(59,65,200,0.4)" }}>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black text-white" style={{ background: "linear-gradient(135deg, #3B41C8, #06C4D4)", boxShadow: "0 3px 10px rgba(59,65,200,0.35)" }}>
                   {upcomingBadge}
                 </span>
               )}
             </div>
-            <div className="absolute bottom-0 left-0 right-0 p-4">
-              <h3 className="text-white font-black text-[18px] leading-tight truncate">{upcomingTrip.name}</h3>
-              <p className="text-white/65 text-[12px] truncate mt-0.5">{upcomingTrip.route}</p>
-              <div className="mt-2.5">
-                <div className="flex justify-between items-center mb-1.5">
-                  <span className="text-white/60 text-[11px]">Planning progress</span>
-                  <span className="text-white font-bold text-[11px]">{upcomingTrip.progress}%</span>
+            <div className="absolute bottom-0 left-0 right-0 p-3.5">
+              <h3 className="text-white font-black text-[16px] leading-tight truncate">{upcomingTrip.name}</h3>
+              <p className="text-white/60 text-[11px] truncate mt-0.5">{upcomingTrip.route}</p>
+              <div className="mt-2">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-white/55 text-[10px]">Planning progress</span>
+                  <span className="text-white font-bold text-[10px]">{upcomingTrip.progress}%</span>
                 </div>
-                <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
+                <div className="h-1 bg-white/25 rounded-full overflow-hidden">
                   <div className="h-full rounded-full" style={{ width: `${upcomingTrip.progress}%`, background: "linear-gradient(90deg, #3B41C8, #06C4D4)" }} />
                 </div>
               </div>
@@ -275,19 +275,19 @@ export default function HomeScreen({ navigate }: Props) {
           )}
         </div>
         {myTrips.length > 0 ? (
-          <div className={isDesktop ? "grid grid-cols-3 lg:grid-cols-4 gap-4 px-5 md:px-8" : "flex gap-3 px-5 overflow-x-auto no-scrollbar pb-1"}>
+          <div className={isDesktop ? "grid grid-cols-3 lg:grid-cols-4 gap-3 px-5 md:px-8" : "flex gap-2.5 px-5 overflow-x-auto no-scrollbar pb-1"}>
             {myTrips.map((trip) => (
               <button
                 key={trip.id ?? trip.name}
                 onClick={() => openTrip(trip.id)}
-                className="flex-shrink-0 rounded-[20px] overflow-hidden relative text-left trypo-card"
-                style={isDesktop ? { width: "100%", height: 220, padding: 0, border: "none" } : { width: 160, height: 200, padding: 0, border: "none" }}
+                className="flex-shrink-0 rounded-[18px] overflow-hidden relative text-left trypo-card"
+                style={isDesktop ? { width: "100%", height: 190, padding: 0, border: "none" } : { width: 145, height: 175, padding: 0, border: "none" }}
               >
                 <img src={trip.image} alt={trip.name} className="w-full h-full object-cover" />
                 <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(13,15,46,0.8) 0%, transparent 60%)" }} />
-                <div className="absolute bottom-0 left-0 right-0 p-3">
-                  <p className="text-white font-bold text-[13px] leading-tight truncate">{trip.name}</p>
-                  <p className="text-white/60 text-[11px] truncate mt-0.5">{trip.dates}</p>
+                <div className="absolute bottom-0 left-0 right-0 p-2.5">
+                  <p className="text-white font-bold text-[12px] leading-tight truncate">{trip.name}</p>
+                  <p className="text-white/55 text-[10px] truncate mt-0.5">{trip.dates}</p>
                 </div>
               </button>
             ))}
@@ -317,7 +317,7 @@ export default function HomeScreen({ navigate }: Props) {
               See all
             </button>
           </div>
-          <div className={isDesktop ? "grid grid-cols-3 gap-4 px-5 md:px-8" : "flex gap-3 px-5 overflow-x-auto no-scrollbar pb-1"}>
+          <div className={isDesktop ? "grid grid-cols-3 gap-3 px-5 md:px-8" : "flex gap-2.5 px-5 overflow-x-auto no-scrollbar pb-1"}>
             {communityFeed.slice(0, 6).map((trip: any) => {
               const cities = (trip.destinations || []).filter((d: any) => d.city).map((d: any) => d.city)
               return (
@@ -331,35 +331,35 @@ export default function HomeScreen({ navigate }: Props) {
                       setCommunityTripSelection({ meta: trip, plan: livePlan })
                     })
                   }}
-                  className="flex-shrink-0 rounded-[20px] overflow-hidden text-left trypo-card"
-                  style={isDesktop ? { width: "100%", padding: 0 } : { width: 180, padding: 0 }}
+                  className="flex-shrink-0 rounded-[18px] overflow-hidden text-left trypo-card"
+                  style={isDesktop ? { width: "100%", padding: 0 } : { width: 165, padding: 0 }}
                 >
-                  <div className="relative" style={{ height: 110 }}>
+                  <div className="relative" style={{ height: 98 }}>
                     <CommunityTripCover
                       coverImageUrl={trip.coverImageUrl}
                       city={cities[0]}
                       title={trip.title}
                       className="w-full h-full object-cover"
                     />
-                    <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(13,15,46,0.8) 0%, transparent 60%)" }} />
-                    <div className="absolute bottom-0 left-0 right-0 p-3">
-                      <p className="text-white font-bold text-[13px] leading-tight truncate">{trip.title}</p>
-                      <p className="text-white/60 text-[11px] truncate mt-0.5">
+                    <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(13,15,46,0.78) 0%, transparent 65%)" }} />
+                    <div className="absolute bottom-0 left-0 right-0 p-2.5">
+                      <p className="text-white font-bold text-[12px] leading-tight truncate">{trip.title}</p>
+                      <p className="text-white/55 text-[10px] truncate mt-0.5">
                         {formatTripDateRange(trip.startDate, trip.endDate) || cities.slice(0, 2).join(" → ") || "Community trip"}
                       </p>
                     </div>
                   </div>
-                  <div className="bg-white px-3 py-2.5 flex items-center gap-2">
+                  <div className="bg-white px-2.5 py-2 flex items-center gap-1.5">
                     <img
                       src={trip.authorAvatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&auto=format"}
                       alt={trip.authorName || "Traveler"}
-                      className="w-6 h-6 rounded-full object-cover flex-shrink-0"
+                      className="w-5 h-5 rounded-full object-cover flex-shrink-0"
                     />
-                    <p className="flex-1 min-w-0 text-navy font-bold text-[12px] truncate">
+                    <p className="flex-1 min-w-0 text-navy font-bold text-[11px] truncate">
                       {trip.authorName || "Traveler"}
                     </p>
-                    <span className="flex items-center gap-1 text-navy font-bold text-[11px] flex-shrink-0">
-                      <HeartIcon size={12} />
+                    <span className="flex items-center gap-1 text-navy font-semibold text-[10px] flex-shrink-0">
+                      <HeartIcon size={11} />
                       {trip.reactionsCount ?? 0}
                     </span>
                   </div>

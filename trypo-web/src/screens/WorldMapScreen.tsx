@@ -2616,46 +2616,49 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-black/85 pointer-events-none" />
 
-          {/* Progress bars */}
-          <div className="absolute top-0 inset-x-0 z-20 flex gap-1 px-3 pt-5">
-            {modalPhotos.map((p, i) => (
-              <div key={p.id} className="flex-1 h-[3px] rounded-full bg-white/30 overflow-hidden">
-                <div
-                  className="h-full bg-white"
-                  style={{
-                    width:
-                      i < storyIndex
-                        ? "100%"
-                        : i === storyIndex
-                          ? `${Math.min(100, (storyElapsed / STORY_DURATION_MS) * 100)}%`
-                          : "0%",
-                  }}
-                />
-              </div>
-            ))}
-          </div>
-
-          {/* Header: flag + city + counter + close */}
-          <div className="absolute top-8 inset-x-0 z-20 flex items-center justify-between px-4 pt-3 pb-2">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <span className="text-2xl leading-none drop-shadow-md">{modalCountry?.flag}</span>
-              <div className="min-w-0">
-                <p className="text-white font-black text-[13px] truncate drop-shadow">
-                  {modalPhotos[storyIndex].city}
-                </p>
-                <p className="text-white/60 text-[10px] font-bold tracking-wide">
-                  {storyIndex + 1} / {modalPhotos.length}
-                </p>
-              </div>
+          {/* Top chrome: progress + place info, kept tight and safe-area aware */}
+          <div className="absolute top-0 inset-x-0 z-20 px-3 pt-[calc(env(safe-area-inset-top,0px)+10px)]">
+            {/* Progress bars */}
+            <div className="flex items-center gap-[3px]">
+              {modalPhotos.map((p, i) => (
+                <div key={p.id} className="flex-1 h-[2px] rounded-full bg-white/25 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-white"
+                    style={{
+                      width:
+                        i < storyIndex
+                          ? "100%"
+                          : i === storyIndex
+                            ? `${Math.min(100, (storyElapsed / STORY_DURATION_MS) * 100)}%`
+                            : "0%",
+                    }}
+                  />
+                </div>
+              ))}
             </div>
-            <button
-              type="button"
-              onClick={() => setStoryIndex(null)}
-              aria-label="Fermer"
-              className="w-9 h-9 rounded-full bg-black/35 hover:bg-black/55 backdrop-blur-md border border-white/20 text-white flex items-center justify-center font-bold text-base active:scale-95 transition-all cursor-pointer flex-shrink-0"
-            >
-              ✕
-            </button>
+
+            {/* Place row: flag + city + counter, then close */}
+            <div className="mt-3 flex items-center justify-between gap-2.5">
+              <div className="flex items-center gap-2 min-w-0 rounded-full pl-1 pr-2.5 py-1 bg-black/25 backdrop-blur-md border border-white/10">
+                <span className="w-6 h-6 rounded-full bg-white/10 grid place-items-center text-[13px] leading-none flex-shrink-0">
+                  {modalCountry?.flag}
+                </span>
+                <span className="text-white text-[12.5px] font-extrabold tracking-tight truncate drop-shadow">
+                  {modalPhotos[storyIndex].city}
+                </span>
+                <span className="text-white/50 text-[10px] font-bold tabular-nums flex-shrink-0">
+                  {storyIndex + 1}/{modalPhotos.length}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setStoryIndex(null)}
+                aria-label="Fermer"
+                className="w-8 h-8 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-md border border-white/15 text-white flex items-center justify-center font-bold text-sm active:scale-95 transition-all cursor-pointer flex-shrink-0"
+              >
+                ✕
+              </button>
+            </div>
           </div>
 
           {/* Tap zones: left third = previous, right two-thirds = next */}
@@ -2679,17 +2682,18 @@ export default function WorldMapScreen({ navigate, goBack }: Props) {
           />
 
           {/* Bottom caption */}
-          <div className="absolute bottom-0 inset-x-0 z-20 px-5 pb-8 pt-16 bg-gradient-to-t from-black/90 via-black/60 to-transparent pointer-events-none">
-            <p className="text-white font-black text-[16px] leading-tight mb-1.5">
+          <div className="absolute bottom-0 inset-x-0 z-20 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] pt-20 bg-gradient-to-t from-black/90 via-black/45 to-transparent pointer-events-none">
+            <p className="text-white font-extrabold text-[15px] leading-snug tracking-tight mb-1">
               {modalPhotos[storyIndex].title}
             </p>
             {modalPhotos[storyIndex].caption && (
-              <p className="text-white/80 text-[12px] leading-relaxed mb-3">
+              <p className="text-white/75 text-[12px] leading-relaxed mb-2.5">
                 {modalPhotos[storyIndex].caption}
               </p>
             )}
-            <div className="flex items-center justify-between text-[11px] text-white/55 font-semibold">
-              <span>📅 {modalPhotos[storyIndex].date}</span>
+            <div className="flex items-center gap-2 text-[10px] font-semibold">
+              <span className="text-white/55">📅 {modalPhotos[storyIndex].date}</span>
+              <span className="w-1 h-1 rounded-full bg-white/25" />
               <span className="text-coral">❤️ {modalPhotos[storyIndex].likes}</span>
             </div>
           </div>

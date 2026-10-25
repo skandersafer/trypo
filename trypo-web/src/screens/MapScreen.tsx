@@ -578,11 +578,11 @@ export default function MapScreen({ navigate, goBack }: Props) {
       <div className="pt-12" />
 
       {/* Header */}
-      <div className="px-5 md:px-8 flex items-center justify-between mb-4">
+      <div className="px-5 md:px-8 flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
           <button
             onClick={() => goBack("trip-overview")}
-            className="w-9 h-9 rounded-full flex items-center justify-center bg-white text-navy transition-all"
+            className="w-9 h-9 rounded-full flex items-center justify-center bg-white text-navy transition-all hover:scale-105 active:scale-95"
             style={{ boxShadow: "0 2px 8px rgba(59,65,200,0.12)" }}
           >
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -596,10 +596,10 @@ export default function MapScreen({ navigate, goBack }: Props) {
             </svg>
           </button>
           <div>
-            <h1 className="text-navy font-black text-[20px]">
+            <h1 className="text-navy font-black text-[20px] tracking-tight">
               Globe & Itinéraire
             </h1>
-            <p className="text-slate-500 text-[12px]">
+            <p className="text-slate-400 text-[12px] font-medium">
               {stops.length} étapes • Vue mondiale interactive
             </p>
           </div>
@@ -607,13 +607,13 @@ export default function MapScreen({ navigate, goBack }: Props) {
       </div>
 
       {/* Real Interactive Mapbox World Map Container */}
-      <div className="px-5 md:px-8 mb-4">
+      <div className="px-5 md:px-8 mb-5">
         <div
           className="relative w-full rounded-[28px] overflow-hidden bg-[#F1F4FB]"
           style={{
             height: isDesktop ? "520px" : "350px",
             border: "1.5px solid rgba(255,255,255,0.9)",
-            boxShadow: "0 16px 40px rgba(59,65,200,0.16), 0 2px 8px rgba(59,65,200,0.08)",
+            boxShadow: "0 16px 40px rgba(59,65,200,0.14), 0 2px 8px rgba(59,65,200,0.06)",
           }}
         >
           {/* Map canvas */}
@@ -642,63 +642,84 @@ export default function MapScreen({ navigate, goBack }: Props) {
 
       {/* Selected Stop Card */}
       {selected && (
-        <div className="px-5 md:px-8 mb-3">
-          <div className="rounded-[32px] border border-white/60 bg-white shadow-xl p-5 transition-all">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2.5">
+        <div className="px-5 md:px-8 mb-4">
+          <div
+            className="rounded-[28px] bg-white p-5 transition-all"
+            style={{
+              border: "1px solid rgba(59,65,200,0.08)",
+              boxShadow: "0 8px 32px rgba(59,65,200,0.10), 0 2px 6px rgba(59,65,200,0.05)",
+            }}
+          >
+            {/* Top row: stop info + nights badge */}
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                {/* Stop emoji badge */}
                 <div
-                  className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl"
+                  className="w-11 h-11 rounded-2xl flex items-center justify-center text-xl flex-shrink-0"
                   style={{
-                    background: `${selected.color}14`,
-                    boxShadow: `inset 0 0 0 1px ${selected.color}22`,
+                    background: `linear-gradient(135deg, ${selected.color}18, ${selected.color}08)`,
+                    border: `1.5px solid ${selected.color}20`,
                   }}
                 >
                   {selected.emoji}
                 </div>
                 <div>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-2 mb-0.5">
                     <span
-                      className="px-2 py-0.5 rounded-md text-[10px] font-black text-white"
-                      style={{ background: selected.color }}
+                      className="px-2 py-0.5 rounded-md text-[10px] font-extrabold text-white tracking-wide"
+                      style={{
+                        background: "linear-gradient(135deg, #4F46E5, #3B82F6)",
+                      }}
                     >
                       Étape {selected.index}
                     </span>
-                    <h3 className="text-navy font-black text-[18px] leading-none">
+                    <h3 className="text-navy font-black text-[18px] leading-none tracking-tight">
                       {selected.city}
                     </h3>
                   </div>
-                  <p className="text-slate-400 text-[11px] mt-0.5 font-medium">
-                    {selected.country} • {selected.dates}
+                  <p className="text-slate-400 text-[11px] font-medium flex items-center gap-1.5">
+                    <span>{selected.country}</span>
+                    <span className="text-indigo-300">•</span>
+                    <span>{selected.dates}</span>
                   </p>
                 </div>
               </div>
-              <div className="text-right">
-                <span className="font-black text-[22px] leading-none block text-brand">
+
+              {/* Nights counter */}
+              <div
+                className="text-center px-3 py-1.5 rounded-xl flex-shrink-0"
+                style={{
+                  background: "linear-gradient(135deg, #EEF2FF, #E8EBFF)",
+                  border: "1px solid rgba(79,70,229,0.1)",
+                }}
+              >
+                <span className="font-black text-[22px] leading-none block text-indigo-600">
                   {selected.nights}
                 </span>
-                <p className="text-slate-400 text-[10px] font-bold mt-0.5">
+                <p className="text-indigo-400 text-[10px] font-bold mt-0.5">
                   nuit{selected.nights > 1 ? "s" : ""}
                 </p>
               </div>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between gap-3">
+            {/* Bottom row: coords + map action */}
+            <div className="mt-4 pt-3.5 border-t border-slate-100 flex items-center justify-between gap-3">
               <div className="flex items-center gap-1.5 text-slate-400 text-[10px] font-mono font-medium">
-                <span className="w-1 h-1 rounded-full bg-slate-300" />
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-300" />
                 {selected.lat.toFixed(2)}°N, {selected.lng.toFixed(2)}°E
               </div>
               <button
                 type="button"
                 onClick={() => openInMaps(selected.lat, selected.lng, selected.city)}
-                className="w-12 h-12 rounded-xl flex items-center justify-center text-[18px] transition-all active:scale-[0.95] cursor-pointer shadow-md"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-bold text-indigo-600 transition-all active:scale-[0.95] cursor-pointer hover:bg-indigo-50"
                 style={{
-                  background: "#ffffff",
-                  border: "1.5px solid rgba(59,65,200,0.18)",
-                  boxShadow: "0 4px 12px rgba(13,15,46,0.08)",
+                  background: "#F5F3FF",
+                  border: "1px solid rgba(79,70,229,0.12)",
                 }}
                 title="Ouvrir dans Maps"
               >
-                🗺️
+                <span className="text-[14px]">🗺️</span>
+                <span>Ouvrir dans Maps</span>
               </button>
             </div>
           </div>
@@ -739,8 +760,8 @@ export default function MapScreen({ navigate, goBack }: Props) {
                 width: isSel ? "34px" : "10px",
                 height: "10px",
                 background: isSel
-                  ? "linear-gradient(90deg, #3B41C8, #06C4D4)"
-                  : "rgba(59,65,200,0.18)",
+                  ? "linear-gradient(90deg, #4F46E5, #3B82F6)"
+                  : "rgba(79,70,229,0.15)",
               }}
               title={s.city}
             />

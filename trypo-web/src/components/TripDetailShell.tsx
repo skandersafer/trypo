@@ -79,38 +79,40 @@ export default function TripDetailShell({ current, navigate, goBack, children }:
     <div className="min-h-full">
       {/* Sticky trip nav — one place for all trip tools */}
       <div className="sticky top-0 z-40 bg-surface/95" style={{ backdropFilter: "blur(12px)" }}>
-        <div className="px-5 md:px-8 pt-12 pb-2 flex items-center gap-2">
+        <div className="px-5 md:px-8 pt-12 pb-2 flex items-center justify-between gap-2">
           <button
             onClick={() => goBack("trips")}
             aria-label="Back to trips"
-            className="w-9 h-9 rounded-full bg-white flex items-center justify-center trypo-card flex-shrink-0"
-            style={{ borderRadius: 99 }}
+            className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-slate-200/80 hover:bg-slate-50 active:scale-95 transition-all flex-shrink-0"
+            style={{ boxShadow: "0 2px 10px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06)" }}
           >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#0D0F2E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#0F172A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M10 13 5 8l5-5" />
             </svg>
           </button>
-          <div className="flex gap-1.5 overflow-x-auto no-scrollbar flex-1 py-1">
+          <nav
+            className="flex items-center bg-white/90 p-1 rounded-full border border-slate-200/70 text-xs font-semibold overflow-x-auto no-scrollbar min-w-0 max-w-[calc(100%-3.5rem)]"
+            style={{ boxShadow: "0 2px 10px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06)" }}
+          >
             {GROUPS.map((g) => {
               const isActive = active === g.key
               return (
                 <button
                   key={g.key}
                   onClick={() => goTab(g.key)}
-                  className="flex-shrink-0 px-4 py-2 rounded-full text-[12px] transition-all flex items-center gap-1.5"
-                  style={{
-                    background: isActive ? "#0D0F2E" : "#FFFFFF",
-                    color: isActive ? "#FFFFFF" : "#64748B",
-                    fontWeight: isActive ? 800 : 600,
-                    border: isActive ? "1px solid #0D0F2E" : "1px solid #EEF0F8",
-                  }}
+                  className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition-colors ${
+                    isActive ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:text-slate-900"
+                  }`}
+                  style={{ fontWeight: isActive ? 700 : 600 }}
                 >
-                  <g.Icon size={14} />
+                  <span className={isActive ? "text-blue-400" : "text-slate-500"}>
+                    <g.Icon size={14} />
+                  </span>
                   {g.label}
                 </button>
               )
             })}
-          </div>
+          </nav>
         </div>
       </div>
 

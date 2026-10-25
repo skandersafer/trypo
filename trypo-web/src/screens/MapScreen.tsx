@@ -690,14 +690,15 @@ export default function MapScreen({ navigate, goBack }: Props) {
               <button
                 type="button"
                 onClick={() => openInMaps(selected.lat, selected.lng, selected.city)}
-                className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 text-white font-bold text-[13px] transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-brand/25"
+                className="w-12 h-12 rounded-xl flex items-center justify-center text-[18px] transition-all active:scale-[0.95] cursor-pointer shadow-md"
                 style={{
-                  background: "linear-gradient(135deg, #3B41C8 0%, #06C4D4 100%)",
-                  boxShadow: "0 8px 20px rgba(59,65,200,0.3), 0 2px 6px rgba(6,196,212,0.2)",
+                  background: "#ffffff",
+                  border: "1.5px solid rgba(59,65,200,0.18)",
+                  boxShadow: "0 4px 12px rgba(13,15,46,0.08)",
                 }}
+                title="Ouvrir dans Maps"
               >
-                <span>Ouvrir dans Maps</span>
-                <span>🗺️</span>
+                🗺️
               </button>
             </div>
           </div>

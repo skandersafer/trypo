@@ -726,35 +726,26 @@ export default function MapScreen({ navigate, goBack }: Props) {
         </div>
       </div>
 
-      {/* Selected Stop Card (Modern Passport / Travel Pass Style) */}
+      {/* Selected Stop Card — Travel Pass Style */}
       {selected && (
-        <div className="px-5 md:px-8 mb-4">
-          <div
-            className="rounded-[28px] bg-white p-5 transition-all relative overflow-hidden"
-            style={{
-              border: "1px solid rgba(226, 232, 240, 0.9)",
-              boxShadow: "0 12px 32px -4px rgba(15, 23, 42, 0.07), 0 2px 6px -1px rgba(15, 23, 42, 0.03)",
-            }}
-          >
-            {/* Top Navigation Row: Step Tag + Quick Step Switchers */}
-            <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-black tracking-wider uppercase bg-indigo-50 text-indigo-700 border border-indigo-100">
+        <div className="px-5 md:px-8 mb-6">
+          <div className="rounded-[32px] bg-white border border-slate-100/60 p-6 shadow-xl transition-all">
+            {/* Step Header: tag + country + nav */}
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <span className="px-3 py-1 rounded-full text-[11px] font-black tracking-wider uppercase bg-indigo-50 text-indigo-700 border border-indigo-100">
                   Étape {selected.index} / {stops.length}
                 </span>
-                {selected.country && (
-                  <span className="text-[11px] font-bold text-slate-500">
-                    {cleanCountryName(selected.country)}
-                  </span>
-                )}
+                <span className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                  {selected.emoji || "🌍"} {cleanCountryName(selected.country)}
+                </span>
               </div>
-
-              {/* Prev / Next controls on the card */}
               <div className="flex items-center gap-1">
                 <button
                   type="button"
                   onClick={prevStop}
-                  className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm transition-all active:scale-90 cursor-pointer"
+                  disabled={stops.length <= 1}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all active:scale-95 cursor-pointer ${stops.length <= 1 ? "bg-slate-100 text-slate-400 cursor-not-allowed" : "bg-white text-slate-700 shadow-sm border border-slate-200 hover:bg-slate-50"}`}
                   title="Étape précédente"
                 >
                   ‹
@@ -762,7 +753,8 @@ export default function MapScreen({ navigate, goBack }: Props) {
                 <button
                   type="button"
                   onClick={nextStop}
-                  className="w-7 h-7 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center font-bold text-sm transition-all active:scale-90 shadow-sm shadow-indigo-500/20 cursor-pointer"
+                  disabled={stops.length <= 1}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all active:scale-95 cursor-pointer ${stops.length <= 1 ? "bg-slate-100 text-slate-400 cursor-not-allowed" : "bg-white text-indigo-600 shadow-sm shadow-indigo-500/15 border border-indigo-100 hover:bg-indigo-50"}`}
                   title="Étape suivante"
                 >
                   ›
@@ -770,48 +762,40 @@ export default function MapScreen({ navigate, goBack }: Props) {
               </div>
             </div>
 
-            {/* Core Destination Info */}
-            <div className="flex items-center justify-between gap-3 mb-4">
-              <div className="flex items-center gap-3.5 min-w-0">
-                {/* Visual Icon Badge */}
+            {/* City Title */}
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div className="flex items-center gap-3 min-w-0">
                 <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 shadow-sm transition-transform hover:scale-105"
+                  className="w-11 h-11 rounded-[20px] flex items-center justify-center text-2xl flex-shrink-0 shadow-sm"
                   style={{
-                    background: "linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)",
-                    border: "1.5px solid rgba(199, 210, 254, 0.8)",
+                    background: `linear-gradient(135deg, ${selected.color}12, ${selected.color}06)`,
+                    border: `1.5px solid ${selected.color}25`,
                   }}
                 >
                   {selected.emoji || "📍"}
                 </div>
-
                 <div className="min-w-0">
-                  <h3 className="text-slate-900 font-black text-[22px] leading-tight tracking-tight truncate">
+                  <h3 className="text-slate-900 font-black text-[25px] leading-none tracking-tight truncate">
                     {selected.city}
                   </h3>
-                  
-                  {/* Formatted Date Pill */}
-                  <div className="flex items-center gap-1.5 text-slate-500 text-[11px] font-semibold mt-1">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">
-                      <span>📅</span>
-                      <span>{formatStopDates(selected.dates)}</span>
-                    </span>
-                  </div>
+                  <p className="text-slate-400 text-[11px] font-medium mt-1.5 flex items-center gap-1">
+                    <span className="text-slate-300">📅</span>
+                    <span>{formatStopDates(selected.dates)}</span>
+                  </p>
                 </div>
               </div>
-
-              {/* Nights Badge (Clean Pill) */}
-              <div className="text-center px-3.5 py-2 rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100/80 flex-shrink-0">
-                <span className="font-black text-[22px] leading-none block text-indigo-600">
+              <div className="text-center px-4 py-3 rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100/80">
+                <span className="font-black text-[25px] leading-none block text-indigo-600">
                   {selected.nights}
                 </span>
-                <p className="text-indigo-400 text-[10px] font-extrabold uppercase tracking-wide mt-0.5">
+                <p className="text-indigo-500 text-[10px] font-black uppercase tracking-wider mt-0.5">
                   nuit{selected.nights > 1 ? "s" : ""}
                 </p>
               </div>
             </div>
 
-            {/* Action Footer: Coords + Open in Maps CTA */}
-            <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
+            {/* Footer: Coordinates + Open in Maps */}
+            <div className="pt-4 border-t border-slate-50 flex items-center justify-between gap-3">
               <button
                 type="button"
                 onClick={() => {
@@ -819,7 +803,7 @@ export default function MapScreen({ navigate, goBack }: Props) {
                     mapInstanceRef.current.flyTo({ center: [selected.lng, selected.lat], zoom: 13, duration: 1000 })
                   }
                 }}
-                className="flex items-center gap-1.5 text-slate-400 hover:text-indigo-600 text-[11px] font-medium transition-colors"
+                className="flex items-center gap-1 text-slate-400 hover:text-indigo-600 text-[11px] font-medium transition-colors"
                 title="Centrer la carte sur cette étape"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
@@ -829,11 +813,11 @@ export default function MapScreen({ navigate, goBack }: Props) {
               <button
                 type="button"
                 onClick={() => openInMaps(selected.lat, selected.lng, selected.city)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-bold text-[12px] shadow-md shadow-indigo-600/20 active:scale-95 transition-all cursor-pointer"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-bold text-[12px] shadow-lg shadow-indigo-600/25 active:scale-[0.98] transition-all cursor-pointer"
               >
-                <span>🗺️</span>
+                <span className="text-[14px]">🗺️</span>
                 <span>Ouvrir dans Maps</span>
-                <span className="text-white/60 text-[13px]">→</span>
+                <span className="text-white/60 text-[11px]">→</span>
               </button>
             </div>
           </div>

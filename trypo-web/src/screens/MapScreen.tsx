@@ -794,30 +794,16 @@ export default function MapScreen({ navigate, goBack }: Props) {
               </div>
             </div>
 
-            {/* Footer: Coordinates + Open in Maps */}
+            {/* Footer: Open in Maps CTA */}
             <div className="pt-4 border-t border-slate-50 flex items-center justify-between gap-3">
               <button
                 type="button"
-                onClick={() => {
-                  if (mapInstanceRef.current) {
-                    mapInstanceRef.current.flyTo({ center: [selected.lng, selected.lat], zoom: 13, duration: 1000 })
-                  }
-                }}
-                className="flex items-center gap-1 text-slate-400 hover:text-indigo-600 text-[11px] font-medium transition-colors"
-                title="Centrer la carte sur cette étape"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
-                <span className="font-mono">{selected.lat.toFixed(2)}°N, {selected.lng.toFixed(2)}°E</span>
-              </button>
-
-              <button
-                type="button"
                 onClick={() => openInMaps(selected.lat, selected.lng, selected.city)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-bold text-[12px] shadow-lg shadow-indigo-600/25 active:scale-[0.98] transition-all cursor-pointer"
+                className="flex-1 flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black text-[15px] shadow-xl shadow-indigo-600/30 active:scale-[0.98] transition-all cursor-pointer"
               >
-                <span className="text-[14px]">🗺️</span>
-                <span>Ouvrir dans Maps</span>
-                <span className="text-white/60 text-[11px]">→</span>
+                <span className="text-[18px]">🗺️</span>
+                <span className="font-extrabold tracking-tight">Ouvrir dans Maps</span>
+                <span className="text-white/60 text-[13px] font-bold">→</span>
               </button>
             </div>
           </div>

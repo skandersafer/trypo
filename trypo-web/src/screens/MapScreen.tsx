@@ -794,12 +794,17 @@ export default function MapScreen({ navigate, goBack }: Props) {
               </div>
             </div>
 
-            {/* Footer: Open in Maps CTA */}
+            {/* Footer: Coordinates (small, left) + Open in Maps CTA (large, right) */}
             <div className="pt-4 border-t border-slate-50 flex items-center justify-between gap-3">
+              <span className="flex items-center gap-1 text-slate-400 text-[11px] font-mono font-medium">
+                <span className="w-1 h-1 rounded-full bg-indigo-400" />
+                {selected.lat.toFixed(2)}°N, {selected.lng.toFixed(2)}°E
+              </span>
+
               <button
                 type="button"
                 onClick={() => openInMaps(selected.lat, selected.lng, selected.city)}
-                className="flex-1 flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black text-[15px] shadow-xl shadow-indigo-600/30 active:scale-[0.98] transition-all cursor-pointer"
+                className="flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black text-[15px] shadow-xl shadow-indigo-600/30 active:scale-[0.98] transition-all cursor-pointer"
               >
                 <span className="text-[18px]">🗺️</span>
                 <span className="font-extrabold tracking-tight">Ouvrir dans Maps</span>

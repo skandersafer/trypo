@@ -591,9 +591,16 @@ export default function MapScreen({ navigate, goBack }: Props) {
     return dates
   }
 
-  const cleanCountryName = (name: string): string => {
-    if (!name) return ""
-    return name.replace(/\s+[A-Z]{2}$/, "").trim()
+  const splitCountryAndCode = (countryStr: string): { name: string; code: string | null } => {
+    if (!countryStr) return { name: "", code: null }
+    const match = countryStr.match(/^(.*?)(?:\s+([A-Z]{2}))?$/)
+    if (match) {
+      return {
+        name: match[1]?.trim() || countryStr,
+        code: match[2]?.trim() || null,
+      }
+    }
+    return { name: countryStr, code: null }
   }
 
   const goToStop = (idx: number) => {
@@ -630,17 +637,17 @@ export default function MapScreen({ navigate, goBack }: Props) {
     <div
       className="min-h-full flex flex-col select-none pb-8"
       style={{
-        background: "linear-gradient(180deg, #F0F4FF 0%, #F8FAFC 25%, #F8FAFC 100%)",
+        background: "#F8FAFC",
       }}
     >
       <div className="pt-12" />
 
-      {/* Modern Header Bar */}
+      {/* Header Bar */}
       <div className="px-5 md:px-8 flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <button
             onClick={() => goBack("trip-overview")}
-            className="w-10 h-10 rounded-2xl flex items-center justify-center bg-white text-slate-800 transition-all hover:scale-105 active:scale-95 shadow-sm border border-slate-200/60"
+            className="w-10 h-10 rounded-full flex items-center justify-center bg-white text-slate-800 transition-all hover:scale-105 active:scale-95 shadow-sm border border-slate-200/70"
           >
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
               <path
@@ -657,33 +664,31 @@ export default function MapScreen({ navigate, goBack }: Props) {
               Globe & Itinéraire
             </h1>
             <p className="text-slate-500 text-[12px] font-medium flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-              <span>{stops.length} étapes</span>
+              <span className="w-2 h-2 rounded-full bg-blue-600 inline-block" />
+              <span className="text-blue-600 font-bold">{stops.length} étapes</span>
               <span className="text-slate-300">•</span>
               <span>Vue interactive</span>
             </p>
           </div>
         </div>
 
-        {/* Header Action Pills */}
+        {/* Header Action Circular Buttons */}
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={centerOnAll}
-            className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-bold text-[11px] shadow-sm border border-slate-200/80 transition-all active:scale-95 flex items-center gap-1.5"
-            title="Recadrer tout le parcours"
+            className="w-10 h-10 rounded-full bg-white hover:bg-slate-50 text-slate-700 shadow-sm border border-slate-200/80 transition-all active:scale-95 flex items-center justify-center text-base"
+            title="Recadrer la carte"
           >
-            <span>🧭</span>
-            <span className="hidden sm:inline">Recadrer</span>
+            🧭
           </button>
           <button
             type="button"
             onClick={() => setLayerType((prev) => (prev === "trypo" ? "satellite" : "trypo"))}
-            className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-bold text-[11px] shadow-sm border border-slate-200/80 transition-all active:scale-95 flex items-center gap-1.5"
-            title="Changer de vue"
+            className="w-10 h-10 rounded-full bg-white hover:bg-slate-50 text-slate-700 shadow-sm border border-slate-200/80 transition-all active:scale-95 flex items-center justify-center text-base"
+            title="Changer de vue (Satellite / Plan)"
           >
-            <span>{layerType === "trypo" ? "🛰️" : "🗺️"}</span>
-            <span className="hidden sm:inline">{layerType === "trypo" ? "Satellite" : "Plan"}</span>
+            {layerType === "trypo" ? "🛰️" : "🗺️"}
           </button>
         </div>
       </div>
@@ -691,11 +696,11 @@ export default function MapScreen({ navigate, goBack }: Props) {
       {/* Interactive Mapbox World Map Container */}
       <div className="px-5 md:px-8 mb-4">
         <div
-          className="relative w-full rounded-[30px] overflow-hidden bg-[#F1F4FB] transition-all"
+          className="relative w-full rounded-[28px] overflow-hidden bg-[#F1F4FB] transition-all"
           style={{
-            height: isDesktop ? "520px" : "360px",
+            height: isDesktop ? "520px" : "380px",
             border: "1px solid rgba(226, 232, 240, 0.9)",
-            boxShadow: "0 14px 34px -4px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04)",
+            boxShadow: "0 10px 30px rgba(15, 23, 42, 0.06)",
           }}
         >
           {/* Map canvas */}
@@ -711,7 +716,7 @@ export default function MapScreen({ navigate, goBack }: Props) {
 
           {/* In-Map Top-Left Journey Pill */}
           <div
-            className="absolute top-3.5 left-3.5 z-10 rounded-full bg-white/95 backdrop-blur-md px-3.5 py-1.5 text-[11px] font-bold text-slate-800 border border-slate-200/70 flex items-center gap-2 shadow-sm"
+            className="absolute top-3.5 left-3.5 z-10 rounded-full bg-white/95 backdrop-blur-md px-3.5 py-1.5 text-[11px] font-bold text-slate-800 border border-slate-200/80 flex items-center gap-2 shadow-sm"
           >
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="truncate max-w-[200px] sm:max-w-none">
@@ -719,101 +724,128 @@ export default function MapScreen({ navigate, goBack }: Props) {
             </span>
           </div>
 
-          {/* In-Map Bottom Legend Tip */}
-          <div className="absolute bottom-3 left-3 z-10 rounded-xl bg-slate-900/75 backdrop-blur-md px-2.5 py-1 text-[10px] font-medium text-white/90 shadow-sm pointer-events-none">
-            Touchez un repère pour voyager
+          {/* In-Map Bottom Tip Pill */}
+          <div className="absolute bottom-3.5 left-1/2 -translate-x-1/2 z-10 rounded-full bg-slate-900/80 backdrop-blur-md px-4 py-1.5 text-[11px] font-medium text-white shadow-lg flex items-center gap-2 whitespace-nowrap pointer-events-none">
+            <span className="w-2.5 h-2.5 rounded-full border border-white/80 flex items-center justify-center">
+              <span className="w-1 h-1 rounded-full bg-white" />
+            </span>
+            <span>Touchez un repère pour voyager</span>
           </div>
         </div>
       </div>
 
-      {/* Selected Stop Card — Travel Pass Style */}
-      {selected && (
-        <div className="px-5 md:px-8 mb-6">
-          <div className="rounded-[32px] bg-white border border-slate-100/60 p-6 shadow-xl transition-all">
-            {/* Step Header: tag + country + nav */}
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-3">
-                <span className="px-3 py-1 rounded-full text-[11px] font-black tracking-wider uppercase bg-indigo-50 text-indigo-700 border border-indigo-100">
-                  Étape {selected.index} / {stops.length}
-                </span>
-                <span className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-                  {selected.emoji || "🌍"} {cleanCountryName(selected.country)}
-                </span>
-              </div>
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={prevStop}
-                  disabled={stops.length <= 1}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all active:scale-95 cursor-pointer ${stops.length <= 1 ? "bg-slate-100 text-slate-400 cursor-not-allowed" : "bg-white text-slate-700 shadow-sm border border-slate-200 hover:bg-slate-50"}`}
-                  title="Étape précédente"
-                >
-                  ‹
-                </button>
-                <button
-                  type="button"
-                  onClick={nextStop}
-                  disabled={stops.length <= 1}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all active:scale-95 cursor-pointer ${stops.length <= 1 ? "bg-slate-100 text-slate-400 cursor-not-allowed" : "bg-white text-indigo-600 shadow-sm shadow-indigo-500/15 border border-indigo-100 hover:bg-indigo-50"}`}
-                  title="Étape suivante"
-                >
-                  ›
-                </button>
-              </div>
-            </div>
-
-            {/* City Title */}
-            <div className="flex items-start justify-between gap-4 mb-4">
-              <div className="flex items-center gap-3 min-w-0">
-                <div
-                  className="w-11 h-11 rounded-[20px] flex items-center justify-center text-2xl flex-shrink-0 shadow-sm"
-                  style={{
-                    background: `linear-gradient(135deg, ${selected.color}12, ${selected.color}06)`,
-                    border: `1.5px solid ${selected.color}25`,
-                  }}
-                >
-                  {selected.emoji || "📍"}
+      {/* Selected Stop Card — Exact Replica of Mockup */}
+      {selected && (() => {
+        const countryInfo = splitCountryAndCode(selected.country)
+        return (
+          <div className="px-5 md:px-8 mb-4">
+            <div
+              className="rounded-[28px] bg-white p-5 transition-all relative overflow-hidden"
+              style={{
+                border: "1px solid rgba(226, 232, 240, 0.8)",
+                boxShadow: "0 10px 30px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.03)",
+              }}
+            >
+              {/* Top Navigation Row: Step Tag + Country + Nav Arrows */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-full text-[11px] font-black tracking-wider uppercase bg-blue-50 text-blue-600 border border-blue-200/80">
+                    Étape {selected.index} / {stops.length}
+                  </span>
+                  <div className="flex items-center gap-1 text-[12px] font-bold text-slate-700">
+                    <span className="text-rose-500">📍</span>
+                    <span>{countryInfo.name}</span>
+                    {countryInfo.code && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold text-slate-400 bg-slate-100 uppercase ml-0.5">
+                        {countryInfo.code}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <h3 className="text-slate-900 font-black text-[25px] leading-none tracking-tight truncate">
-                    {selected.city}
-                  </h3>
-                  <p className="text-slate-400 text-[11px] font-medium mt-1.5 flex items-center gap-1">
-                    <span className="text-slate-300">📅</span>
-                    <span>{formatStopDates(selected.dates)}</span>
+
+                {/* Prev / Next controls on the card */}
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={prevStop}
+                    className="w-8 h-8 rounded-full bg-slate-50 border border-slate-200/80 text-slate-500 hover:text-slate-800 hover:bg-slate-100 flex items-center justify-center font-bold text-sm transition-all active:scale-90 cursor-pointer shadow-2xs"
+                    title="Étape précédente"
+                  >
+                    ‹
+                  </button>
+                  <button
+                    type="button"
+                    onClick={nextStop}
+                    className="w-8 h-8 rounded-full bg-slate-50 border border-slate-200/80 text-slate-700 hover:text-slate-900 hover:bg-slate-100 flex items-center justify-center font-bold text-sm transition-all active:scale-90 cursor-pointer shadow-2xs"
+                    title="Étape suivante"
+                  >
+                    ›
+                  </button>
+                </div>
+              </div>
+
+              {/* Core Destination Info */}
+              <div className="flex items-center justify-between gap-3 mb-5">
+                <div className="flex items-center gap-3.5 min-w-0">
+                  {/* Visual Pink Pin Badge */}
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 bg-rose-50 border border-rose-100/90 shadow-2xs">
+                    📍
+                  </div>
+
+                  <div className="min-w-0">
+                    <h3 className="text-slate-900 font-black text-[24px] leading-none tracking-tight truncate">
+                      {selected.city}
+                    </h3>
+
+                    {/* Date Line */}
+                    <div className="flex items-center gap-1.5 text-slate-400 text-[12px] font-medium mt-1.5">
+                      <span>📅</span>
+                      <span>{formatStopDates(selected.dates)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Nights Badge (Tall rounded blue card) */}
+                <div className="w-16 py-2.5 rounded-2xl bg-blue-50/70 border border-blue-100 text-center flex flex-col items-center justify-center flex-shrink-0">
+                  <span className="font-black text-[26px] leading-none block text-blue-600">
+                    {selected.nights}
+                  </span>
+                  <p className="text-blue-500 text-[9px] font-black uppercase tracking-widest mt-1">
+                    nuits
                   </p>
                 </div>
               </div>
-              <div className="text-center px-4 py-3 rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100/80">
-                <span className="font-black text-[25px] leading-none block text-indigo-600">
-                  {selected.nights}
-                </span>
-                <p className="text-indigo-500 text-[10px] font-black uppercase tracking-wider mt-0.5">
-                  nuit{selected.nights > 1 ? "s" : ""}
-                </p>
+
+              {/* Action Footer: Coords + Open in Maps CTA */}
+              <div className="pt-3.5 border-t border-slate-100 flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (mapInstanceRef.current) {
+                      mapInstanceRef.current.flyTo({ center: [selected.lng, selected.lat], zoom: 13, duration: 1000 })
+                    }
+                  }}
+                  className="flex items-center gap-2 text-slate-500 hover:text-blue-600 text-[12px] font-medium transition-colors"
+                  title="Centrer la carte sur cette étape"
+                >
+                  <span className="w-2 h-2 rounded-full bg-blue-600" />
+                  <span className="font-mono">{selected.lat.toFixed(2)}°N, {selected.lng.toFixed(2)}°E</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => openInMaps(selected.lat, selected.lng, selected.city)}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-[13px] shadow-lg shadow-blue-500/25 active:scale-95 transition-all cursor-pointer whitespace-nowrap"
+                >
+                  <span>🗺️</span>
+                  <span>Ouvrir dans Maps</span>
+                  <span className="text-white/80 text-[13px]">→</span>
+                </button>
               </div>
             </div>
-
-            {/* Footer: Coordinates (small, left) + Open in Maps CTA (large, right) */}
-            <div className="pt-4 border-t border-slate-50 flex items-center justify-between gap-3">
-              <span className="flex items-center gap-1 text-slate-400 text-[11px] font-mono font-medium">
-                <span className="w-1 h-1 rounded-full bg-indigo-400" />
-                {selected.lat.toFixed(2)}°N, {selected.lng.toFixed(2)}°E
-              </span>
-
-              <button
-                type="button"
-                onClick={() => openInMaps(selected.lat, selected.lng, selected.city)}
-                className="flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black text-[15px] shadow-xl shadow-indigo-600/30 active:scale-[0.98] transition-all cursor-pointer"
-              >
-                <span className="text-[18px]">🗺️</span>
-                <span className="font-extrabold tracking-tight">Ouvrir dans Maps</span>
-                <span className="text-white/60 text-[13px] font-bold">→</span>
-              </button>
-            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* Horizontal Stop Navigation Dots */}
       <div
@@ -839,7 +871,7 @@ export default function MapScreen({ navigate, goBack }: Props) {
                 width: isSel ? "28px" : "8px",
                 height: "8px",
                 background: isSel
-                  ? "linear-gradient(90deg, #4F46E5, #3B82F6)"
+                  ? "linear-gradient(90deg, #2563EB, #4F46E5)"
                   : "#CBD5E1",
               }}
               title={s.city}

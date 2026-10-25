@@ -365,6 +365,7 @@ export default function MapScreen({ navigate, goBack }: Props) {
   const stopsRef = useRef<Stop[]>([])
   const mapLoadedRef = useRef(false)
   const layerTypeRef = useRef<MapboxStyleKey>("trypo")
+  const touchStartX = useRef(0)
   layerTypeRef.current = layerType
 
   selectedRef.current = selected
@@ -642,17 +643,11 @@ export default function MapScreen({ navigate, goBack }: Props) {
       {/* Selected Stop Card */}
       {selected && (
         <div className="px-5 md:px-8 mb-3">
-          <div
-            className="rounded-[24px] p-4 transition-all bg-white"
-            style={{
-              border: `1.5px solid ${selected.color}35`,
-              boxShadow: "0 12px 32px rgba(59,65,200,0.12)",
-            }}
-          >
-            <div className="flex items-start justify-between mb-2.5">
-              <div className="flex items-center gap-3">
+          <div className="rounded-[32px] border border-white/60 bg-white shadow-xl p-5 transition-all">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2.5">
                 <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl"
+                  className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl"
                   style={{
                     background: `${selected.color}14`,
                     boxShadow: `inset 0 0 0 1px ${selected.color}22`,
@@ -668,20 +663,17 @@ export default function MapScreen({ navigate, goBack }: Props) {
                     >
                       Étape {selected.index}
                     </span>
-                    <h3 className="text-navy font-black text-[17px]">
+                    <h3 className="text-navy font-black text-[18px] leading-none">
                       {selected.city}
                     </h3>
                   </div>
-                  <p className="text-slate-500 text-[11px] mt-0.5">
+                  <p className="text-slate-400 text-[11px] mt-0.5 font-medium">
                     {selected.country} • {selected.dates}
                   </p>
                 </div>
               </div>
-
               <div className="text-right">
-                <span
-                  className="font-black text-[22px] leading-none block text-brand"
-                >
+                <span className="font-black text-[22px] leading-none block text-brand">
                   {selected.nights}
                 </span>
                 <p className="text-slate-400 text-[10px] font-bold mt-0.5">
@@ -690,18 +682,22 @@ export default function MapScreen({ navigate, goBack }: Props) {
               </div>
             </div>
 
-            {/* GPS coordinates & action button */}
-            <div className="flex items-center justify-between pt-2 border-t border-slate-100 mt-2">
-              <span className="text-slate-400 text-[10px] font-mono">
-                📍 {selected.lat.toFixed(2)}°N, {selected.lng.toFixed(2)}°E
-              </span>
+            <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-1.5 text-slate-400 text-[10px] font-mono font-medium">
+                <span className="w-1 h-1 rounded-full bg-slate-300" />
+                {selected.lat.toFixed(2)}°N, {selected.lng.toFixed(2)}°E
+              </div>
               <button
                 type="button"
                 onClick={() => openInMaps(selected.lat, selected.lng, selected.city)}
-                className="text-[11px] font-bold px-3 py-1.5 rounded-xl text-brand transition-all active:scale-95"
-                style={{ background: "rgba(59,65,200,0.08)" }}
+                className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 text-white font-bold text-[13px] transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-brand/25"
+                style={{
+                  background: "linear-gradient(135deg, #3B41C8 0%, #06C4D4 100%)",
+                  boxShadow: "0 8px 20px rgba(59,65,200,0.3), 0 2px 6px rgba(6,196,212,0.2)",
+                }}
               >
-                Ouvrir dans Maps 🗺️
+                <span>Ouvrir dans Maps</span>
+                <span>🗺️</span>
               </button>
             </div>
           </div>
@@ -709,7 +705,23 @@ export default function MapScreen({ navigate, goBack }: Props) {
       )}
 
       {/* Horizontal Stop Navigation Dots */}
-      <div className="flex justify-center items-center gap-2 pb-6 px-5 md:px-8">
+      <div
+        className="flex justify-center items-center gap-2 pb-8 px-5 md:px-8"
+        onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX }}
+        onTouchEnd={(e) => {
+          if (!touchStartX.current || stops.length < 2) return
+          const diff = touchStartX.current - e.changedTouches[0].clientX
+          touchStartX.current = 0
+          if (Math.abs(diff) < 50) return
+          const idx = stops.findIndex((s) => s.id === selected?.id)
+          const next = diff > 0 ? (idx + 1) % stops.length : (idx - 1 + stops.length) % stops.length
+          const nxt = stops[next]
+          setSelected(nxt)
+          if (mapInstanceRef.current) {
+            mapInstanceRef.current.flyTo({ center: [nxt.lng, nxt.lat], zoom: 12, duration: 1200 })
+          }
+        }}
+      >
         {stops.map((s) => {
           const isSel = selected?.id === s.id
           return (
@@ -721,9 +733,9 @@ export default function MapScreen({ navigate, goBack }: Props) {
                   mapInstanceRef.current.flyTo({ center: [s.lng, s.lat], zoom: 12, duration: 1200 })
                 }
               }}
-              className="rounded-full transition-all duration-300 flex items-center justify-center"
+              className="rounded-full transition-all duration-300 flex items-center justify-center cursor-pointer"
               style={{
-                width: isSel ? "32px" : "10px",
+                width: isSel ? "34px" : "10px",
                 height: "10px",
                 background: isSel
                   ? "linear-gradient(90deg, #3B41C8, #06C4D4)"

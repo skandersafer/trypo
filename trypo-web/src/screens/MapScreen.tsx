@@ -567,13 +567,6 @@ export default function MapScreen({ navigate, goBack }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stops, selected, savedPlaces])
 
-  // Calculate total route distance in km
-  const totalDistanceKm = stops.reduce((total, stop, i) => {
-    if (i === 0) return 0
-    const prev = stops[i - 1]
-    return total + calculateDistanceKm(prev.lat, prev.lng, stop.lat, stop.lng)
-  }, 0)
-
   return (
     <div
       className="min-h-full flex flex-col select-none"
@@ -602,37 +595,14 @@ export default function MapScreen({ navigate, goBack }: Props) {
             </svg>
           </button>
           <div>
-            <h1 className="text-navy font-black text-[20px] flex items-center gap-2">
-              <span>Globe & Itinéraire</span>
-              <span className="text-[10px] bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full font-bold">
-                Live GPS
-              </span>
+            <h1 className="text-navy font-black text-[20px]">
+              Globe & Itinéraire
             </h1>
             <p className="text-slate-500 text-[12px]">
               {stops.length} étapes • Vue mondiale interactive
             </p>
           </div>
         </div>
-      </div>
-
-      {/* Stats strip */}
-      <div className="px-5 md:px-8 mb-4 flex gap-2.5">
-        {[
-          { val: String(stops.length), lbl: "Étapes", color: "#3B41C8" },
-          { val: totalDistanceKm > 0 ? `${totalDistanceKm} km` : "720 km", lbl: "Distance", color: "#7C3AED" },
-          { val: "Actif", lbl: "Statut", color: "#16A34A" },
-        ].map((s) => (
-          <div
-            key={s.lbl}
-            className="flex-1 rounded-2xl py-2.5 flex flex-col items-center bg-white border border-slate-100"
-            style={{ boxShadow: "0 2px 10px rgba(59,65,200,0.07)" }}
-          >
-            <span className="font-black text-[14px]" style={{ color: s.color }}>
-              {s.val}
-            </span>
-            <span className="text-slate-400 text-[10px] font-semibold">{s.lbl}</span>
-          </div>
-        ))}
       </div>
 
       {/* Real Interactive Mapbox World Map Container */}

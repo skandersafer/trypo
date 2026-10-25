@@ -438,7 +438,7 @@ export default function TripSocialScreen({ navigate, goBack }: Props) {
                 {r.key === "epic" ? (
                   <SparklesIcon size={14} />
                 ) : r.key === "save" ? (
-                  <HeartIcon size={14} />
+                  <HeartIcon size={14} filled={myReaction === "save"} />
                 ) : (
                   <PlaneIcon size={14} />
                 )}

@@ -590,7 +590,7 @@ export default function App() {
         <div
           className="flex-1 overflow-y-auto overflow-x-hidden relative"
           style={{
-                  paddingBottom: showNav ? "calc(72px + env(safe-area-inset-bottom, 0px))" : "0",
+                  paddingBottom: showNav ? "calc(112px + env(safe-area-inset-bottom, 0px))" : "0",
                   WebkitOverflowScrolling: "touch",
                   overscrollBehavior: "contain",
                 }}

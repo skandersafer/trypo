@@ -560,8 +560,8 @@ export default function HomeScreen({ navigate }: Props) {
                 </svg>
               </div>
               <p className="text-[11px] font-medium leading-relaxed text-slate-500">
-                Budget, bookings and trip tools live inside each trip — tap any card to open its
-                itinerary.
+                Budget, bookings and trip tools live inside each trip — tap any card to open the
+                trip.
               </p>
             </div>
           </section>

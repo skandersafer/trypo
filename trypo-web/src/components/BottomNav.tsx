@@ -186,7 +186,7 @@ function NavItem({
     <button
       type="button"
       aria-label={label}
-      className="flex w-14 flex-col items-center justify-center py-1"
+      className="flex min-w-0 flex-1 flex-col items-center justify-center py-1"
       onClick={onClick}
     >
       {children}

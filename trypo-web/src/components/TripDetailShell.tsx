@@ -78,20 +78,20 @@ export default function TripDetailShell({ current, navigate, goBack, children }:
   return (
     <div className="min-h-full">
       {/* Sticky trip nav — one place for all trip tools */}
-      <div className="sticky top-0 z-40 bg-surface/95" style={{ backdropFilter: "blur(12px)" }}>
+      <div className="sticky top-0 z-40 bg-surface" style={{ backdropFilter: "blur(12px)" }}>
         <div className="px-5 md:px-8 pt-12 pb-2 flex items-center justify-between gap-2">
           <button
             onClick={() => goBack("trips")}
             aria-label="Back to trips"
-            className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-slate-200/80 hover:bg-slate-50 active:scale-95 transition-all flex-shrink-0"
+            className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-slate-200/80 text-navy hover:bg-slate-50 active:scale-95 transition-all flex-shrink-0"
             style={{ boxShadow: "0 2px 10px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06)" }}
           >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#0F172A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M10 13 5 8l5-5" />
             </svg>
           </button>
           <nav
-            className="flex items-center bg-white/90 p-1 rounded-full border border-slate-200/70 text-xs font-semibold overflow-x-auto no-scrollbar min-w-0 max-w-[calc(100%-3.5rem)]"
+            className="flex items-center bg-white p-1 rounded-full border border-slate-200/70 text-xs font-semibold overflow-x-auto no-scrollbar min-w-0 max-w-[calc(100%-3.5rem)]"
             style={{ boxShadow: "0 2px 10px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06)" }}
           >
             {GROUPS.map((g) => {

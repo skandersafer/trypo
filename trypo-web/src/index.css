@@ -343,6 +343,10 @@ html.dark,
   color: #93C5FD !important;
 }
 
+.dark .text-blue-600 {
+  color: #60A5FA !important;
+}
+
 .dark .text-indigo-900,
 .dark .text-indigo-800,
 .dark .text-indigo-700 {

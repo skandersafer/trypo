@@ -10,7 +10,6 @@ import { hasMapboxToken } from "../lib/mapbox"
 import { TransportIcon, MapIcon, ToolIcon } from "../components/icons"
 import { addBooking, addItineraryItem, updateBooking, updateItineraryItem, deleteBooking, deleteItineraryItem, claimMissingServerMembership, generateTripInviteCode, getActiveTripId, getDestinationStayDays, getMyTrips, getTripDetails, getUserTripPermission, setActiveTripId, syncTripDestinations, deleteTrip, generateUuid, updateTripDates } from "../lib/trips"
 import { getMyTripMembership, setTripVisibility } from "../lib/communityLive"
-import { useIsDesktop } from "../lib/useIsDesktop"
 import { getStoredRates, fetchLiveRates, getRelativeRate } from "../lib/currencyApi"
 
 interface Props {
@@ -100,9 +99,16 @@ const cityCoordinates: Record<string, { lat: number; lng: number }> = {
   pattaya: { lat: 12.9236, lng: 100.8825 },
 }
 
+const toLocalIsoDate = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
+
 const parseIsoDate = (date: string) => {
   if (!date) return null
-  const parsed = new Date(date)
+  // A date-only ISO string is a calendar date, not a UTC instant. Parsing it
+  // with `new Date("YYYY-MM-DD")` shifts the day in most timezones.
+  const parsed = /^\d{4}-\d{2}-\d{2}$/.test(date)
+    ? new Date(`${date}T00:00:00`)
+    : new Date(date)
   if (Number.isNaN(parsed.getTime())) return null
   return parsed
 }
@@ -123,7 +129,7 @@ const addDays = (isoDate: string | null | undefined, amount: number) => {
     const base = new Date()
     base.setHours(0, 0, 0, 0)
     base.setDate(base.getDate() + amount)
-    return base.toISOString().slice(0, 10)
+    return toLocalIsoDate(base)
   }
 
   const parsed = parseIsoDate(isoDate)
@@ -132,7 +138,7 @@ const addDays = (isoDate: string | null | undefined, amount: number) => {
   const next = new Date(parsed)
   next.setHours(0, 0, 0, 0)
   next.setDate(next.getDate() + amount)
-  return next.toISOString().slice(0, 10)
+  return toLocalIsoDate(next)
 }
 
 const formatShortDate = (isoDate: string | null | undefined) => {
@@ -158,7 +164,7 @@ const formatDateRange = (startDate: string | null | undefined, endDate: string |
 const normalizeStopDates = (route: Stop[], tripStartDate?: string) => {
   if (!route.length) return route
 
-  const baseDate = tripStartDate || route[0]?.startDate || new Date().toISOString().slice(0, 10)
+  const baseDate = tripStartDate || route[0]?.startDate || toLocalIsoDate(new Date())
   let cursor = parseIsoDate(baseDate) ?? new Date()
   cursor.setHours(0, 0, 0, 0)
 
@@ -172,12 +178,14 @@ const normalizeStopDates = (route: Stop[], tripStartDate?: string) => {
     const end = new Date(cursor)
     end.setDate(end.getDate() + stayDays)
 
+    const startIso = toLocalIsoDate(start)
+    const endIso = toLocalIsoDate(end)
     const nextStop = {
       ...stop,
       days: stayDays,
-      startDate: start.toISOString().slice(0, 10),
-      endDate: end.toISOString().slice(0, 10),
-      dates: formatDateRange(start.toISOString().slice(0, 10), end.toISOString().slice(0, 10)),
+      startDate: startIso,
+      endDate: endIso,
+      dates: formatDateRange(startIso, endIso),
     }
 
     cursor = new Date(end)
@@ -1467,7 +1475,6 @@ function TransportLegModal({
 
 export default function TripOverviewScreen({ navigate }: Props) {
   const { configured, user } = useAuth()
-  const isDesktop = useIsDesktop()
   const [showShare, setShowShare] = useState(false)
   const [trip, setTrip] = useState<any>(null)
 
@@ -2116,295 +2123,303 @@ export default function TripOverviewScreen({ navigate }: Props) {
     )
   }
 
+  const routeMapWidth = Math.max(280, stops.length * 44)
+  const joinedMembers = ((trip?.members || []) as Array<{ status?: string; avatar_url?: string | null }>).filter(
+    (member) => member.status === "joined",
+  )
+  const pendingMemberCount = ((trip?.members || []) as Array<{ status?: string }>).filter(
+    (member) => member.status === "pending",
+  ).length
+  const joinedMemberCount = joinedMembers.length
+  const communityAvatars = [
+    ...new Set([
+      ...joinedMembers.map((member) => member.avatar_url).filter((url): url is string => Boolean(url)),
+      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=40&h=40&fit=crop",
+      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=40&h=40&fit=crop",
+    ]),
+  ].slice(0, 2)
+
   return (
-    <div className="relative min-h-full bg-surface">
-      {/* Hero image */}
-      <div className="relative h-[260px] md:h-[360px] bg-slate-900 flex-shrink-0">
-        <img
-          src={
-            trip?.cover_image_url ||
-            "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&h=700&fit=crop&auto=format"
-          }
-          alt={(trip?.title || "Trip") + " cover"}
-          className="w-full h-full object-cover"
-        />
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(13,15,46,0.7) 100%)",
-          }}
-        />
-        <button
-          onClick={() => setShowShare(true)}
-          aria-label="Partager le voyage"
-          className="absolute top-12 right-5 md:right-8 w-9 h-9 rounded-full flex items-center justify-center"
-          style={{ background: "rgba(0,0,0,0.3)", backdropFilter: "blur(8px)" }}
-        >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <circle cx="13" cy="3" r="2" stroke="white" strokeWidth="1.5" />
-            <circle cx="3" cy="8" r="2" stroke="white" strokeWidth="1.5" />
-            <circle cx="13" cy="13" r="2" stroke="white" strokeWidth="1.5" />
-            <path
-              d="M5 7l6-3M5 9l6 3"
-              stroke="white"
-              strokeWidth="1.5"
-              strokeLinecap="round"
+    <div className="relative min-h-full bg-surface pb-6">
+      <div className="mx-auto w-full max-w-[820px] px-4 pt-3 md:px-8 md:pt-4">
+        {/* Hero image */}
+        <section aria-label="Trip banner" className="relative">
+          <div className="group relative h-[280px] w-full overflow-hidden rounded-[28px] border border-slate-200/60 bg-slate-900 shadow-lg md:h-[340px]">
+            <img
+              src={
+                trip?.cover_image_url ||
+                "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&h=700&fit=crop&auto=format"
+              }
+              alt={(trip?.title || "Trip") + " cover"}
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
             />
-          </svg>
-        </button>
-        <div className="absolute bottom-5 left-5 right-5 md:left-8 md:right-8">
-          <div className="flex items-center gap-2 mb-1">
-            <h1 className={`text-white font-black text-[22px] md:text-[28px] ${isDesktop ? "max-w-none" : "truncate"}`}>
-              {trip?.title || (loading ? "Loading trip..." : "My Trip Overview")}
-            </h1>
-            <SyncStatusBadge />
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(to top, rgba(2,6,23,0.9) 0%, rgba(15,23,42,0.45) 52%, rgba(15,23,42,0.05) 100%)",
+              }}
+            />
+            <button
+              onClick={() => setShowShare(true)}
+              aria-label="Share trip"
+              className="absolute right-3.5 top-3.5 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-md transition-all hover:bg-black/60 active:scale-95"
+            >
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.933 2.185 2.25 2.25 0 00-3.933-2.185zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
+              </svg>
+            </button>
+            <div className="absolute bottom-4 left-4 right-4 text-white md:bottom-5 md:left-5 md:right-5">
+              <div className="mb-1 flex flex-wrap items-center gap-2">
+                <h1 className="min-w-0 truncate text-[22px] font-black tracking-tight text-white drop-shadow-sm md:text-[28px]">
+                  {trip?.title || (loading ? "Loading trip..." : "My Trip Overview")}
+                </h1>
+                <SyncStatusBadge />
+              </div>
+              <p className="mb-3 text-[12px] font-medium leading-relaxed text-slate-200/90 drop-shadow">
+                {[trip?.start_date, trip?.end_date].filter(Boolean).join(" – ") || "Dates to be set"} · {stops.length} Destination{stops.length === 1 ? "" : "s"}
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditStartDate(trip?.start_date ? String(trip.start_date).slice(0, 10) : "")
+                  setEditEndDate(trip?.end_date ? String(trip.end_date).slice(0, 10) : "")
+                  setDatesError(null)
+                  setShowDatesModal(true)
+                }}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/20 px-3.5 py-1.5 text-[11px] font-semibold tracking-wide text-white shadow-sm backdrop-blur-md transition-all hover:bg-white/30 active:scale-95"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
+                </svg>
+                Edit dates
+              </button>
+            </div>
           </div>
-          <p className={`text-white/65 text-[13px] ${isDesktop ? "md:max-w-none" : "truncate"}`}>
-            {[trip?.start_date, trip?.end_date].filter(Boolean).join(" – ") || "Dates to be set"} · {stops.length} Destinations
-          </p>
-          <button
-            type="button"
-            onClick={() => {
-              setEditStartDate(trip?.start_date ? String(trip.start_date).slice(0, 10) : "")
-              setEditEndDate(trip?.end_date ? String(trip.end_date).slice(0, 10) : "")
-              setDatesError(null)
-              setShowDatesModal(true)
-            }}
-            className="mt-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-black text-white transition-all active:scale-95"
-            style={{ background: "rgba(255,255,255,0.18)", backdropFilter: "blur(8px)" }}
-          >
-            Edit dates
-          </button>
-        </div>
-      </div>
+        </section>
 
-      {/* Stats strip */}
-      <div
-        className="mx-5 md:mx-8 -mt-4 rounded-2xl bg-white grid grid-cols-5 py-3 px-2"
-        style={{
-          boxShadow: "0 8px 24px rgba(59,65,200,0.12)",
-          zIndex: 10,
-          position: "relative",
-        }}
-      >
-        {[
-          { value: String(stops.length), label: "Places" },
-          {
-            value: String((trip?.bookings || []).filter((b: any) => b.booking_type === "stay").length),
-            label: "Stays",
-          },
-          {
-            value: String((trip?.bookings || []).filter((b: any) => b.booking_type === "flight").length),
-            label: "Flights",
-          },
-          {
-            value: String((trip?.itinerary_items || []).length),
-            label: "Activities",
-          },
-          {
-            value: String((trip?.members || []).filter((m: any) => m.status === "joined").length),
-            label: "On Trip",
-          },
-        ].map((s) => (
-          <div key={s.label} className="flex flex-col items-center gap-0.5">
-            <span className="text-navy font-black text-[16px]">{s.value}</span>
-            <span className="text-slate-400 text-[10px] font-medium">
-              {s.label}
-            </span>
+        {/* Stats strip */}
+        <section aria-label="Trip summary counters" className="mt-2">
+          <div className="grid grid-cols-5 divide-x divide-slate-100 rounded-3xl border border-slate-200/70 bg-white px-2 py-3 text-center shadow-[0_4px_20px_-2px_rgba(15,23,42,0.05)]">
+            {[
+              { value: String(stops.length), label: "Places" },
+              {
+                value: String((trip?.bookings || []).filter((b: any) => b.booking_type === "stay").length),
+                label: "Stays",
+              },
+              {
+                value: String((trip?.bookings || []).filter((b: any) => b.booking_type === "flight").length),
+                label: "Flights",
+              },
+              {
+                value: String((trip?.itinerary_items || []).length),
+                label: "Activities",
+              },
+              {
+                value: String(joinedMemberCount),
+                label: "On Trip",
+              },
+            ].map((s) => (
+              <div key={s.label} className="flex flex-col items-center gap-0.5 px-1">
+                <span className="text-[17px] font-bold leading-tight text-navy">{s.value}</span>
+                <span className="text-[10px] font-semibold text-slate-400">{s.label}</span>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </section>
 
-      {/* Viewer / Read-only notice */}
-      {userRole === "viewer" && (
-        <div className="mx-5 md:mx-8 mt-3 px-3.5 py-2.5 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-between shadow-sm">
-          <div className="flex items-center gap-2">
+        {/* Viewer / Read-only notice */}
+        {userRole === "viewer" && (
+          <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-3.5 py-2.5 shadow-sm">
             <div>
-              <p className="text-[11px] font-black text-amber-900 leading-tight">
+              <p className="text-[11px] font-black leading-tight text-amber-900">
                 Read-only access
               </p>
               <p className="text-[10px] text-amber-700">
                 You&apos;re viewing this trip as a guest reader.
               </p>
             </div>
-          </div>
-          <button
-            onClick={() => navigate("collaborative")}
-            className="px-2.5 py-1 rounded-xl bg-white border border-amber-200 text-[10px] font-black text-amber-800 shadow-xs cursor-pointer active:scale-95"
-          >
-            Crew →
-          </button>
-        </div>
-      )}
-
-      {/* Progress */}
-      <div className="mx-5 md:mx-8 mt-4">
-        <div className="flex justify-between items-center mb-1.5">
-          <span className="text-[12px] font-semibold text-slate-500">
-            Planning progress
-          </span>
-          <span className="text-[12px] font-black text-brand">
-            {trip?.planning_progress || 0}%
-          </span>
-        </div>
-        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-          <div
-            className="h-full rounded-full"
-            style={{
-              width: `${trip?.planning_progress || 0}%`,
-              background: "linear-gradient(90deg, #3B41C8, #06C4D4)",
-            }}
-          />
-        </div>
-
-        <div className="mt-3 flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-              Stay total
-            </p>
-            <p className="text-[15px] font-black text-navy">{totalStayDays} days</p>
-          </div>
-          <div className="text-right">
-            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-              {remainingTripDays >= 0 ? "Days left" : "Over by"}
-            </p>
-            <p
-              className={`text-[15px] font-black ${
-                remainingTripDays >= 0 ? "text-brand" : "text-red-500"
-              }`}
+            <button
+              onClick={() => navigate("collaborative")}
+              className="flex-shrink-0 cursor-pointer rounded-xl border border-amber-200 bg-white px-2.5 py-1 text-[10px] font-black text-amber-800 shadow-xs active:scale-95"
             >
-              {Math.abs(remainingTripDays)} {remainingTripDays >= 0 ? "days" : "days"}
-            </p>
+              Crew →
+            </button>
           </div>
-        </div>
-      </div>
+        )}
 
-      {/* Route map preview — numbered stops, tap for the full map */}
-      <div className="px-5 md:px-8 mt-4">
-        <button
-          onClick={() => navigate("map")}
-          className="w-full trypo-card p-4 text-left active:scale-[0.99] transition-transform"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <p className="trypo-section-label">Route map</p>
-            <span className="text-[12px] font-bold text-brand">Open map →</span>
-          </div>
-          {stops.length > 0 ? (
-            <svg viewBox="0 0 320 86" className="w-full" style={{ height: 86 }} aria-hidden="true">
-              <defs>
-                <linearGradient id="trypo-route-line" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0" stopColor="#3B41C8" />
-                  <stop offset="1" stopColor="#06C4D4" />
-                </linearGradient>
-              </defs>
-              {[20, 43, 66].map((y) => (
-                <line key={y} x1="8" y1={y} x2="312" y2={y} stroke="#EEF0F8" strokeWidth="1" />
-              ))}
-              <path
-                d={`M 20 52 ${stops.map((_, i) => {
-                  const x = stops.length === 1 ? 160 : 20 + (i * 280) / (stops.length - 1)
-                  const y = 52 - (i % 2 === 0 ? 0 : 14)
-                  return `L ${x} ${y}`
-                }).join(" ")}`}
-                fill="none"
-                stroke="url(#trypo-route-line)"
-                strokeWidth="2.5"
-                strokeDasharray="1 0"
-                strokeLinecap="round"
+        {/* Planning progress + duration */}
+        <section aria-label="Planning progress" className="mt-4">
+          <div className="mb-3 rounded-2xl border border-slate-200/70 bg-white p-3.5 shadow-sm">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-600">Planning progress</span>
+              <span className="text-sm font-extrabold text-blue-600">
+                {trip?.planning_progress || 0}%
+              </span>
+            </div>
+            <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${Math.min(100, Math.max(0, trip?.planning_progress || 0))}%`,
+                  background: "linear-gradient(90deg, #2563eb, #06b6d4)",
+                }}
               />
-              {stops.map((stop, i) => {
-                const x = stops.length === 1 ? 160 : 20 + (i * 280) / (stops.length - 1)
-                const y = 52 - (i % 2 === 0 ? 0 : 14)
-                return (
-                  <g key={stop.id || i}>
-                    <circle cx={x} cy={y} r="11" fill="#0D0F2E" />
-                    <text x={x} y={y + 4} textAnchor="middle" fontSize="10" fontWeight="800" fill="#fff">
-                      {i + 1}
-                    </text>
-                    <text x={x} y={y + 26} textAnchor="middle" fontSize="9" fontWeight="700" fill="#64748B">
-                      {(stop.city || "").length > 10 ? `${stop.city.slice(0, 9)}…` : stop.city}
-                    </text>
-                  </g>
-                )
-              })}
-            </svg>
-          ) : (
-            <div className="rounded-2xl border border-dashed px-4 py-5 text-center" style={{ borderColor: "#CBD5E1" }}>
-              <p className="text-[13px] font-bold" style={{ color: "#64748B" }}>No stops yet — add destinations to see your route</p>
             </div>
-          )}
-        </button>
-      </div>
-
-      {/* Tabs live in TripDetailShell — one nav for all trip tools. */}
-
-      {/* Community banner */}
-      <div className="px-5 md:px-8 mb-4">
-        <button
-          onClick={() => navigate("trip-social")}
-          className="w-full rounded-[20px] overflow-hidden flex items-center gap-4 px-4 py-4 relative"
-          style={{
-            background: "linear-gradient(135deg, #0D0F2E, #1e2080)",
-            boxShadow: "0 8px 24px rgba(13,15,46,0.25)",
-          }}
-        >
-          <div className="absolute inset-0 opacity-20">
-            <div
-              className="absolute right-0 top-0 w-32 h-32 rounded-full border border-white/20"
-              style={{ transform: "translate(30%, -30%)" }}
-            />
-            <div
-              className="absolute right-0 top-0 w-20 h-20 rounded-full border border-white/20"
-              style={{ transform: "translate(20%, -10%)" }}
-            />
           </div>
-          <div
-            className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 text-white font-black text-[14px] tracking-wide"
-            style={{ background: "rgba(255,255,255,0.1)" }}
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col justify-between rounded-2xl border border-slate-200/70 bg-white p-3.5 shadow-sm">
+              <span className="text-[10.5px] font-bold uppercase tracking-wider text-slate-400">
+                Stay total
+              </span>
+              <span className="mt-1 text-lg font-black text-navy">{totalStayDays} days</span>
+            </div>
+            <div className="flex flex-col justify-between rounded-2xl border border-slate-200/70 bg-white p-3.5 shadow-sm">
+              <span className="text-[10.5px] font-bold uppercase tracking-wider text-slate-400">
+                {remainingTripDays >= 0 ? "Days left" : "Over by"}
+              </span>
+              <span
+                className={`mt-1 text-lg font-black ${
+                  remainingTripDays >= 0 ? "text-blue-600" : "text-rose-500"
+                }`}
+              >
+                {Math.abs(remainingTripDays)} {Math.abs(remainingTripDays) === 1 ? "day" : "days"}
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* Route map preview — numbered stops, tap for the full map */}
+        <section aria-label="Route map preview" className="mt-4">
+          <div className="rounded-3xl border border-slate-200/70 bg-white p-4 shadow-[0_4px_20px_-2px_rgba(15,23,42,0.05)]">
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-slate-400">
+                Route map
+              </p>
+              <button
+                type="button"
+                onClick={() => navigate("map")}
+                className="group flex items-center gap-1 text-xs font-bold text-blue-600 transition-colors hover:text-blue-700"
+              >
+                Open map
+                <span className="transition-transform group-hover:translate-x-0.5">→</span>
+              </button>
+            </div>
+            {stops.length > 0 ? (
+              <div className="overflow-x-auto no-scrollbar">
+                <svg
+                  viewBox={`0 0 ${routeMapWidth} 64`}
+                  className="mx-auto block max-w-none overflow-visible"
+                  style={{ height: 64, width: routeMapWidth }}
+                  aria-hidden="true"
+                >
+                  {stops.length > 1 && (
+                    <path
+                      d={stops
+                        .map((_, i) => {
+                          const x =
+                            stops.length === 1
+                              ? routeMapWidth / 2
+                              : 18 + (i * (routeMapWidth - 36)) / (stops.length - 1)
+                          const y = 32 - (i % 2 === 0 ? 0 : 12)
+                          return `${i === 0 ? "M" : "L"} ${x} ${y}`
+                        })
+                        .join(" ")}
+                      fill="none"
+                      stroke="#2563EB"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  )}
+                  {stops.map((stop, i) => {
+                    const x =
+                      stops.length === 1
+                        ? routeMapWidth / 2
+                        : 18 + (i * (routeMapWidth - 36)) / (stops.length - 1)
+                    const y = 32 - (i % 2 === 0 ? 0 : 12)
+                    return (
+                      <g key={stop.id || i}>
+                        <circle cx={x} cy={y} r="11" fill="#0F172A" stroke="#FFFFFF" strokeWidth="3" />
+                        <text x={x} y={y + 4} textAnchor="middle" fontSize="10" fontWeight="800" fill="#fff">
+                          {i + 1}
+                        </text>
+                        <text x={x} y={y + 26} textAnchor="middle" fontSize="9" fontWeight="700" fill="#94A3B8">
+                          {(stop.city || "").length > 9 ? `${stop.city.slice(0, 8)}…` : stop.city}
+                        </text>
+                      </g>
+                    )
+                  })}
+                </svg>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowAdd(true)}
+                className="w-full rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-center"
+              >
+                <p className="text-[13px] font-bold text-slate-500">
+                  No stops yet — add destinations to see your route
+                </p>
+              </button>
+            )}
+          </div>
+        </section>
+
+        {/* Community banner */}
+        <section aria-label="Trip community" className="mt-3">
+          <button
+            onClick={() => navigate("trip-social")}
+            className="relative flex w-full items-center justify-between gap-3 overflow-hidden rounded-3xl border border-slate-800 p-4 text-left shadow-lg active:scale-[0.99]"
+            style={{
+              background: "linear-gradient(100deg, #020617 0%, #121B38 55%, #1E2958 100%)",
+            }}
           >
-            CO
-          </div>
-          <div className="flex-1 text-left relative">
-            <p className="text-white font-black text-[15px]">Trip Community</p>
-            <p className="text-white/50 text-[11px]">
-              312 views · 3 join requests · 5 comments
+            <div className="pointer-events-none absolute -bottom-8 -right-8 h-36 w-36 rounded-full bg-blue-500/10 blur-2xl" />
+            <div className="relative z-10 flex min-w-0 items-center gap-3">
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-base font-black tracking-wider text-white shadow backdrop-blur-md">
+                CO
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-sm font-bold tracking-tight text-white">Trip Community</h2>
+                <p className="mt-0.5 truncate text-[11px] font-medium leading-snug text-slate-300/80">
+                  {communityPublic ? "Public" : "Private"} · {joinedMemberCount} traveler
+                  {joinedMemberCount === 1 ? "" : "s"}
+                  {pendingMemberCount > 0 ? ` · ${pendingMemberCount} pending` : ""}
+                </p>
+              </div>
+            </div>
+            <div className="relative z-10 flex flex-shrink-0 flex-col items-end">
+              <div className="mb-1.5 flex -space-x-2">
+                {communityAvatars.map((avatar, i) => (
+                  <img
+                    key={i}
+                    src={avatar}
+                    className="h-7 w-7 rounded-full border-2 border-slate-900 object-cover ring-1 ring-white/10"
+                    alt=""
+                  />
+                ))}
+              </div>
+              <span className="text-[10px] font-bold text-rose-400">
+                {pendingMemberCount > 0
+                  ? `${pendingMemberCount} want${pendingMemberCount === 1 ? "s" : ""} to join →`
+                  : "Open community →"}
+              </span>
+            </div>
+          </button>
+        </section>
+
+        {/* Route */}
+        <section aria-label="Route timeline" className="mt-6">
+          <div className="mb-3 flex items-center justify-between px-1">
+            <h2 className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-slate-400">
+              Route
+            </h2>
+            <p className="text-[9px] font-semibold tracking-tight text-slate-400/90 md:text-[10px]">
+              ← swipe to delete · → to lock · ⠿ drag
             </p>
           </div>
-          <div className="flex flex-col items-end gap-1 relative">
-            <div className="flex -space-x-1.5">
-              {[
-                "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=40&h=40&fit=crop",
-                "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=40&h=40&fit=crop",
-              ].map((a, i) => (
-                <img
-                  key={i}
-                  src={a}
-                  className="w-6 h-6 rounded-full object-cover border-2 border-[#1e2080]"
-                  alt=""
-                />
-              ))}
-            </div>
-            <span
-              className="text-[10px] font-black"
-              style={{ color: "#FF6347" }}
-            >
-              3 want to join →
-            </span>
-          </div>
-        </button>
-      </div>
-
-      {/* Route */}
-      <div className="px-5 md:px-8">
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
-            Route
-          </p>
-          <p className="text-[10px] text-slate-300">
-            ← swipe to delete · → to lock · ≡ drag
-          </p>
-        </div>
 
         <div
           ref={listRef}
@@ -2434,13 +2449,14 @@ export default function TripOverviewScreen({ navigate }: Props) {
             const leg = legKey ? (transportLegs[legKey] ?? defaultLeg) : null
             const hasLeg = leg && leg.icon !== "➕"
             const legDistance = nextStop ? getDistanceBetweenCities(stop.city, nextStop.city, stopCoord(stop), stopCoord(nextStop)) : ""
+            const legDistanceShown = legDistance && legDistance !== "Distance à définir" ? legDistance : ""
 
             const swipeBg =
               offset < -20
                 ? `rgba(239,68,68,${Math.min(1, Math.abs(offset) / 80)})`
                 : offset > 20
                   ? `rgba(${
-                      isLocked ? "16,185,129" : "59,65,200"
+                      isLocked ? "16,185,129" : "37,99,235"
                     },${Math.min(1, offset / 80)})`
                   : "transparent"
 
@@ -2467,26 +2483,26 @@ export default function TripOverviewScreen({ navigate }: Props) {
                 >
                   {/* Timeline spine */}
                   <div
-                    className="flex flex-col items-center flex-shrink-0"
+                    className="flex flex-shrink-0 flex-col items-center self-stretch"
                     style={{ width: "32px" }}
                   >
                     <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-black text-white flex-shrink-0"
+                      className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-[11px] font-black text-white shadow-md ring-4 ring-white"
                       style={{
                         background: isLocked
                           ? "linear-gradient(135deg, #10b981, #047857)"
-                          : "linear-gradient(135deg, #3B41C8, #06C4D4)",
+                          : "#2563EB",
                       }}
                     >
                       {isLocked ? "✓" : i + 1}
                     </div>
                     {(i < stops.length - 1 || isExpanded) && (
                       <div
-                        className="w-[2px] flex-1 my-1"
+                        className="my-1 w-[2px] flex-1"
                         style={{
                           background:
-                            "linear-gradient(to bottom, #06C4D4, rgba(59,65,200,0.2))",
-                          minHeight: isExpanded ? "12px" : "32px",
+                            "linear-gradient(to bottom, #2563EB, #38BDF8, rgba(37,99,235,0.12))",
+                          minHeight: isExpanded ? "16px" : "32px",
                         }}
                       />
                     )}
@@ -2495,9 +2511,9 @@ export default function TripOverviewScreen({ navigate }: Props) {
                   {/* Card + expand */}
                   <div className="pb-2 flex-1 min-w-0">
                     {/* Swipe wrapper */}
-                    <div className="relative overflow-hidden rounded-2xl">
+                    <div className="relative overflow-hidden rounded-[22px]">
                       <div
-                        className="absolute inset-0 rounded-2xl flex items-center justify-between px-5"
+                        className="absolute inset-0 flex items-center justify-between rounded-[22px] px-5"
                         style={{ background: swipeBg }}
                       >
                         {offset < -20 && (
@@ -2513,11 +2529,11 @@ export default function TripOverviewScreen({ navigate }: Props) {
                       </div>
 
                       <div
-                        className="bg-white rounded-2xl flex items-center gap-3 relative"
+                        className="relative flex flex-wrap items-start justify-between gap-2 rounded-[22px] border border-slate-200/80 bg-white p-4"
                         style={{
                           boxShadow: isExpanded
-                            ? "0 4px 16px rgba(59,65,200,0.14)"
-                            : "0 2px 8px rgba(59,65,200,0.07)",
+                            ? "0 8px 24px -4px rgba(37,99,235,0.16)"
+                            : "0 4px 20px -2px rgba(15,23,42,0.05)",
                           transform: `translateX(${offset}px)`,
                           transition: snapping
                             ? "transform 0.25s cubic-bezier(0.25,1,0.5,1)"
@@ -2527,10 +2543,10 @@ export default function TripOverviewScreen({ navigate }: Props) {
                         onTouchMove={(e) => onSwipeTouchMove(e, stop.id)}
                         onTouchEnd={() => onSwipeTouchEnd(stop.id)}
                       >
-                        <div className="flex-1 p-3.5 flex justify-between items-center min-w-0">
+                        <div className="flex min-w-[110px] flex-1 items-start gap-0.5">
                           <button
                             type="button"
-                            className="flex-1 text-left min-w-0 pr-2 group cursor-pointer"
+                            className="group min-w-0 max-w-full cursor-pointer text-left"
                             onClick={() =>
                               setSelectedHubDestination({
                                 city: stop.city,
@@ -2541,105 +2557,104 @@ export default function TripOverviewScreen({ navigate }: Props) {
                               })
                             }
                           >
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <h3 className="text-navy font-black text-[15px] group-hover:text-brand transition-colors">
+                            <div className="flex min-w-0 items-start gap-1">
+                              <h3 className="line-clamp-2 text-[15px] font-bold leading-tight text-navy transition-colors group-hover:text-blue-600">
                                 {stop.city}
                               </h3>
-                              <span className="text-[11px] text-brand opacity-80 group-hover:opacity-100 font-bold flex items-center gap-0.5">
+                              <span className="mt-0.5 flex-shrink-0 text-[11px] font-bold text-blue-500 opacity-80 group-hover:opacity-100">
                                 ↗
                               </span>
                             </div>
-                            <p className="text-slate-400 text-[12px] truncate">
-                              {stop.dates}
-                            </p>
+                            <div className="mt-1 flex items-center gap-1 text-slate-400">
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                                <path d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
+                              </svg>
+                              <span className="truncate text-[11px] font-medium">{stop.dates}</span>
+                            </div>
                           </button>
 
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setExpandedStop(isExpanded ? null : stop.id)
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (!detail) {
+                                setSelectedHubDestination({
+                                  city: stop.city,
+                                  dates: stop.dates,
+                                  startDate: stop.startDate,
+                                  endDate: stop.endDate,
+                                  days: stop.days,
+                                })
+                                return
                               }
-                              className="px-2 py-1 rounded-xl text-[11px] font-bold text-slate-500 hover:text-navy hover:bg-slate-100 transition-colors flex items-center gap-1"
-                              title={isExpanded ? "Collapse" : "Expand"}
-                            >
-                              <span
-                                className="text-slate-400 text-[13px]"
-                                style={{
-                                  transform: isExpanded ? "rotate(180deg)" : "none",
-                                  display: "inline-block",
-                                  transition: "transform 0.2s",
-                                }}
-                              >
-                                ▾
-                              </span>
-                            </button>
-
-                            <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  updateStopDays(stop.id, -1)
-                                }}
-                                  className="w-5 h-5 rounded-full flex items-center justify-center text-[12px] font-black"
-                                  style={{ background: "rgba(59,65,200,0.08)", color: "#3B41C8" }}
-                                >
-                                  −
-                                </button>
-                                <span
-                                  className="px-1 py-0.5 rounded-full text-[10px] font-bold"
-                                  style={{
-                                    background: "rgba(59,65,200,0.08)",
-                                    color: "#3B41C8",
-                                  }}
-                                >
-                                  {stop.days}d
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    updateStopDays(stop.id, 1)
-                                  }}
-                                  className="w-5 h-5 rounded-full flex items-center justify-center text-[12px] font-black"
-                                  style={{ background: "rgba(59,65,200,0.08)", color: "#3B41C8" }}
-                                >
-                                  +
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-
-                        {!isLocked && (
-                          <div
-                            draggable
-                            onDragStart={(event) => onNativeDragStart(event, i)}
-                            onDragEnd={onNativeDragEnd}
-                            className="w-10 h-full flex items-center justify-center cursor-grab active:cursor-grabbing flex-shrink-0 touch-none"
-                            onTouchStart={(e) => onDragTouchStart(e, i)}
+                              setExpandedStop(isExpanded ? null : stop.id)
+                            }}
+                            className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-navy"
+                            title={detail ? (isExpanded ? "Collapse" : "Expand") : "Open destination hub"}
+                            aria-label={detail ? (isExpanded ? "Collapse destination" : "Expand destination") : "Open destination hub"}
                           >
                             <svg
-                              width="14"
-                              height="14"
-                              viewBox="0 0 14 14"
+                              width="12"
+                              height="12"
+                              viewBox="0 0 24 24"
                               fill="none"
-                              opacity="0.25"
+                              stroke="currentColor"
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              style={{
+                                transform: isExpanded && detail ? "rotate(180deg)" : "none",
+                                transition: "transform 0.2s",
+                              }}
                             >
-                              <circle cx="4" cy="3.5" r="1.2" fill="#0D0F2E" />
-                              <circle cx="10" cy="3.5" r="1.2" fill="#0D0F2E" />
-                              <circle cx="4" cy="7" r="1.2" fill="#0D0F2E" />
-                              <circle cx="10" cy="7" r="1.2" fill="#0D0F2E" />
-                              <circle cx="4" cy="10.5" r="1.2" fill="#0D0F2E" />
-                              <circle
-                                cx="10"
-                                cy="10.5"
-                                r="1.2"
-                                fill="#0D0F2E"
-                              />
+                              <path d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                             </svg>
+                          </button>
+                        </div>
+
+                        <div className="ml-auto flex flex-shrink-0 items-center gap-1.5">
+                          <div className="flex items-center gap-0.5 rounded-full border border-slate-200 bg-slate-50 px-1 py-1 shadow-inner">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                updateStopDays(stop.id, -1)
+                              }}
+                              className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-[12px] font-bold text-slate-600 shadow-sm transition-transform hover:bg-slate-100 active:scale-90"
+                              aria-label={`Remove a day from ${stop.city}`}
+                            >
+                              −
+                            </button>
+                            <span className="min-w-[28px] px-1 text-center text-[11px] font-bold text-blue-600">
+                              {stop.days}d
+                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                updateStopDays(stop.id, 1)
+                              }}
+                              className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-[12px] font-bold text-slate-600 shadow-sm transition-transform hover:bg-slate-100 active:scale-90"
+                              aria-label={`Add a day to ${stop.city}`}
+                            >
+                              +
+                            </button>
                           </div>
-                        )}
+
+                          {!isLocked && (
+                            <div
+                              draggable
+                              onDragStart={(event) => onNativeDragStart(event, i)}
+                              onDragEnd={onNativeDragEnd}
+                              className="flex h-8 w-7 cursor-grab touch-none items-center justify-center rounded-lg text-slate-300 transition-colors hover:text-slate-500 active:cursor-grabbing"
+                              onTouchStart={(e) => onDragTouchStart(e, i)}
+                              title="Drag to reorder"
+                            >
+                              <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path d="M7 4a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0zM7 16a2 2 0 11-4 0 2 2 0 014 0zM17 4a2 2 0 11-4 0 2 2 0 014 0zM17 10a2 2 0 11-4 0 2 2 0 014 0zM17 16a2 2 0 11-4 0 2 2 0 014 0z" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -2819,113 +2834,85 @@ export default function TripOverviewScreen({ navigate }: Props) {
 
                 {/* Transport leg connector between stops */}
                 {leg && i < stops.length - 1 && (
-                  <div className="flex gap-3 items-center" style={{ paddingLeft: "0px" }}>
+                  <div className="flex gap-3">
                     <div
-                      className="flex flex-col items-center flex-shrink-0"
+                      className="flex flex-shrink-0 flex-col items-center self-stretch"
                       style={{ width: "32px" }}
                     >
                       <div
-                        className="w-[2px] h-3"
-                        style={{ background: "rgba(59,65,200,0.2)" }}
+                        className="w-[2px] flex-1"
+                        style={{
+                          background:
+                            "linear-gradient(to bottom, rgba(37,99,235,0.12), rgba(37,99,235,0.55))",
+                        }}
                       />
                     </div>
 
-                    <div className="flex-1 flex flex-col gap-1 mb-1">
+                    <div className="mb-1 flex flex-1 flex-col items-center gap-1.5 py-2.5">
                       {nextStop && (
-                        <div className="px-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                          {stop.city} → {nextStop.city} · {legDistance}
+                        <div className="text-center text-[9.5px] font-bold uppercase tracking-[0.1em] text-slate-400">
+                          {stop.city} → {nextStop.city}
+                          {legDistanceShown ? ` · ${legDistanceShown}` : ""}
                         </div>
                       )}
 
-                      <div className="flex items-center gap-2">
-                        {hasLeg ? (
-                          <div
-                            className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl"
-                            style={{
-                              background: "rgba(59,65,200,0.06)",
-                              border: "1px solid rgba(59,65,200,0.1)",
-                            }}
-                          >
-                            <span className="w-8 h-8 rounded-xl flex items-center justify-center text-[11px] font-black text-brand flex-shrink-0" style={{ background: "rgba(59,65,200,0.08)" }}><TransportIcon type={leg.label} size={16} /></span>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-navy font-bold text-[12px]">
-                                {leg.label}
-                              </p>
-                              <p className="text-slate-400 text-[10px] truncate">
-                                {leg.detail}
-                                {leg.duration ? ` · ${normalizeDuration(leg.duration)}` : ""}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-slate-500 font-black text-[10px]">
-                                {legDistance}
-                              </span>
-                              <span className="text-brand font-black text-[11px]">
-                                {leg.price}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  if (legKey) {
-                                    setLegModalKey(legKey)
-                                    setLegEditType(leg.label)
-                                  }
-                                }}
-                                className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-                                style={{
-                                  background: "rgba(59,65,200,0.12)",
-                                  color: "#3B41C8",
-                                }}
-                              >
-                                <svg
-                                  width="8"
-                                  height="8"
-                                  viewBox="0 0 8 8"
-                                  fill="none"
-                                >
-                                  <path
-                                    d="M1 7l5.5-5.5M5.5 1.5H7V3"
-                                    stroke="#3B41C8"
-                                    strokeWidth="1.2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </svg>
-                              </button>
-                            </div>
+                      {hasLeg ? (
+                        <div className="flex w-full items-center gap-2 rounded-2xl border border-blue-500/20 bg-blue-500/10 px-3 py-2.5">
+                          <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-blue-500/15 text-blue-600">
+                            <TransportIcon type={leg.label} size={16} />
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[12px] font-bold text-navy">{leg.label}</p>
+                            <p className="truncate text-[10px] text-slate-400">
+                              {leg.detail}
+                              {leg.duration ? ` · ${normalizeDuration(leg.duration)}` : ""}
+                            </p>
                           </div>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (legKey) {
-                                setLegModalKey(legKey)
-                                setLegEditType("Flight")
-                              }
-                            }}
-                            className="flex items-center gap-2 px-3 py-2 rounded-xl"
-                            style={{
-                              background: "rgba(59,65,200,0.04)",
-                              border: "1.5px dashed rgba(59,65,200,0.25)",
-                            }}
-                          >
-                            <div
-                              className="w-5 h-5 rounded-full flex items-center justify-center text-white font-black text-[11px] flex-shrink-0"
-                              style={{
-                                background: "linear-gradient(135deg, #3B41C8, #06C4D4)",
+                          <div className="flex flex-shrink-0 items-center gap-1.5">
+                            {legDistanceShown && (
+                              <span className="text-[10px] font-bold text-slate-500">{legDistanceShown}</span>
+                            )}
+                            <span className="text-[11px] font-bold text-blue-600">{leg.price}</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (legKey) {
+                                  setLegModalKey(legKey)
+                                  setLegEditType(leg.label)
+                                }
                               }}
+                              className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500/15 text-blue-600 transition-colors hover:bg-blue-500/25"
+                              aria-label={`Edit transport to ${nextStop?.city}`}
                             >
-                              +
-                            </div>
-                            <span
-                              className="text-[12px] font-bold"
-                              style={{ color: "#3B41C8" }}
-                            >
-                              Add transport to {nextStop?.city}
-                            </span>
-                          </button>
-                        )}
-                      </div>
+                              <svg width="9" height="9" viewBox="0 0 8 8" fill="none">
+                                <path
+                                  d="M1 7l5.5-5.5M5.5 1.5H7V3"
+                                  stroke="currentColor"
+                                  strokeWidth="1.2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (legKey) {
+                              setLegModalKey(legKey)
+                              setLegEditType("Flight")
+                            }
+                          }}
+                          className="flex w-full items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-blue-400/70 bg-blue-500/10 py-2 text-xs font-bold text-blue-600 transition-all hover:border-blue-500 hover:bg-blue-500/15 active:scale-[0.99]"
+                        >
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-xs font-extrabold text-white">
+                            +
+                          </span>
+                          Add transport to {nextStop?.city}
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
@@ -2934,165 +2921,170 @@ export default function TripOverviewScreen({ navigate }: Props) {
           })}
 
           {/* Add stop button */}
-          <div className="flex gap-3 items-center mt-1 mb-2">
-            <div className="w-8 flex-shrink-0 flex items-center justify-center">
-              <div
-                className="w-[2px] h-5"
-                style={{
-                  background:
-                    "linear-gradient(to bottom, #3B41C8, transparent)",
-                }}
-              />
-            </div>
+          <div className="pt-2">
             <button
+              type="button"
               onClick={() => setShowAdd(true)}
-              className="flex-1 flex items-center gap-2.5 py-3 px-4 rounded-2xl border-2 border-dashed transition-all"
-              style={{
-                borderColor: "rgba(59,65,200,0.25)",
-                background: "rgba(59,65,200,0.03)",
-              }}
+              className="flex w-full items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-blue-400/80 bg-blue-500/10 py-3.5 text-sm font-bold text-blue-600 shadow-sm transition-all hover:border-blue-500 hover:bg-blue-500/15 active:scale-[0.99]"
             >
-              <div
-                className="w-7 h-7 rounded-full flex items-center justify-center text-white font-black text-lg flex-shrink-0"
-                style={{
-                  background: "linear-gradient(135deg, #3B41C8, #06C4D4)",
-                }}
-              >
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white shadow-sm">
                 +
-              </div>
-              <span
-                className="text-[13px] font-bold"
-                style={{ color: "#3B41C8" }}
-              >
-                Add a destination
               </span>
+              Add a destination
             </button>
           </div>
         </div>
-      </div>
+        </section>
 
-      {/* Trip Tools */}
-      <div className="px-5 md:px-8 mb-5 mt-2">
-        <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-3">
-          Trip Tools
-        </p>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-          {[
-            {
-              label: "Packing List",
-              sub: "9/15 packed",
-              screen: "packing-list" as Screen,
-            },
-            {
-              label: "Weather",
-              sub: "Tunis 28°C",
-              screen: "weather" as Screen,
-            },
-            {
-              label: "Currency",
-              sub: `1 USD = ${liveRates.TND ? liveRates.TND.toFixed(2) : "2.91"} TND`,
-              screen: "currency" as Screen,
-            },
-            {
-              label: "Trip Crew",
-              sub: "3 travelers",
-              screen: "collaborative" as Screen,
-            },
-            {
-              label: "Split Bills",
-              sub: "$317 total · 3 people",
-              screen: "split-bills" as Screen,
-            },
-            {
-              label: "Find Crew",
-              sub: "Sarah 12min · Marco 32min",
-              screen: "crew-tracker" as Screen,
-            },
-            {
-              label: "Hidden Gems",
-              sub: stops.length > 0 ? `Secrets in ${stops.map((s) => s.city).slice(0, 2).join(" & ")}` : "Local secrets nearby",
-              screen: "hidden-gems" as Screen,
-            },
-            {
-              label: "Vibe Match",
-              sub: "Match today's mood",
-              screen: "vibe-match" as Screen,
-            },
-            {
-              label: "Community",
-              sub: "312 views · 3 join requests",
-              screen: "trip-social" as Screen,
-            },
-            {
-              label: "Memories",
-              sub: "Map style · photos · slideshow",
-              screen: "trip-memories" as Screen,
-            },
-          ].map((tool) => (
-            <button
-              key={tool.label}
-              onClick={() => {
-                if (typeof window !== "undefined") {
-                  if (trip?.id) localStorage.setItem("trypo_active_trip_id", trip.id)
-                  if (tool.screen === "hidden-gems") {
-                    if (stops.length > 0) {
-                      localStorage.setItem("trypo_hidden_gems_target_city", stops[0].city)
-                      localStorage.setItem("trypo_vibe_match_target_city", stops[0].city)
-                    } else {
-                      localStorage.removeItem("trypo_hidden_gems_target_city")
+        {/* Trip Tools */}
+        <section aria-label="Trip tools" className="mt-8">
+          <h2 className="mb-3 px-1 text-[11px] font-extrabold uppercase tracking-[0.16em] text-slate-400">
+            Trip Tools
+          </h2>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            {[
+              {
+                label: "Packing List",
+                sub: "9/15 packed",
+                screen: "packing-list" as Screen,
+                iconBg: "bg-indigo-500/10",
+                iconColor: "text-indigo-500",
+              },
+              {
+                label: "Weather",
+                sub: `${stops[0]?.city || "Tunis"} 28°C`,
+                screen: "weather" as Screen,
+                iconBg: "bg-sky-500/10",
+                iconColor: "text-sky-500",
+              },
+              {
+                label: "Currency",
+                sub: `1 USD = ${liveRates.TND ? liveRates.TND.toFixed(2) : "2.91"} TND`,
+                screen: "currency" as Screen,
+                iconBg: "bg-emerald-500/10",
+                iconColor: "text-emerald-500",
+              },
+              {
+                label: "Trip Crew",
+                sub: `${joinedMemberCount || 1} travelers`,
+                screen: "collaborative" as Screen,
+                iconBg: "bg-blue-500/10",
+                iconColor: "text-blue-500",
+              },
+              {
+                label: "Split Bills",
+                sub: "$317 total · 3 people",
+                screen: "split-bills" as Screen,
+                iconBg: "bg-violet-500/10",
+                iconColor: "text-violet-500",
+              },
+              {
+                label: "Find Crew",
+                sub: "Sarah 12min · Marco 32min",
+                screen: "crew-tracker" as Screen,
+                iconBg: "bg-amber-500/10",
+                iconColor: "text-amber-500",
+              },
+              {
+                label: "Hidden Gems",
+                sub: stops.length > 0 ? `Secrets in ${stops.map((s) => s.city).slice(0, 2).join(" & ")}` : "Local secrets nearby",
+                screen: "hidden-gems" as Screen,
+                iconBg: "bg-rose-500/10",
+                iconColor: "text-rose-500",
+              },
+              {
+                label: "Vibe Match",
+                sub: "Match today's mood",
+                screen: "vibe-match" as Screen,
+                iconBg: "bg-fuchsia-500/10",
+                iconColor: "text-fuchsia-500",
+              },
+              {
+                label: "Community",
+                sub: communityPublic ? "Public · open to join" : "Private · share with crew",
+                screen: "trip-social" as Screen,
+                iconBg: "bg-cyan-500/10",
+                iconColor: "text-cyan-500",
+              },
+              {
+                label: "Memories",
+                sub: "Map style · photos · slideshow",
+                screen: "trip-memories" as Screen,
+                iconBg: "bg-teal-500/10",
+                iconColor: "text-teal-500",
+              },
+            ].map((tool) => (
+              <button
+                key={tool.label}
+                onClick={() => {
+                  if (typeof window !== "undefined") {
+                    if (trip?.id) localStorage.setItem("trypo_active_trip_id", trip.id)
+                    if (tool.screen === "hidden-gems") {
+                      if (stops.length > 0) {
+                        localStorage.setItem("trypo_hidden_gems_target_city", stops[0].city)
+                        localStorage.setItem("trypo_vibe_match_target_city", stops[0].city)
+                      } else {
+                        localStorage.removeItem("trypo_hidden_gems_target_city")
+                      }
+                    }
+                    if (tool.screen === "vibe-match") {
+                      if (stops.length > 0) {
+                        const activeStopObj = expandedStop ? stops.find((s) => s.id === expandedStop) : null
+                        const targetCity = activeStopObj ? activeStopObj.city : stops[0].city
+                        localStorage.setItem("trypo_vibe_match_target_city", targetCity)
+                        localStorage.setItem(
+                          "trypo_vibe_match_destinations",
+                          JSON.stringify(stops.map((s) => s.city)),
+                        )
+                      }
                     }
                   }
-                  if (tool.screen === "vibe-match") {
-                    if (stops.length > 0) {
-                      const activeStopObj = expandedStop ? stops.find((s) => s.id === expandedStop) : null
-                      const targetCity = activeStopObj ? activeStopObj.city : stops[0].city
-                      localStorage.setItem("trypo_vibe_match_target_city", targetCity)
-                      localStorage.setItem(
-                        "trypo_vibe_match_destinations",
-                        JSON.stringify(stops.map((s) => s.city)),
-                      )
-                    }
-                  }
-                }
-                navigate(tool.screen)
-              }}
-              className="bg-white rounded-2xl p-3.5 flex items-center gap-3 text-left cursor-pointer transition-transform active:scale-98"
-              style={{ boxShadow: "0 2px 8px rgba(59,65,200,0.07)" }}
-            >
-              <span className="w-9 h-9 rounded-xl flex items-center justify-center text-brand flex-shrink-0" style={{ background: "rgba(59,65,200,0.07)" }}><ToolIcon name={tool.label} size={18} /></span>
-              <div>
-                <p className="text-navy font-bold text-[13px]">{tool.label}</p>
-                <p className="text-slate-400 text-[10px]">{tool.sub}</p>
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
+                  navigate(tool.screen)
+                }}
+                className="group flex flex-col rounded-3xl border border-slate-200/80 bg-white p-3.5 text-left shadow-[0_4px_20px_-2px_rgba(15,23,42,0.05)] transition-all hover:shadow-md active:scale-[0.98]"
+              >
+                <span className={`flex h-10 w-10 items-center justify-center rounded-2xl ${tool.iconBg} ${tool.iconColor}`}>
+                  <ToolIcon name={tool.label} size={20} />
+                </span>
+                <span className="mt-2.5 text-[13px] font-bold leading-tight text-navy">
+                  {tool.label}
+                </span>
+                <span className="mt-1 text-[11px] font-semibold leading-tight text-slate-400">
+                  {tool.sub}
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
 
-      {/* CTA */}
-      <div className="px-5 md:px-8 pb-8 pt-2 flex flex-col gap-3">
-        <button
-          onClick={() => navigate("itinerary")}
-          className="w-full py-4 rounded-2xl text-white font-bold text-[15px]"
-          style={{
-            background: "linear-gradient(135deg, #3B41C8, #06C4D4)",
-            boxShadow: "0 8px 24px rgba(59,65,200,0.3)",
-          }}
-        >
-          View Itinerary →
-        </button>
-
-        {userRole === "owner" && (
+        {/* CTA */}
+        <footer className="mb-4 mt-8 space-y-3">
           <button
-            onClick={() => setShowDeleteModal(true)}
-            className="w-full py-3 rounded-2xl border border-red-200 bg-red-50/50 hover:bg-red-50 text-red-600 font-bold text-[13px] flex items-center justify-center gap-2 transition-all active:scale-98 cursor-pointer"
+            type="button"
+            onClick={() => navigate("itinerary")}
+            className="flex w-full items-center justify-center gap-2 rounded-3xl py-4 text-base font-extrabold tracking-wide text-white transition-all hover:opacity-95 active:scale-[0.98]"
+            style={{
+              background: "linear-gradient(90deg, #2563eb, #0284c7, #06b6d4)",
+              boxShadow: "0 12px 30px -4px rgba(37,99,235,0.35)",
+            }}
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-            </svg>
-            Supprimer ce voyage
+            View Itinerary
+            <span className="text-lg leading-none">→</span>
           </button>
-        )}
+
+          {userRole === "owner" && (
+            <button
+              type="button"
+              onClick={() => setShowDeleteModal(true)}
+              className="flex w-full items-center justify-center gap-2 rounded-3xl border border-rose-500/25 bg-rose-500/10 py-3.5 text-sm font-bold text-rose-500 transition-all hover:bg-rose-500/15 active:scale-[0.98]"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+              </svg>
+              Supprimer ce voyage
+            </button>
+          )}
+        </footer>
       </div>
 
       {/* Delete Trip Confirmation Modal */}

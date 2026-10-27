@@ -74,14 +74,18 @@ export default function SyncStatusBadge() {
 
   return (
     <span
-      className="flex items-center gap-1.5 rounded-full bg-black/35 px-2.5 py-1 text-[11px] font-semibold text-white"
+      className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold backdrop-blur-md ${
+        live
+          ? "border-emerald-500/40 bg-emerald-950/60 text-emerald-300"
+          : "border-amber-500/40 bg-amber-950/60 text-amber-300"
+      }`}
       title={
         live
           ? "Compte connecté à Supabase : les modifications se synchronisent avec l'autre compte."
           : "Mode local : les modifications restent sur cet appareil tant que le compte n'est pas connecté."
       }
     >
-      <span className={`h-1.5 w-1.5 rounded-full ${live ? "bg-emerald-400" : "bg-amber-400"}`} />
+      <span className={`h-1.5 w-1.5 rounded-full ${live ? "animate-pulse bg-emerald-400" : "bg-amber-400"}`} />
       {live ? "Live sync" : "Local only"}
     </span>
   )

@@ -405,7 +405,7 @@ export default function HomeScreen({ navigate }: Props) {
 
                   <div className="mt-3 border-t border-white/15 pt-2.5">
                     <div className="mb-1.5 flex items-center justify-between text-[11px] font-semibold">
-                      <span className="text-slate-300">Planning progress</span>
+                      <span className="text-white/70">Planning progress</span>
                       <span className="font-bold text-cyan-300">{upcomingTrip.progress}%</span>
                     </div>
                     <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/20 backdrop-blur-sm">
@@ -524,7 +524,7 @@ export default function HomeScreen({ navigate }: Props) {
                       <h4 className="truncate text-sm font-bold capitalize leading-tight tracking-tight">
                         {trip.name}
                       </h4>
-                      <p className="mt-0.5 truncate text-[10px] font-medium text-slate-300">
+                      <p className="mt-0.5 truncate text-[10px] font-medium text-white/70">
                         {compactTripRange(trip.startDate, trip.endDate)}
                       </p>
                     </div>

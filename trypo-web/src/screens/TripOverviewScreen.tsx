@@ -1465,7 +1465,7 @@ function TransportLegModal({
   )
 }
 
-export default function TripOverviewScreen({ navigate, goBack }: Props) {
+export default function TripOverviewScreen({ navigate }: Props) {
   const { configured, user } = useAuth()
   const isDesktop = useIsDesktop()
   const [showShare, setShowShare] = useState(false)
@@ -2136,22 +2136,8 @@ export default function TripOverviewScreen({ navigate, goBack }: Props) {
           }}
         />
         <button
-              onClick={() => goBack("home")}
-          className="absolute top-12 left-5 md:left-8 w-9 h-9 rounded-full flex items-center justify-center"
-          style={{ background: "rgba(0,0,0,0.3)", backdropFilter: "blur(8px)" }}
-        >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <path
-              d="M11 14L6 9l5-5"
-              stroke="white"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-        <button
           onClick={() => setShowShare(true)}
+          aria-label="Partager le voyage"
           className="absolute top-12 right-5 md:right-8 w-9 h-9 rounded-full flex items-center justify-center"
           style={{ background: "rgba(0,0,0,0.3)", backdropFilter: "blur(8px)" }}
         >

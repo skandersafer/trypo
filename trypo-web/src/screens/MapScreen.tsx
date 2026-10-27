@@ -49,7 +49,6 @@ type SavedPlace = {
 const ROUTE_COLOR = "#3B41C8"
 
 /* Mockup shadow / glass tokens (not part of the Tailwind theme). */
-const SUBTLE_SHADOW = "0 2px 10px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06)"
 const FLOAT_SHADOW = "0 12px 32px -4px rgba(15, 23, 42, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.06)"
 const GLOW_SHADOW = "0 0 20px -3px rgba(59, 130, 246, 0.5)"
 const GLASS_SURFACE = {
@@ -361,12 +360,12 @@ function routeBounds(stops: Stop[]): [[number, number], [number, number]] | null
   ]
 }
 
-export default function MapScreen({ goBack }: Props) {
+export default function MapScreen(_props: Props) {
   const isDesktop = useIsDesktop()
   const [stops, setStops] = useState<Stop[]>([])
   const [selected, setSelected] = useState<Stop | null>(null)
   const [savedPlaces, setSavedPlaces] = useState<SavedPlace[]>([])
-  const [layerType, setLayerType] = useState<MapboxStyleKey>("trypo")
+  const [layerType] = useState<MapboxStyleKey>("trypo")
 
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<mapboxgl.Map | null>(null)
@@ -648,10 +647,6 @@ export default function MapScreen({ goBack }: Props) {
     }
   }
 
-  const resetNorth = () => {
-    mapInstanceRef.current?.easeTo({ bearing: 0, pitch: 0, duration: 500 })
-  }
-
   const zoomIn = () => mapInstanceRef.current?.zoomIn()
   const zoomOut = () => mapInstanceRef.current?.zoomOut()
 
@@ -663,60 +658,15 @@ export default function MapScreen({ goBack }: Props) {
       }}
     >
       {/* Subheader / screen title */}
-      <section className="px-5 md:px-8 pt-1.5 pb-2.5 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => goBack("trip-overview")}
-            aria-label="Retour au niveau supérieur"
-            className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-slate-700 border border-slate-200/80 hover:bg-slate-50 active:scale-95 transition-all cursor-pointer flex-shrink-0"
-            style={{ boxShadow: SUBTLE_SHADOW }}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path d="M15.75 19.5 8.25 12l7.5-7.5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-          <div>
-            <h1 className="text-[18px] font-bold text-slate-900 tracking-tight leading-none mb-1">
-              Globe & Itinéraire
-            </h1>
-            <div className="flex items-center gap-1.5 text-[0.72rem] font-medium text-slate-500">
-              <span className="w-2 h-2 rounded-full bg-blue-600" />
-              <span className="font-semibold text-blue-700">{stops.length} étapes</span>
-              <span className="text-slate-300">•</span>
-              <span>Vue interactive</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={resetNorth}
-            className="w-9 h-9 rounded-2xl bg-white text-amber-500 border border-slate-200/80 hover:bg-slate-50 active:scale-95 transition-all flex items-center justify-center cursor-pointer"
-            style={{ boxShadow: SUBTLE_SHADOW }}
-            title="Boussole"
-            aria-label="Boussole"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="9" />
-              <path d="m15.5 8.5-2.2 5.3-5.3 2.2 2.2-5.3 5.3-2.2Z" strokeLinejoin="round" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            onClick={() => setLayerType((prev) => (prev === "trypo" ? "satellite" : "trypo"))}
-            className="w-9 h-9 rounded-2xl bg-white text-slate-500 border border-slate-200/80 hover:text-slate-800 hover:bg-slate-50 active:scale-95 transition-all flex items-center justify-center cursor-pointer"
-            style={{ boxShadow: SUBTLE_SHADOW }}
-            title="Changer de vue (Satellite / Plan)"
-            aria-label="Mode satellite"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="m12 3 9 5-9 5-9-5 9-5Z" strokeLinejoin="round" />
-              <path d="m3 13 9 5 9-5" strokeLinejoin="round" />
-              <path d="m3 17 9 5 9-5" strokeLinejoin="round" />
-            </svg>
-          </button>
+      <section className="px-5 md:px-8 pt-1.5 pb-2.5">
+        <h1 className="text-[18px] font-bold text-slate-900 tracking-tight leading-none mb-1">
+          Globe & Itinéraire
+        </h1>
+        <div className="flex items-center gap-1.5 text-[0.72rem] font-medium text-slate-500">
+          <span className="w-2 h-2 rounded-full bg-blue-600" />
+          <span className="font-semibold text-blue-700">{stops.length} étapes</span>
+          <span className="text-slate-300">•</span>
+          <span>Vue interactive</span>
         </div>
       </section>
 

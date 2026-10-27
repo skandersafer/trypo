@@ -221,32 +221,13 @@ export default function CollaborativeScreen({ navigate, goBack }: Props) {
 
   return (
     <div className="min-h-full w-full max-w-full overflow-x-hidden bg-surface pb-10">
-      <div className="pt-12" />
-
       {/* Header */}
       <div className="px-5 md:px-8 flex items-center justify-between mb-5">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => goBack("trip-overview")}
-            className="w-9 h-9 rounded-full bg-white flex items-center justify-center flex-shrink-0 cursor-pointer active:scale-95 transition-transform"
-            style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}
-          >
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <path
-                d="M11 14L6 9l5-5"
-                stroke="#0D0F2E"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-          <div className="min-w-0">
-            <h1 className={isDesktop ? "text-[20px] font-black text-navy" : "text-[20px] font-black text-navy truncate"}>Trip Crew</h1>
-            <p className={isDesktop ? "text-slate-400 text-[12px]" : "text-slate-400 text-[12px] truncate"}>
-              {trip?.title || "My Trip"} · {members.length} membre{members.length > 1 ? "s" : ""}
-            </p>
-          </div>
+        <div className="min-w-0">
+          <h1 className={isDesktop ? "text-[20px] font-black text-navy" : "text-[20px] font-black text-navy truncate"}>Trip Crew</h1>
+          <p className={isDesktop ? "text-slate-400 text-[12px]" : "text-slate-400 text-[12px] truncate"}>
+            {trip?.title || "My Trip"} · {members.length} membre{members.length > 1 ? "s" : ""}
+          </p>
         </div>
 
         <div className="flex items-center gap-1.5 flex-shrink-0">

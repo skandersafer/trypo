@@ -414,34 +414,15 @@ export default function FindStayScreen({ navigate, openBooking, goBack }: Props)
 
   return (
     <div className="min-h-full bg-surface">
-      <div className="pt-12" />
-
       {/* Header */}
       <div className="px-5 md:px-8 flex items-center justify-between gap-3 mb-4">
-        <div className="flex items-center gap-3 min-w-0">
-          <button
-            onClick={() => goBack("home")}
-            className="w-9 h-9 rounded-full bg-white flex items-center justify-center cursor-pointer flex-shrink-0"
-            style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}
-          >
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <path
-                d="M11 14L6 9l5-5"
-                stroke="#0D0F2E"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-          <div className="min-w-0">
-            <h1 className={isDesktop ? "text-[20px] md:text-[26px] font-black text-navy max-w-none" : "text-[18px] font-black text-navy leading-tight"}>
-              Find Your Perfect Stay
-            </h1>
-            <p className={isDesktop ? "text-slate-400 text-[12px] max-w-none" : "text-slate-400 text-[12px] truncate"}>
-              {activeCity}{activeCountry ? ` · ${activeCountry}` : ""}{tripRange ? ` · ${tripRange}` : ""}
-            </p>
-          </div>
+        <div className="min-w-0">
+          <h1 className={isDesktop ? "text-[20px] md:text-[26px] font-black text-navy max-w-none" : "text-[18px] font-black text-navy leading-tight"}>
+            Find Your Perfect Stay
+          </h1>
+          <p className={isDesktop ? "text-slate-400 text-[12px] max-w-none" : "text-slate-400 text-[12px] truncate"}>
+            {activeCity}{activeCountry ? ` · ${activeCountry}` : ""}{tripRange ? ` · ${tripRange}` : ""}
+          </p>
         </div>
 
         <button

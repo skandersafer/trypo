@@ -307,24 +307,6 @@ export default function BookingDetailScreen({
               "linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(13,15,46,0.7) 100%)",
           }}
         />
-        <button
-          onClick={() => goBack("trip-overview")}
-          className="absolute top-12 left-5 w-9 h-9 rounded-full flex items-center justify-center"
-          style={{
-            background: "rgba(0,0,0,0.35)",
-            backdropFilter: "blur(8px)",
-          }}
-        >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <path
-              d="M11 14L6 9l5-5"
-              stroke="white"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
         <div className="absolute bottom-5 left-5 right-5 md:left-8 md:right-8 flex items-end justify-between">
           <div className="flex items-center gap-2">
             <div

@@ -189,25 +189,10 @@ export default function TripMemoriesScreen({ navigate, goBack }: Props) {
     <div className="min-h-full flex flex-col" style={{ background: "#f5f6ff" }}>
       {/* Header */}
       <div
-        className="flex-shrink-0 pt-12 pb-5 px-5 md:px-8"
+        className="flex-shrink-0 pb-5 px-5 md:px-8"
         style={{ background: "linear-gradient(135deg, #0D0F2E, #1e2080)" }}
       >
         <div className="flex items-center gap-3 mb-5">
-          <button
-            onClick={() => goBack("trip-overview")}
-            className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ background: "rgba(255,255,255,0.1)" }}
-          >
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <path
-                d="M11 14L6 9l5-5"
-                stroke="white"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
           <div className="flex-1">
             <h1 className="text-white font-black text-[18px]">Trip Memories</h1>
             <p className="text-white/50 text-[12px]">

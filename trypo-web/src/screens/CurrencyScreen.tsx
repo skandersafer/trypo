@@ -129,36 +129,17 @@ export default function CurrencyScreen({ navigate, goBack }: Props) {
 
   return (
     <div className="min-h-full w-full max-w-full overflow-x-hidden bg-surface">
-      <div className="pt-12" />
-
       {/* Header */}
       <div className="px-5 md:px-8 flex items-center justify-between mb-5">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => goBack("trip-overview")}
-            className="w-9 h-9 rounded-full bg-white flex items-center justify-center flex-shrink-0 cursor-pointer active:scale-95 transition-transform"
-            style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}
-          >
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <path
-                d="M11 14L6 9l5-5"
-                stroke="#0D0F2E"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-          <div className="min-w-0">
-            <h1 className={isDesktop ? "text-[20px] md:text-[24px] font-black text-navy max-w-none" : "text-[20px] font-black text-navy truncate"}>
-              Currency Converter
-            </h1>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <p className="text-slate-400 text-[11px] font-medium truncate">
-                Live Google Rates · Realtime
-              </p>
-            </div>
+        <div className="min-w-0">
+          <h1 className={isDesktop ? "text-[20px] md:text-[24px] font-black text-navy max-w-none" : "text-[20px] font-black text-navy truncate"}>
+            Currency Converter
+          </h1>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <p className="text-slate-400 text-[11px] font-medium truncate">
+              Live Google Rates · Realtime
+            </p>
           </div>
         </div>
 

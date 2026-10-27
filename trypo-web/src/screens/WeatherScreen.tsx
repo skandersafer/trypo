@@ -115,23 +115,7 @@ export default function WeatherScreen({ navigate, goBack }: Props) {
 
   return (
     <div className="min-h-full bg-surface pb-8">
-      <div className="pt-12" />
-
       <div className="px-5 md:px-8 flex items-center gap-3 mb-5">
-        <button
-          onClick={() => goBack("trip-overview")}
-          className="w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-sm active:scale-95 transition-transform"
-        >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <path
-              d="M11 14L6 9l5-5"
-              stroke="#0D0F2E"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
         <div>
           <h1 className="text-[20px] font-black text-navy">Météo en direct</h1>
           <p className="text-slate-400 text-[12px] font-medium">

@@ -246,21 +246,6 @@ export default function StayDetailsScreen({ navigate, goBack }: Props) {
           }}
         />
         <button
-          onClick={() => goBack("find-stay")}
-          className="absolute top-12 left-5 md:left-8 w-9 h-9 rounded-full flex items-center justify-center cursor-pointer"
-          style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(8px)" }}
-        >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <path
-              d="M11 14L6 9l5-5"
-              stroke="white"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-        <button
           onClick={handleToggleSave}
           className="absolute top-12 right-5 md:right-8 w-9 h-9 rounded-full flex items-center justify-center cursor-pointer transition-transform active:scale-95"
           style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(8px)" }}

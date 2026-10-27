@@ -876,25 +876,8 @@ export default function CrewTrackerScreen({ navigate, goBack }: Props) {
           "linear-gradient(170deg, #0a0c2e 0%, #0e1545 40%, #081428 100%)",
       }}
     >
-      <div className="pt-12" />
-
       {/* Header */}
       <div className="px-5 md:px-8 flex items-center gap-3 mb-4">
-        <button
-          onClick={() => goBack("collaborative")}
-          className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
-          style={{ background: "rgba(255,255,255,0.1)" }}
-        >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <path
-              d="M11 14L6 9l5-5"
-              stroke="white"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
         <div className="min-w-0">
           <h1 className="text-white font-black text-[20px]">Find My Crew 📍</h1>
           <p className="text-white/40 text-[12px] truncate">

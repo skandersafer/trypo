@@ -347,25 +347,8 @@ export default function HiddenGemsScreen({ navigate, goBack }: Props) {
 
   return (
     <div className="min-h-full bg-surface">
-      <div className="pt-12" />
-
       {/* Header */}
       <div className="px-5 md:px-8 flex items-center gap-3 mb-4">
-        <button
-          onClick={() => goBack("trip-overview")}
-          className="w-9 h-9 rounded-full bg-white flex items-center justify-center cursor-pointer transition-transform active:scale-95"
-          style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}
-        >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <path
-              d="M11 14L6 9l5-5"
-              stroke="#0D0F2E"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
         <div className="flex-1 min-w-0">
           <h1 className="text-[20px] md:text-[26px] font-black text-navy flex items-center gap-1.5">
             Hidden Gems 💎
